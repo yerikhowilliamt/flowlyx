@@ -1,0 +1,25 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Example Base Model to demonstrate structure. 
+// Will be replaced with real business tables in the future.
+model ExampleEntity {
+  id        String    @id @default(uuid()) @db.Uuid
+  
+  name      String    @map("name")
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @db.Uuid @map("created_by")
+  updatedBy String?   @db.Uuid @map("updated_by")
+
+  @@map("example_entities")
+}

@@ -1,0 +1,28 @@
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { LoggerModule } from './core/logger/logger.module';
+import { validateEnv } from './core/config/env.validation';
+import { CorrelationIdMiddleware } from './core/middleware/correlation-id.middleware';
+import { RequestContextMiddleware } from './core/middleware/request-context.middleware';
+
+import { HealthModule } from './core/health/health.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: validateEnv,
+    }),
+    LoggerModule,
+    HealthModule,
+  ],
+  controllers: [],
+  providers: [],
+})
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(CorrelationIdMiddleware, RequestContextMiddleware)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}
