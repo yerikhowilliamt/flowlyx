@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { OrganizationsModule } from './modules/organizations/organizations.module';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { ProjectsModule } from './modules/projects/projects.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 
 @Module({
@@ -24,6 +25,7 @@ import { RbacModule } from './modules/rbac/rbac.module';
     AuthModule,
     OrganizationsModule,
     WorkspacesModule,
+    ProjectsModule,
     RbacModule,
   ],
   controllers: [],
