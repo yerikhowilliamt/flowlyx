@@ -1,0 +1,12 @@
+import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
+
+const createTaskSchema = z.object({
+  listId: z.string().uuid(),
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+  order: z.number().optional(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+});
+
+export class CreateTaskDto extends createZodDto(createTaskSchema) {}
