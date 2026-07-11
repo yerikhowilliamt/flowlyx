@@ -12,6 +12,7 @@ import { OrganizationsModule } from './modules/organizations/organizations.modul
 import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RbacModule } from './modules/rbac/rbac.module';
+import { ProjectMembersModule } from './modules/project-members/project-members.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { RbacModule } from './modules/rbac/rbac.module';
     WorkspacesModule,
     ProjectsModule,
     RbacModule,
+    ProjectMembersModule,
   ],
   controllers: [],
   providers: [],

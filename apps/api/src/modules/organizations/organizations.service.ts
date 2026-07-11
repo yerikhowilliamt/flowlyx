@@ -1,48 +1,48 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { OrganizationsRepository } from './organizations.repository';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { Organization } from '@flowlyx/database';
+import { prisma, Organization } from '@flowlyx/database';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly organizationsRepository: OrganizationsRepository) {}
-
   async create(createOrganizationDto: CreateOrganizationDto): Promise<Organization> {
-    const existing = await this.organizationsRepository.findBySlug(createOrganizationDto.slug);
+    const existing = await prisma.organization.findUnique({
+      where: { slug: createOrganizationDto.slug },
+    });
     if (existing) {
       throw new ConflictException('Organization with this slug already exists');
     }
-    return this.organizationsRepository.create(createOrganizationDto);
+    return prisma.organization.create({ data: createOrganizationDto });
   }
 
-  async findAll(): Promise<Organization[]> {
-    return this.organizationsRepository.findAll();
+  async findAll(query?: unknown): Promise<Organization[]> {
+    return prisma.organization.findMany({ where: query as Record<string, unknown> });
   }
 
   async findById(id: string): Promise<Organization> {
-    const organization = await this.organizationsRepository.findById(id);
-    if (!organization) {
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (!org) {
       throw new NotFoundException('Organization not found');
     }
-    return organization;
+    return org;
   }
 
   async findBySlug(slug: string): Promise<Organization> {
-    const organization = await this.organizationsRepository.findBySlug(slug);
-    if (!organization) {
+    const org = await prisma.organization.findUnique({ where: { slug } });
+    if (!org) {
       throw new NotFoundException('Organization not found');
     }
-    return organization;
+    return org;
   }
 
   async update(id: string, updateOrganizationDto: UpdateOrganizationDto): Promise<Organization> {
-    const organization = await this.findById(id);
-    return this.organizationsRepository.update(organization.id, updateOrganizationDto);
+    await this.findById(id);
+    return prisma.organization.update({ where: { id }, data: updateOrganizationDto });
   }
 
   async remove(id: string): Promise<boolean> {
-    const organization = await this.findById(id);
-    return this.organizationsRepository.delete(organization.id);
+    await this.findById(id);
+    await prisma.organization.delete({ where: { id } });
+    return true;
   }
 }

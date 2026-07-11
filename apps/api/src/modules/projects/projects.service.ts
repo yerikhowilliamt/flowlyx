@@ -1,27 +1,24 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { ProjectsRepository } from './projects.repository';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { Project } from '@flowlyx/database';
+import { prisma, Project } from '@flowlyx/database';
 
 @Injectable()
 export class ProjectsService {
-  constructor(private readonly projectsRepository: ProjectsRepository) {}
-
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
-    const existing = await this.projectsRepository.findBySlug(createProjectDto.slug);
+    const existing = await prisma.project.findUnique({ where: { slug: createProjectDto.slug } });
     if (existing) {
       throw new ConflictException('Project with this slug already exists');
     }
-    return this.projectsRepository.create(createProjectDto);
+    return prisma.project.create({ data: createProjectDto });
   }
 
   async findAllByWorkspaceId(workspaceId: string): Promise<Project[]> {
-    return this.projectsRepository.findAllByWorkspaceId(workspaceId);
+    return prisma.project.findMany({ where: { workspaceId } });
   }
 
   async findById(id: string): Promise<Project> {
-    const project = await this.projectsRepository.findById(id);
+    const project = await prisma.project.findUnique({ where: { id } });
     if (!project) {
       throw new NotFoundException('Project not found');
     }
@@ -29,7 +26,7 @@ export class ProjectsService {
   }
 
   async findBySlug(slug: string): Promise<Project> {
-    const project = await this.projectsRepository.findBySlug(slug);
+    const project = await prisma.project.findUnique({ where: { slug } });
     if (!project) {
       throw new NotFoundException('Project not found');
     }
@@ -37,12 +34,13 @@ export class ProjectsService {
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto): Promise<Project> {
-    const project = await this.findById(id);
-    return this.projectsRepository.update(project.id, updateProjectDto);
+    await this.findById(id);
+    return prisma.project.update({ where: { id }, data: updateProjectDto });
   }
 
   async remove(id: string): Promise<boolean> {
-    const project = await this.findById(id);
-    return this.projectsRepository.delete(project.id);
+    await this.findById(id);
+    await prisma.project.delete({ where: { id } });
+    return true;
   }
 }
