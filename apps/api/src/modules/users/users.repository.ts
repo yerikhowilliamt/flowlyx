@@ -5,8 +5,7 @@ import { BaseRepository } from '../../core/base/base.repository';
 @Injectable()
 export class UsersRepository implements BaseRepository<User> {
   async findAll(query?: unknown): Promise<User[]> {
-    // @ts-expect-error Prisma types
-    return prisma.user.findMany({ where: query });
+    return prisma.user.findMany({ where: query as never });
   }
 
   async findById(id: string): Promise<User | null> {
@@ -18,15 +17,13 @@ export class UsersRepository implements BaseRepository<User> {
   }
 
   async create(data: unknown): Promise<User> {
-    // @ts-expect-error Prisma types
-    return prisma.user.create({ data });
+    return prisma.user.create({ data: data as never });
   }
 
   async update(id: string, data: unknown): Promise<User> {
     return prisma.user.update({
       where: { id },
-      // @ts-expect-error Prisma types
-      data,
+      data: data as never,
     });
   }
 
