@@ -14,7 +14,15 @@ import {
 import { WorkspacesService } from './workspaces.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { WorkspaceRolesGuard } from '../rbac/guards/workspace-roles.guard';
+import { WorkspaceRoles } from '../rbac/decorators/workspace-roles.decorator';
+import { WorkspaceRole } from '../rbac/enums/workspace-role.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('workspaces')
 export class WorkspacesController {
   private readonly logger = new Logger(WorkspacesController.name);
@@ -53,12 +61,16 @@ export class WorkspacesController {
   }
 
   @Patch(':id')
+  @UseGuards(WorkspaceRolesGuard)
+  @WorkspaceRoles(WorkspaceRole.ADMIN)
   async update(@Param('id') id: string, @Body() updateWorkspaceDto: UpdateWorkspaceDto) {
     this.logger.log(`Updating workspace with id: ${id}`);
     return this.workspacesService.update(id, updateWorkspaceDto);
   }
 
   @Delete(':id')
+  @UseGuards(WorkspaceRolesGuard)
+  @WorkspaceRoles(WorkspaceRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
     this.logger.log(`Deleting workspace with id: ${id}`);

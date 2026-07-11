@@ -13,7 +13,15 @@ import {
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OrganizationRolesGuard } from '../rbac/guards/organization-roles.guard';
+import { OrganizationRoles } from '../rbac/decorators/organization-roles.decorator';
+import { OrganizationRole } from '../rbac/enums/organization-role.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('organizations')
 export class OrganizationsController {
   private readonly logger = new Logger(OrganizationsController.name);
@@ -46,12 +54,16 @@ export class OrganizationsController {
   }
 
   @Patch(':id')
+  @UseGuards(OrganizationRolesGuard)
+  @OrganizationRoles(OrganizationRole.OWNER, OrganizationRole.ADMIN)
   async update(@Param('id') id: string, @Body() updateOrganizationDto: UpdateOrganizationDto) {
     this.logger.log(`Updating organization with id: ${id}`);
     return this.organizationsService.update(id, updateOrganizationDto);
   }
 
   @Delete(':id')
+  @UseGuards(OrganizationRolesGuard)
+  @OrganizationRoles(OrganizationRole.OWNER)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
     this.logger.log(`Deleting organization with id: ${id}`);
