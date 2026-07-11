@@ -179,7 +179,8 @@ model List {
   color   String? @map("color")
   status  String  @default("ACTIVE") @map("status")
 
-  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -189,4 +190,25 @@ model List {
   updatedBy String?   @map("updated_by") @db.Uuid
 
   @@map("lists")
+}
+
+model Task {
+  id          String  @id @default(uuid()) @db.Uuid
+  listId      String  @map("list_id") @db.Uuid
+  title       String  @map("title")
+  description String? @map("description")
+  order       Float   @default(0) @map("order")
+  priority    String  @default("MEDIUM") @map("priority")
+  status      String  @default("ACTIVE") @map("status")
+
+  list List @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("tasks")
 }
