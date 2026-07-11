@@ -159,6 +159,7 @@ model Board {
   status      String  @default("ACTIVE") @map("status")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  lists   List[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -168,4 +169,24 @@ model Board {
   updatedBy String?   @map("updated_by") @db.Uuid
 
   @@map("boards")
+}
+
+model List {
+  id      String  @id @default(uuid()) @db.Uuid
+  boardId String  @map("board_id") @db.Uuid
+  name    String  @map("name")
+  order   Float   @default(0) @map("order")
+  color   String? @map("color")
+  status  String  @default("ACTIVE") @map("status")
+
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("lists")
 }
