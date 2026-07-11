@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -9,20 +9,60 @@ datasource db {
 
 // User model for authentication and identity management.
 model User {
-  id              String    @id @default(uuid()) @db.Uuid
-  email           String    @unique @map("email")
-  passwordHash    String    @map("password_hash")
-  isEmailVerified Boolean   @default(false) @map("is_email_verified")
-  role            String    @default("USER") @map("role")
-  status          String    @default("ACTIVE") @map("status")
-  refreshToken    String?   @map("refresh_token")
+  id              String  @id @default(uuid()) @db.Uuid
+  email           String  @unique @map("email")
+  passwordHash    String  @map("password_hash")
+  isEmailVerified Boolean @default(false) @map("is_email_verified")
+  role            String  @default("USER") @map("role")
+  status          String  @default("ACTIVE") @map("status")
+  refreshToken    String? @map("refresh_token")
+
+  organizationMembers OrganizationMember[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
-  createdBy String?   @db.Uuid @map("created_by")
-  updatedBy String?   @db.Uuid @map("updated_by")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
 
   @@map("users")
+}
+
+model Organization {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @map("name")
+  slug        String  @unique @map("slug")
+  description String? @map("description")
+  logoUrl     String? @map("logo_url")
+  status      String  @default("ACTIVE") @map("status")
+
+  members OrganizationMember[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  userId         String @map("user_id") @db.Uuid
+  role           String @default("MEMBER") @map("role")
+  status         String @default("ACTIVE") @map("status")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
 }
