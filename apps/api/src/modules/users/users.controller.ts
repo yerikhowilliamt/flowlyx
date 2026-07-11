@@ -15,6 +15,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { User } from '@flowlyx/database';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { RolesGuard } from '../rbac/guards/roles.guard';
+import { Roles } from '../rbac/decorators/roles.decorator';
+import { Role } from '../rbac/enums/role.enum';
 
 interface RequestWithUser extends Request {
   user: User;
@@ -22,7 +25,7 @@ interface RequestWithUser extends Request {
 
 @ApiTags('Users')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -40,6 +43,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'List all users' })
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get()
   async findAll() {
     const users = await this.usersService.findAll();
@@ -72,6 +76,7 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Delete a user' })
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.usersService.delete(id);
