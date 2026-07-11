@@ -80,6 +80,7 @@ model Workspace {
 
   organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   members        WorkspaceMember[]
+  projects       Project[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -107,4 +108,24 @@ model WorkspaceMember {
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
+}
+
+model Project {
+  id          String  @id @default(uuid()) @db.Uuid
+  workspaceId String  @map("workspace_id") @db.Uuid
+  name        String  @map("name")
+  slug        String  @unique @map("slug")
+  description String? @map("description")
+  status      String  @default("ACTIVE") @map("status")
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("projects")
 }
