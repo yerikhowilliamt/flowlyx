@@ -1,27 +1,26 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
-import { WorkspacesRepository } from './workspaces.repository';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { Workspace } from '@flowlyx/database';
+import { prisma, Workspace } from '@flowlyx/database';
 
 @Injectable()
 export class WorkspacesService {
-  constructor(private readonly workspacesRepository: WorkspacesRepository) {}
-
   async create(createWorkspaceDto: CreateWorkspaceDto): Promise<Workspace> {
-    const existing = await this.workspacesRepository.findBySlug(createWorkspaceDto.slug);
+    const existing = await prisma.workspace.findUnique({
+      where: { slug: createWorkspaceDto.slug },
+    });
     if (existing) {
       throw new ConflictException('Workspace with this slug already exists');
     }
-    return this.workspacesRepository.create(createWorkspaceDto);
+    return prisma.workspace.create({ data: createWorkspaceDto });
   }
 
   async findAllByOrganizationId(organizationId: string): Promise<Workspace[]> {
-    return this.workspacesRepository.findAllByOrganizationId(organizationId);
+    return prisma.workspace.findMany({ where: { organizationId } });
   }
 
   async findById(id: string): Promise<Workspace> {
-    const workspace = await this.workspacesRepository.findById(id);
+    const workspace = await prisma.workspace.findUnique({ where: { id } });
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
@@ -29,7 +28,7 @@ export class WorkspacesService {
   }
 
   async findBySlug(slug: string): Promise<Workspace> {
-    const workspace = await this.workspacesRepository.findBySlug(slug);
+    const workspace = await prisma.workspace.findUnique({ where: { slug } });
     if (!workspace) {
       throw new NotFoundException('Workspace not found');
     }
@@ -37,12 +36,13 @@ export class WorkspacesService {
   }
 
   async update(id: string, updateWorkspaceDto: UpdateWorkspaceDto): Promise<Workspace> {
-    const workspace = await this.findById(id);
-    return this.workspacesRepository.update(workspace.id, updateWorkspaceDto);
+    await this.findById(id);
+    return prisma.workspace.update({ where: { id }, data: updateWorkspaceDto });
   }
 
   async remove(id: string): Promise<boolean> {
-    const workspace = await this.findById(id);
-    return this.workspacesRepository.delete(workspace.id);
+    await this.findById(id);
+    await prisma.workspace.delete({ where: { id } });
+    return true;
   }
 }

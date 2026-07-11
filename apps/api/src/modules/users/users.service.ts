@@ -1,29 +1,26 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from '@flowlyx/database';
+import { prisma, User } from '@flowlyx/database';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly usersRepository: UsersRepository) {}
-
   async create(createUserDto: CreateUserDto & { passwordHash: string }): Promise<User> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...data } = createUserDto;
-    return this.usersRepository.create(data);
+    return prisma.user.create({ data });
   }
 
   async findAll(query?: unknown): Promise<User[]> {
-    return this.usersRepository.findAll(query);
+    return prisma.user.findMany({ where: query as Record<string, unknown> });
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    return this.usersRepository.findByEmail(email);
+    return prisma.user.findUnique({ where: { email } });
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.usersRepository.findById(id);
+    return prisma.user.findUnique({ where: { id } });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -31,7 +28,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return this.usersRepository.update(id, updateUserDto);
+    return prisma.user.update({ where: { id }, data: updateUserDto });
   }
 
   async delete(id: string): Promise<boolean> {
@@ -39,6 +36,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return this.usersRepository.delete(id);
+    await prisma.user.delete({ where: { id } });
+    return true;
   }
 }

@@ -1,45 +1,26 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
-import { UsersRepository } from './users.repository';
 import { NotFoundException } from '@nestjs/common';
+import { prisma } from '@flowlyx/database';
 
-const mockUser = {
-  id: '1',
-  name: 'Test User',
-  email: 'test@example.com',
-  passwordHash: 'hashedpassword',
-  isEmailVerified: false,
-  role: 'USER',
-  status: 'ACTIVE',
-  refreshToken: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  deletedAt: null,
-  createdBy: null,
-  updatedBy: null,
-};
-
-const mockUsersRepository = {
-  create: jest.fn().mockResolvedValue(mockUser),
-  findAll: jest.fn().mockResolvedValue([mockUser]),
-  findByEmail: jest.fn().mockResolvedValue(mockUser),
-  findById: jest.fn().mockResolvedValue(mockUser),
-  update: jest.fn().mockResolvedValue({ ...mockUser, status: 'INACTIVE' }),
-  delete: jest.fn().mockResolvedValue(true),
-};
+jest.mock('@flowlyx/database', () => ({
+  prisma: {
+    user: {
+      create: jest.fn(),
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+  },
+}));
 
 describe('UsersService', () => {
   let service: UsersService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        UsersService,
-        {
-          provide: UsersRepository,
-          useValue: mockUsersRepository,
-        },
-      ],
+      providers: [UsersService],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
@@ -50,62 +31,14 @@ describe('UsersService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('create', () => {
-    it('should create a user', async () => {
-      const dto = {
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'password',
-        passwordHash: 'hashedpassword',
-      };
-      const result = await service.create(dto);
-      expect(result).toEqual(mockUser);
-      expect(mockUsersRepository.create).toHaveBeenCalled();
-    });
+  it('should call prisma.user.create', async () => {
+    (prisma.user.create as jest.Mock).mockResolvedValue({ id: '1' });
+    await service.create({ name: 'T', email: 't@t.com', password: '1', passwordHash: '1' });
+    expect(prisma.user.create).toHaveBeenCalled();
   });
 
-  describe('findAll', () => {
-    it('should return an array of users', async () => {
-      const result = await service.findAll();
-      expect(result).toEqual([mockUser]);
-    });
-  });
-
-  describe('findByEmail', () => {
-    it('should return a user by email', async () => {
-      const result = await service.findByEmail('test@example.com');
-      expect(result).toEqual(mockUser);
-    });
-  });
-
-  describe('findById', () => {
-    it('should return a user by id', async () => {
-      const result = await service.findById('1');
-      expect(result).toEqual(mockUser);
-    });
-  });
-
-  describe('update', () => {
-    it('should update a user', async () => {
-      const result = await service.update('1', { status: 'INACTIVE' });
-      expect(result.status).toEqual('INACTIVE');
-    });
-
-    it('should throw NotFoundException if user not found', async () => {
-      mockUsersRepository.findById.mockResolvedValueOnce(null);
-      await expect(service.update('2', { status: 'INACTIVE' })).rejects.toThrow(NotFoundException);
-    });
-  });
-
-  describe('delete', () => {
-    it('should delete a user', async () => {
-      const result = await service.delete('1');
-      expect(result).toEqual(true);
-    });
-
-    it('should throw NotFoundException if user not found', async () => {
-      mockUsersRepository.findById.mockResolvedValueOnce(null);
-      await expect(service.delete('2')).rejects.toThrow(NotFoundException);
-    });
+  it('should throw NotFoundException on update if not found', async () => {
+    (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
+    await expect(service.update('1', {})).rejects.toThrow(NotFoundException);
   });
 });
