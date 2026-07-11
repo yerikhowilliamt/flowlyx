@@ -18,6 +18,7 @@ model User {
   refreshToken    String? @map("refresh_token")
 
   organizationMembers OrganizationMember[]
+  workspaceMembers    WorkspaceMember[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -37,7 +38,8 @@ model Organization {
   logoUrl     String? @map("logo_url")
   status      String  @default("ACTIVE") @map("status")
 
-  members OrganizationMember[]
+  members    OrganizationMember[]
+  workspaces Workspace[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -65,4 +67,43 @@ model OrganizationMember {
 
   @@unique([organizationId, userId])
   @@map("organization_members")
+}
+
+model Workspace {
+  id             String  @id @default(uuid()) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  name           String  @map("name")
+  slug           String  @unique @map("slug")
+  description    String? @map("description")
+  status         String  @default("ACTIVE") @map("status")
+
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members        WorkspaceMember[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String @id @default(uuid()) @db.Uuid
+  workspaceId String @map("workspace_id") @db.Uuid
+  userId      String @map("user_id") @db.Uuid
+  role        String @default("MEMBER") @map("role")
+  status      String @default("ACTIVE") @map("status")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
 }
