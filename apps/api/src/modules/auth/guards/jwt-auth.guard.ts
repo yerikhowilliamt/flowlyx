@@ -7,13 +7,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return super.canActivate(context);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-  handleRequest<TUser = any>(
-    err: any,
-    user: any,
-    _info: any,
+  handleRequest<TUser = Record<string, unknown>>(
+    err: Error | null,
+    user: TUser,
+    _info: unknown,
     _context: ExecutionContext,
-    _status?: any,
+    _status?: unknown,
   ): TUser {
     if (err || !user) {
       throw err || new UnauthorizedException();
