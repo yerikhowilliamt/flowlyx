@@ -79,9 +79,9 @@ model Workspace {
   description    String? @map("description")
   status         String  @default("ACTIVE") @map("status")
 
-  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  members        WorkspaceMember[]
-  projects       Project[]
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      WorkspaceMember[]
+  projects     Project[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -119,8 +119,9 @@ model Project {
   description String? @map("description")
   status      String  @default("ACTIVE") @map("status")
 
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  members     ProjectMember[]
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members   ProjectMember[]
+  boards    Board[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -148,4 +149,23 @@ model ProjectMember {
 
   @@unique([projectId, userId])
   @@map("project_members")
+}
+
+model Board {
+  id          String  @id @default(uuid()) @db.Uuid
+  projectId   String  @map("project_id") @db.Uuid
+  name        String  @map("name")
+  description String? @map("description")
+  status      String  @default("ACTIVE") @map("status")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("boards")
 }
