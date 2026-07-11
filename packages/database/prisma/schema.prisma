@@ -7,12 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Example Base Model to demonstrate structure. 
-// Will be replaced with real business tables in the future.
-model ExampleEntity {
-  id        String    @id @default(uuid()) @db.Uuid
-  
-  name      String    @map("name")
+// User model for authentication and identity management.
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  email           String    @unique @map("email")
+  passwordHash    String    @map("password_hash")
+  isEmailVerified Boolean   @default(false) @map("is_email_verified")
+  role            String    @default("USER") @map("role")
+  status          String    @default("ACTIVE") @map("status")
+  refreshToken    String?   @map("refresh_token")
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -21,5 +24,5 @@ model ExampleEntity {
   createdBy String?   @db.Uuid @map("created_by")
   updatedBy String?   @db.Uuid @map("updated_by")
 
-  @@map("example_entities")
+  @@map("users")
 }

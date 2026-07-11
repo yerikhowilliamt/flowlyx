@@ -6,6 +6,8 @@ import { CorrelationIdMiddleware } from './core/middleware/correlation-id.middle
 import { RequestContextMiddleware } from './core/middleware/request-context.middleware';
 
 import { HealthModule } from './core/health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { HealthModule } from './core/health/health.module';
     }),
     LoggerModule,
     HealthModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
