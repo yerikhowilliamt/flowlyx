@@ -14,6 +14,7 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { ProjectMembersModule } from './modules/project-members/project-members.module';
 import { BoardsModule } from './modules/boards/boards.module';
+import { ListsModule } from './modules/lists/lists.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { BoardsModule } from './modules/boards/boards.module';
     RbacModule,
     ProjectMembersModule,
     BoardsModule,
+    ListsModule,
   ],
   controllers: [],
   providers: [],
