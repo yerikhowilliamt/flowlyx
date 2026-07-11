@@ -8,6 +8,7 @@ import { RequestContextMiddleware } from './core/middleware/request-context.midd
 import { HealthModule } from './core/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { OrganizationsModule } from './modules/organizations/organizations.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UsersModule } from './modules/users/users.module';
     HealthModule,
     UsersModule,
     AuthModule,
+    OrganizationsModule,
   ],
   controllers: [],
   providers: [],

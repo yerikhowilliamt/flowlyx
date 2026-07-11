@@ -16,5 +16,6 @@ _Kami menyediakan dokumentasi dalam dua bahasa. Silakan pilih bahasa yang Anda i
 
 - `docs/id/` - Contains all 71 Phase Documentation markdown files in Indonesian.
 - `docs/en/` - Contains all 71 Phase Documentation markdown files in English.
+- `docs/errors/troubleshooting.md` - 🛠 Contains logs of common CI/CD errors and their solutions (Bilingual).
 
 Both folders contain Architecture Decision Records (ADRs) explaining the technology stack, advantages, and drawbacks for each specific module throughout the 70 phases of Flowlyx development.
