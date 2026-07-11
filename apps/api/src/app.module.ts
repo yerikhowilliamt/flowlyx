@@ -13,6 +13,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 import { ProjectsModule } from './modules/projects/projects.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { ProjectMembersModule } from './modules/project-members/project-members.module';
+import { BoardsModule } from './modules/boards/boards.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { ProjectMembersModule } from './modules/project-members/project-members.
     ProjectsModule,
     RbacModule,
     ProjectMembersModule,
+    BoardsModule,
   ],
   controllers: [],
   providers: [],
