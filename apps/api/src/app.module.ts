@@ -16,6 +16,7 @@ import { ProjectMembersModule } from './modules/project-members/project-members.
 import { BoardsModule } from './modules/boards/boards.module';
 import { ListsModule } from './modules/lists/lists.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { SubtasksModule } from './modules/subtasks/subtasks.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
     BoardsModule,
     ListsModule,
     TasksModule,
+    SubtasksModule,
   ],
   controllers: [],
   providers: [],
