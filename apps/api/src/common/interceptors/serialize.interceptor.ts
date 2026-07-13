@@ -12,13 +12,13 @@ export function Serialize(dto: ClassConstructor | [ClassConstructor]) {
 }
 
 export class SerializeInterceptor implements NestInterceptor {
-  constructor(private dto: unknown) {}
+  constructor(private dto: ClassConstructor | [ClassConstructor]) {}
 
   intercept(context: ExecutionContext, handler: CallHandler): Observable<unknown> {
     return handler.handle().pipe(
       map((data: unknown) => {
-        const isArray = Array.isArray(this.dto);
-        const dtoClass = isArray ? this.dto[0] : this.dto;
+        const dto = this.dto;
+        const dtoClass = Array.isArray(dto) ? dto[0] : dto;
 
         return plainToInstance(dtoClass, data, {
           excludeExtraneousValues: true,
