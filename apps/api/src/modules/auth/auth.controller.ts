@@ -1,27 +1,33 @@
+import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
 import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Request, Response } from 'express';
 import { User } from '@flowlyx/database';
+import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { UserResponse } from '../../models/user.model';
 
 interface RequestWithUser extends Request {
   user: User;
 }
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiOperation({ summary: 'Register a new user' })
+  @ApiCreatedResponse({ type: UserResponse })
   @Post('register')
+  @Serialize(UserResponse)
   async register(@Body() registerDto: RegisterDto) {
     const user = await this.authService.register(registerDto);
-    // Remove passwordHash from response
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, refreshToken, ...result } = user;
-    return result;
+    return user;
   }
 
+  @ApiOperation({ summary: 'Login user' })
+  @ApiOkResponse({ description: 'User successfully logged in, returning access token' })
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -35,7 +41,7 @@ export class AuthController {
     });
 
     return {
-      accessToken: tokens.accessToken,
+      access_token: tokens.accessToken,
     };
   }
 }

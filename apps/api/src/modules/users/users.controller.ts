@@ -14,7 +14,9 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { User } from '@flowlyx/database';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
+import { UserResponse, UserSummary } from '../../models/user.model';
+import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { RolesGuard } from '../rbac/guards/roles.guard';
 import { Roles } from '../rbac/decorators/roles.decorator';
 import { Role } from '../rbac/enums/role.enum';
@@ -31,48 +33,44 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @ApiOperation({ summary: 'Get current user profile' })
+  @ApiOkResponse({ type: UserResponse })
+  @Serialize(UserResponse)
   @Get('me')
   async getProfile(@Req() req: RequestWithUser) {
     const user = await this.usersService.findById(req.user.id);
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, refreshToken, ...result } = user;
-    return result;
+    return user;
   }
 
   @ApiOperation({ summary: 'List all users' })
+  @ApiOkResponse({ type: [UserSummary] })
+  @Serialize([UserSummary])
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get()
   async findAll() {
-    const users = await this.usersService.findAll();
-    return users.map((user) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { passwordHash, refreshToken, ...result } = user;
-      return result;
-    });
+    return this.usersService.findAll();
   }
 
   @ApiOperation({ summary: 'Get a user by ID' })
+  @ApiOkResponse({ type: UserResponse })
+  @Serialize(UserResponse)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const user = await this.usersService.findById(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, refreshToken, ...result } = user;
-    return result;
+    return user;
   }
 
   @ApiOperation({ summary: 'Update a user' })
+  @ApiOkResponse({ type: UserResponse })
+  @Serialize(UserResponse)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    const user = await this.usersService.update(id, updateUserDto);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, refreshToken, ...result } = user;
-    return result;
+    return this.usersService.update(id, updateUserDto);
   }
 
   @ApiOperation({ summary: 'Delete a user' })
