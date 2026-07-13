@@ -49,3 +49,43 @@ However, the existing unit test specifications (`*.spec.ts`) were tightly couple
 
 - **Resilient Mocks**: When refactoring API contracts globally, ensure that global test mocks and helper utilities are updated first.
 - **Avoid Over-Asserting**: Avoid asserting the exact payload of ORM calls in unit tests unless absolutely necessary, as it makes tests extremely brittle to minor query changes (like adding `skip` or `take`).
+
+---
+
+# Phase 20 - Linter/Typescript Strict Typing Error (No Explicit Any)
+
+## Symptoms
+
+During the fixing of unit test suites mentioned above, CI/CD pipeline failed during the `npm run lint` step with the following error:
+`Unexpected any. Specify a different type @typescript-eslint/no-explicit-any`
+
+This error was triggered because the project strictly enforces a "no `any` types allowed" policy, and the interim solution used `as any` to quickly bypass TypeScript compiler errors when dealing with mocked request objects or unwrapping paginated results.
+
+## Root Cause
+
+The initial fix applied to mock requests and test assertions relied on type assertions using `any`:
+
+1. `const req = { user: { id: '1' } } as unknown as Request as any;` (to bypass missing `RequestWithUser` properties).
+2. `expect((result as any).data || result).toEqual([mockData]);` (to bypass the fact that `result` could sometimes be interpreted as an array instead of a `PaginatedResponse`).
+3. `mockResolvedValueOnce({ data: [], meta: {} } as any)` (to bypass the required `totalPages` and other strictly typed fields in `PaginationMeta`).
+
+The ESLint rule `@typescript-eslint/no-explicit-any` correctly caught these deviations and failed the build.
+
+## Solution
+
+1. **Type-Safe Mock Parameter Injection**:
+   Replaced `as any` casting for parameter injection with exact method signature extraction using TypeScript's `Parameters<T>` utility.
+   _Example:_ `const req = { user: { id: '1' } } as unknown as Parameters<typeof controller.getProfile>[0];`
+
+2. **Structural Narrowing for Assertions**:
+   Replaced type casting on test results with a type-safe dynamic check that TypeScript understands.
+   _Example:_ `const actualData = 'data' in (result as object) ? (result as { data: unknown }).data : result;`
+
+3. **Strict Type Conformance for Mocks**:
+   Instead of casting incomplete mocked metadata as `any` or `never`, the full structure defined by the DTO was provided:
+   `meta: { total: 1, page: 1, totalPages: 1, limit: 10 }`
+
+## Prevention
+
+- **Avoid `any` at all costs**: Do not use `as any` as an escape hatch during testing, as it defeats the purpose of type checking and violates project rules.
+- **Leverage Type Inference (`Parameters<T>`, `ReturnType<T>`)**: Use TypeScript's robust utility types to dynamically map mock variables to the exact types expected by the function under test.
