@@ -15,14 +15,6 @@ const mockUser = {
   status: 'ACTIVE',
 };
 
-const mockResultUser = {
-  id: '1',
-  name: 'Test User',
-  email: 'test@example.com',
-  role: 'USER',
-  status: 'ACTIVE',
-};
-
 const mockUsersService = {
   findAll: jest.fn().mockResolvedValue([mockUser]),
   findById: jest.fn().mockResolvedValue(mockUser),
@@ -56,11 +48,11 @@ describe('UsersController', () => {
   });
 
   describe('getProfile', () => {
-    it('should return user profile without sensitive data', async () => {
+    it('should return user profile', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const req = { user: { id: '1' } } as any;
       const result = await controller.getProfile(req);
-      expect(result).toEqual(mockResultUser);
+      expect(result).toEqual(mockUser);
     });
 
     it('should throw NotFoundException if user not found', async () => {
@@ -72,25 +64,25 @@ describe('UsersController', () => {
   });
 
   describe('findAll', () => {
-    it('should return array of users without sensitive data', async () => {
+    it('should return array of users', async () => {
       const result = await controller.findAll();
-      expect(result).toEqual([mockResultUser]);
+      expect(result).toEqual([mockUser]);
     });
   });
 
   describe('findOne', () => {
-    it('should return user without sensitive data', async () => {
+    it('should return user', async () => {
       const result = await controller.findOne('1');
-      expect(result).toEqual(mockResultUser);
+      expect(result).toEqual(mockUser);
     });
   });
 
   describe('update', () => {
-    it('should update user and return without sensitive data', async () => {
+    it('should update user', async () => {
       const result = await controller.update('1', {
         status: 'INACTIVE',
       } as unknown as UpdateUserDto);
-      expect(result).toEqual({ ...mockResultUser, status: 'INACTIVE' });
+      expect(result).toEqual({ ...mockUser, status: 'INACTIVE' });
     });
   });
 

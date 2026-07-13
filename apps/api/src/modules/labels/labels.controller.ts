@@ -1,3 +1,5 @@
+import { LabelResponse, LabelSummary } from '../../models/label.model';
+import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import {
   Controller,
   Get,
@@ -16,23 +18,34 @@ import { LabelsService } from './labels.service';
 import { CreateLabelDto } from './dto/create-label.dto';
 import { UpdateLabelDto } from './dto/update-label.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@ApiTags('Labels')
 @Controller('labels')
 export class LabelsController {
   private readonly logger = new Logger(LabelsController.name);
 
   constructor(private readonly labelsService: LabelsService) {}
-
+  @ApiOperation({ summary: 'Create a new label' })
+  @ApiCreatedResponse({ type: LabelResponse })
+  @Serialize(LabelResponse)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createLabelDto: CreateLabelDto) {
     this.logger.log(`Creating label in project: ${createLabelDto.projectId}`);
     return this.labelsService.create(createLabelDto);
   }
-
+  @ApiOperation({ summary: 'List all labels' })
+  @ApiOkResponse({ type: [LabelSummary] })
+  @Serialize([LabelSummary])
   @Get()
   async findAll(@Query('projectId') projectId?: string, @Query('taskId') taskId?: string) {
     if (taskId) {
@@ -45,13 +58,17 @@ export class LabelsController {
     }
     return [];
   }
-
+  @ApiOperation({ summary: 'Get a label by ID' })
+  @ApiOkResponse({ type: LabelResponse })
+  @Serialize(LabelResponse)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     this.logger.log(`Fetching label with id: ${id}`);
     return this.labelsService.findById(id);
   }
-
+  @ApiOperation({ summary: 'Update a label' })
+  @ApiOkResponse({ type: LabelResponse })
+  @Serialize(LabelResponse)
   @Patch(':id')
   async update(@Param('id') id: string, @Body() updateLabelDto: UpdateLabelDto) {
     this.logger.log(`Updating label with id: ${id}`);

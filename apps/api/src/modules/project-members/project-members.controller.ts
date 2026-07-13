@@ -1,14 +1,24 @@
+import { ProjectMemberResponse, ProjectMemberSummary } from '../../models/project-member.model';
+import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { ProjectMembersService } from './project-members.service';
 import { CreateProjectMemberDto } from './dto/create-project-member.dto';
 import { UpdateProjectMemberDto } from './dto/update-project-member.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+} from '@nestjs/swagger';
 
 @ApiTags('project-members')
 @Controller('project-members')
 export class ProjectMembersController {
   constructor(private readonly projectMembersService: ProjectMembersService) {}
-
+  @ApiOperation({ summary: 'Create a new projectmember' })
+  @ApiCreatedResponse({ type: ProjectMemberResponse })
+  @Serialize(ProjectMemberResponse)
   @Post()
   @ApiOperation({ summary: 'Add a user to a project' })
   @ApiResponse({ status: 201, description: 'Project member created successfully.' })
@@ -18,10 +28,14 @@ export class ProjectMembersController {
 
   @Get('project/:projectId')
   @ApiOperation({ summary: 'Get all members of a project' })
+  @ApiOkResponse({ type: [ProjectMemberSummary] })
+  @Serialize([ProjectMemberSummary])
   findAll(@Param('projectId') projectId: string) {
     return this.projectMembersService.findAll(projectId);
   }
-
+  @ApiOperation({ summary: 'Update a projectmember' })
+  @ApiOkResponse({ type: ProjectMemberResponse })
+  @Serialize(ProjectMemberResponse)
   @Patch(':id')
   @ApiOperation({ summary: 'Update a project member' })
   update(@Param('id') id: string, @Body() updateProjectMemberDto: UpdateProjectMemberDto) {

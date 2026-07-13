@@ -5,10 +5,12 @@ import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './core/exceptions/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ZodValidationPipe } from 'nestjs-zod';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
-
+  app.setGlobalPrefix('api');
   // 1. Logger
   const logger = app.get(Logger);
   app.useLogger(logger);
@@ -31,7 +33,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // 5. Start Server
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 4000;
   await app.listen(port);
   logger.log(`Application listening on port ${port}`);
 }
