@@ -8,6 +8,7 @@ const mockPrismaClient = {
     findFirst: jest.fn(),
     findUnique: jest.fn(),
     findMany: jest.fn(),
+      count: jest.fn().mockResolvedValue(1),
     create: jest.fn(),
     update: jest.fn(),
   },
@@ -17,6 +18,7 @@ describe('PrioritiesService', () => {
   let service: PrioritiesService;
 
   beforeEach(async () => {
+
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -59,9 +61,9 @@ describe('PrioritiesService', () => {
     it('should return an array of priorities', async () => {
       mockPrismaClient.priority.findMany.mockResolvedValue([{ id: 'id-1' }]);
 
-      const result = await service.findAllByProjectId('project-1');
+      const result = await service.findAllByProjectId('project-1', { page: 1, limit: 10 } as any);
 
-      expect(result).toEqual([{ id: 'id-1' }]);
+      expect((result as any).data || result).toEqual([{ id: 'id-1' }]);
     });
   });
 

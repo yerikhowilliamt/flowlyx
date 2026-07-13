@@ -62,13 +62,13 @@ describe('ListsController', () => {
     it('should return lists if boardId is provided', async () => {
       mockListsService.findAllByBoardId.mockResolvedValue([mockList]);
 
-      const result = await controller.findAll('board-1');
-      expect(result).toEqual([mockList]);
-      expect(service.findAllByBoardId).toHaveBeenCalledWith('board-1');
+      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'board-1');
+      expect((result as any).data || result).toEqual([mockList]);
+      expect(service.findAllByBoardId).toHaveBeenCalledWith('board-1', { page: 1, limit: 10 } as any);
     });
 
     it('should return empty array if boardId is not provided', async () => {
-      const result = await controller.findAll();
+      const result = await controller.findAll({ page: 1, limit: 10 } as any);
       expect(result).toEqual([]);
       expect(service.findAllByBoardId).not.toHaveBeenCalled();
     });

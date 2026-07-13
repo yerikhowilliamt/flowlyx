@@ -8,6 +8,7 @@ jest.mock('@flowlyx/database', () => ({
     user: {
       create: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn().mockResolvedValue(1),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -19,6 +20,7 @@ describe('UsersService', () => {
   let service: UsersService;
 
   beforeEach(async () => {
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [UsersService],
     }).compile();

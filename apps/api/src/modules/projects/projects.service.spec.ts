@@ -7,6 +7,7 @@ jest.mock('@flowlyx/database', () => ({
     project: {
       create: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn().mockResolvedValue(1),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -18,6 +19,7 @@ describe('ProjectsService', () => {
   let service: ProjectsService;
 
   beforeEach(async () => {
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [ProjectsService],
     }).compile();

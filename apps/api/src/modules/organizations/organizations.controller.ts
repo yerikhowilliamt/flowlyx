@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  Query,
 } from '@nestjs/common';
 import { OrganizationsService } from './organizations.service';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
@@ -27,6 +28,7 @@ import {
 } from '@nestjs/swagger';
 import { OrganizationResponse, OrganizationSummary } from '../../models/organization.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -51,9 +53,9 @@ export class OrganizationsController {
   @ApiOkResponse({ type: [OrganizationSummary] })
   @Serialize([OrganizationSummary])
   @Get()
-  async findAll() {
+  async findAll(@Query() query: PaginationDto) {
     this.logger.log('Fetching all organizations');
-    return this.organizationsService.findAll();
+    return this.organizationsService.findAll(query);
   }
 
   @ApiOperation({ summary: 'Get an organization by ID' })

@@ -48,7 +48,7 @@ describe('OrganizationsController', () => {
   describe('findAll', () => {
     it('should call service findAll', async () => {
       mockService.findAll.mockResolvedValue([{ id: '1' }]);
-      const result = await controller.findAll();
+      const result = await controller.findAll({ page: 1, limit: 10 } as any);
       expect(result).toEqual([{ id: '1' }]);
       expect(service.findAll).toHaveBeenCalled();
     });

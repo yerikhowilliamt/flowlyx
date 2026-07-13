@@ -17,6 +17,7 @@ describe('AuthService', () => {
   let jwtService: JwtService;
 
   beforeEach(async () => {
+
     const mockUsersService = {
       findByEmail: jest.fn(),
       create: jest.fn(),

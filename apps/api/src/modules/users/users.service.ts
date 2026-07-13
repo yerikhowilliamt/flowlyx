@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { prisma, User } from '@flowlyx/database';
+import { prisma, User, Prisma } from '@flowlyx/database';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class UsersService {
@@ -11,8 +13,29 @@ export class UsersService {
     return prisma.user.create({ data });
   }
 
-  async findAll(query?: unknown): Promise<User[]> {
-    return prisma.user.findMany({ where: query as Record<string, unknown> });
+  async findAll(query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.UserWhereInput = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findByEmail(email: string): Promise<User | null> {

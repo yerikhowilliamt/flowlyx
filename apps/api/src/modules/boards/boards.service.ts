@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
-import { prisma, Board } from '@flowlyx/database';
+import { prisma, Board, Prisma } from '@flowlyx/database';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class BoardsService {
@@ -13,8 +15,26 @@ export class BoardsService {
     return prisma.board.create({ data: createBoardDto });
   }
 
-  async findAllByProjectId(projectId: string): Promise<Board[]> {
-    return prisma.board.findMany({ where: { projectId } });
+  async findAllByProjectId(projectId: string, query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.BoardWhereInput = { projectId };
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.board.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.board.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string): Promise<Board> {

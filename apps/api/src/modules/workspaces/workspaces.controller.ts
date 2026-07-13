@@ -1,5 +1,6 @@
 import { WorkspaceResponse, WorkspaceSummary } from '../../models/workspace.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 import {
   Controller,
   Get,
@@ -50,10 +51,10 @@ export class WorkspacesController {
   @ApiOkResponse({ type: [WorkspaceSummary] })
   @Serialize([WorkspaceSummary])
   @Get()
-  async findAll(@Query('organizationId') organizationId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('organizationId') organizationId?: string) {
     if (organizationId) {
       this.logger.log(`Fetching workspaces for organizationId: ${organizationId}`);
-      return this.workspacesService.findAllByOrganizationId(organizationId);
+      return this.workspacesService.findAllByOrganizationId(organizationId, query);
     }
     this.logger.log(
       'Fetching all workspaces is not supported without organizationId, returning empty',

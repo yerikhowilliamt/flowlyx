@@ -55,12 +55,12 @@ describe('PrioritiesController', () => {
     it('should return array if projectId provided', async () => {
       mockPrioritiesService.findAllByProjectId.mockResolvedValue([{ id: 'id-1' }]);
 
-      const result = await controller.findAll('project-1');
+      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'project-1');
       expect(result).toEqual([{ id: 'id-1' }]);
     });
 
     it('should return empty if projectId not provided', async () => {
-      const result = await controller.findAll();
+      const result = await controller.findAll({ page: 1, limit: 10 } as any);
       expect(result).toEqual([]);
     });
   });

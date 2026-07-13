@@ -21,6 +21,7 @@ model User {
   organizationMembers OrganizationMember[]
   workspaceMembers    WorkspaceMember[]
   projectMembers      ProjectMember[]
+  taskAssignments     TaskAssignment[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -203,10 +204,11 @@ model Task {
   priorityId  String? @map("priority_id") @db.Uuid
   status      String  @default("ACTIVE") @map("status")
 
-  list       List        @relation(fields: [listId], references: [id], onDelete: Cascade)
-  priority   Priority?   @relation(fields: [priorityId], references: [id])
-  subtasks   Subtask[]
-  taskLabels TaskLabel[]
+  list            List             @relation(fields: [listId], references: [id], onDelete: Cascade)
+  priority        Priority?        @relation(fields: [priorityId], references: [id])
+  subtasks        Subtask[]
+  taskLabels      TaskLabel[]
+  taskAssignments TaskAssignment[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -294,4 +296,20 @@ model Priority {
 
   @@unique([projectId, name])
   @@map("priorities")
+}
+
+model TaskAssignment {
+  id        String @id @default(uuid()) @db.Uuid
+  taskId    String @map("task_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@unique([taskId, userId])
+  @@map("task_assignments")
 }

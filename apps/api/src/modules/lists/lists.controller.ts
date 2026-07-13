@@ -1,5 +1,6 @@
 import { ListResponse, ListSummary } from '../../models/list.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 import {
   Controller,
   Get,
@@ -47,10 +48,10 @@ export class ListsController {
   @ApiOkResponse({ type: [ListSummary] })
   @Serialize([ListSummary])
   @Get()
-  async findAll(@Query('boardId') boardId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('boardId') boardId?: string) {
     if (boardId) {
       this.logger.log(`Fetching lists for boardId: ${boardId}`);
-      return this.listsService.findAllByBoardId(boardId);
+      return this.listsService.findAllByBoardId(boardId, query);
     }
     this.logger.log('Fetching all lists is not supported without boardId, returning empty');
     return [];

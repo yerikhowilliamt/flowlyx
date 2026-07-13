@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { prisma, Workspace } from '@flowlyx/database';
+import { prisma, Workspace, Prisma } from '@flowlyx/database';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class WorkspacesService {
@@ -15,8 +17,29 @@ export class WorkspacesService {
     return prisma.workspace.create({ data: createWorkspaceDto });
   }
 
-  async findAllByOrganizationId(organizationId: string): Promise<Workspace[]> {
-    return prisma.workspace.findMany({ where: { organizationId } });
+  async findAllByOrganizationId(organizationId: string, query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.WorkspaceWhereInput = { organizationId };
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.workspace.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.workspace.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string): Promise<Workspace> {

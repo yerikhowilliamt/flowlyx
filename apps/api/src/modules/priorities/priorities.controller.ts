@@ -31,6 +31,7 @@ import {
 } from '@nestjs/swagger';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PriorityResponse, PrioritySummary } from '../../models/priority.model';
+import { PaginationDto } from '../../core/pagination';
 
 @ApiTags('Priorities')
 @ApiBearerAuth()
@@ -57,10 +58,10 @@ export class PrioritiesController {
   @Serialize([PrioritySummary])
   @ApiQuery({ name: 'projectId', required: false })
   @Get()
-  async findAll(@Query('projectId') projectId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('projectId') projectId?: string) {
     if (projectId) {
       this.logger.log(`Fetching priorities for project: ${projectId}`);
-      return this.prioritiesService.findAllByProjectId(projectId);
+      return this.prioritiesService.findAllByProjectId(projectId, query);
     }
     this.logger.log(
       'Fetching all priorities is not supported without projectId, returning empty array',

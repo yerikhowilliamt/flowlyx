@@ -1,7 +1,9 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateOrganizationDto } from './dto/create-organization.dto';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
-import { prisma, Organization } from '@flowlyx/database';
+import { prisma, Organization, Prisma } from '@flowlyx/database';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class OrganizationsService {
@@ -15,8 +17,29 @@ export class OrganizationsService {
     return prisma.organization.create({ data: createOrganizationDto });
   }
 
-  async findAll(query?: unknown): Promise<Organization[]> {
-    return prisma.organization.findMany({ where: query as Record<string, unknown> });
+  async findAll(query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.OrganizationWhereInput = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.organization.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.organization.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string): Promise<Organization> {
