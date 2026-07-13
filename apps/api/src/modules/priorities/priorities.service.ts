@@ -1,18 +1,15 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import { CreatePriorityDto } from './dto/create-priority.dto';
 import { UpdatePriorityDto } from './dto/update-priority.dto';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
-import { Prisma } from '@flowlyx/database';
+import { prisma, Prisma } from '@flowlyx/database';
 
 @Injectable()
 export class PrioritiesService {
-  constructor(private prisma: PrismaClient) {}
-
   async create(createPriorityDto: CreatePriorityDto, userId: string) {
     // Check if priority with same name already exists in project
-    const existing = await this.prisma.priority.findFirst({
+    const existing = await prisma.priority.findFirst({
       where: {
         projectId: createPriorityDto.projectId,
         name: createPriorityDto.name,
@@ -25,7 +22,7 @@ export class PrioritiesService {
       );
     }
 
-    return this.prisma.priority.create({
+    return prisma.priority.create({
       data: {
         ...createPriorityDto,
         createdBy: userId,
@@ -48,20 +45,20 @@ export class PrioritiesService {
     }
 
     const [data, total] = await Promise.all([
-      this.prisma.priority.findMany({
+      prisma.priority.findMany({
         where,
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder },
       }),
-      this.prisma.priority.count({ where }),
+      prisma.priority.count({ where }),
     ]);
 
     return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string) {
-    const priority = await this.prisma.priority.findUnique({
+    const priority = await prisma.priority.findUnique({
       where: { id },
     });
 
@@ -76,7 +73,7 @@ export class PrioritiesService {
     const priority = await this.findById(id); // Ensure it exists
 
     if (updatePriorityDto.name) {
-      const existing = await this.prisma.priority.findFirst({
+      const existing = await prisma.priority.findFirst({
         where: {
           projectId: priority.projectId,
           name: updatePriorityDto.name,
@@ -92,7 +89,7 @@ export class PrioritiesService {
       }
     }
 
-    return this.prisma.priority.update({
+    return prisma.priority.update({
       where: { id },
       data: {
         ...updatePriorityDto,
@@ -104,7 +101,7 @@ export class PrioritiesService {
   async remove(id: string, userId: string) {
     await this.findById(id);
 
-    return this.prisma.priority.update({
+    return prisma.priority.update({
       where: { id },
       data: {
         deletedAt: new Date(),
