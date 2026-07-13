@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -17,7 +18,6 @@ describe('AuthService', () => {
   let jwtService: JwtService;
 
   beforeEach(async () => {
-
     const mockUsersService = {
       findByEmail: jest.fn(),
       create: jest.fn(),

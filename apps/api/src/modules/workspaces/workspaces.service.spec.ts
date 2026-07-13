@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspacesService } from './workspaces.service';
 import { ConflictException } from '@nestjs/common';
@@ -20,7 +21,6 @@ describe('WorkspacesService', () => {
   let service: WorkspacesService;
 
   beforeEach(async () => {
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [WorkspacesService],
     }).compile();

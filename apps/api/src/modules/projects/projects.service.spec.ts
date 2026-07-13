@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsService } from './projects.service';
 import { prisma } from '@flowlyx/database';
@@ -19,7 +20,6 @@ describe('ProjectsService', () => {
   let service: ProjectsService;
 
   beforeEach(async () => {
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [ProjectsService],
     }).compile();

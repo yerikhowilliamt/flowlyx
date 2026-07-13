@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubtasksService } from './subtasks.service';
 import { prisma } from '@flowlyx/database';
@@ -69,8 +70,8 @@ describe('SubtasksService', () => {
   describe('findAllByTaskId', () => {
     it.skip('should return subtasks for a task', async () => {
       (prisma.subtask.findMany as jest.Mock).mockResolvedValueOnce([mockSubtask]);
-      const result = await service.findAllByTaskId('task-1', { page: 1, limit: 10 } as unknown);
-      expect((result as unknown).data || result).toEqual([mockSubtask]);
+      const result = await service.findAllByTaskId('task-1', { page: 1, limit: 10 } as any);
+      expect((result as any).data || result).toEqual([mockSubtask]);
       expect(prisma.subtask.findMany).toHaveBeenCalledWith({
         where: { taskId: 'task-1' },
         orderBy: { order: 'asc' },

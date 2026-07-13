@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { TasksService } from './tasks.service';
 import { prisma } from '@flowlyx/database';
@@ -70,8 +71,8 @@ describe('TasksService', () => {
   describe('findAllByListId', () => {
     it.skip('should return tasks for a list', async () => {
       (prisma.task.findMany as jest.Mock).mockResolvedValueOnce([mockTask]);
-      const result = await service.findAllByListId('list-1', { page: 1, limit: 10 } as unknown);
-      expect((result as unknown).data || result).toEqual([mockTask]);
+      const result = await service.findAllByListId('list-1', { page: 1, limit: 10 } as any);
+      expect((result as any).data || result).toEqual([mockTask]);
       expect(prisma.task.findMany).toHaveBeenCalledWith({
         where: { listId: 'list-1' },
         orderBy: { order: 'asc' },

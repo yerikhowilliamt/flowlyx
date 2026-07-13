@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -65,8 +66,8 @@ describe('UsersController', () => {
 
   describe('findAll', () => {
     it('should return array of users', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as unknown);
-      expect((result as unknown).data || result).toEqual([mockUser]);
+      const result = await controller.findAll({ page: 1, limit: 10 } as any);
+      expect((result as any).data || result).toEqual([mockUser]);
     });
   });
 

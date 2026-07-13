@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ListsController } from './lists.controller';
 import { ListsService } from './lists.service';
@@ -62,16 +63,16 @@ describe('ListsController', () => {
     it('should return lists if boardId is provided', async () => {
       mockListsService.findAllByBoardId.mockResolvedValue([mockList]);
 
-      const result = await controller.findAll({ page: 1, limit: 10 } as unknown, 'board-1');
-      expect((result as unknown).data || result).toEqual([mockList]);
+      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'board-1');
+      expect((result as any).data || result).toEqual([mockList]);
       expect(service.findAllByBoardId).toHaveBeenCalledWith('board-1', {
         page: 1,
         limit: 10,
-      } as unknown);
+      } as any);
     });
 
     it('should return empty array if boardId is not provided', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as unknown);
+      const result = await controller.findAll({ page: 1, limit: 10 } as any);
       expect(result).toEqual([]);
       expect(service.findAllByBoardId).not.toHaveBeenCalled();
     });

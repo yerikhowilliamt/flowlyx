@@ -3,6 +3,7 @@
 ## Symptoms
 
 During the execution of the unit test suite (`npm run test`), numerous tests across 12 different modules failed. The errors encountered were primarily related to type mismatches and mocked functions failing their parameter assertions:
+
 - `Expected: [mockData], Received: { data: [mockData], meta: {} }` (Return Type Mismatch)
 - `Expected: "project-1", Received: "project-1", { page: 1, limit: 10 }` (Mock Parameters Mismatch)
 - `TypeError: database_1.prisma.board.count is not a function` (Prisma Mock Missing Property)
@@ -10,9 +11,10 @@ During the execution of the unit test suite (`npm run test`), numerous tests acr
 
 ## Root Cause
 
-All `findAll` endpoints across the entire application were refactored to return a standard `PaginatedResponse<T>` and accept a `PaginationDto` containing `page`, `limit`, `sortBy`, `sortOrder`, and `search` parameters. 
+All `findAll` endpoints across the entire application were refactored to return a standard `PaginatedResponse<T>` and accept a `PaginationDto` containing `page`, `limit`, `sortBy`, `sortOrder`, and `search` parameters.
 
 However, the existing unit test specifications (`*.spec.ts`) were tightly coupled to the previous implementation:
+
 1. They expected the endpoints to return a raw array (`T[]`).
 2. They expected service methods to only be called with the entity ID (e.g., `findAllByProjectId('project-1')`) instead of including the new pagination query object.
 3. The newly added `prisma.model.count()` calls were not supported by the global `prismaMock`, leading to runtime `TypeError` in tests.
@@ -25,15 +27,16 @@ However, the existing unit test specifications (`*.spec.ts`) were tightly couple
 
 ## Solution
 
-1. **Fixing Return Type Expectations**: 
+1. **Fixing Return Type Expectations**:
    Refactored assertions in `*.spec.ts` files to unwrap the `.data` property from the paginated response before comparing it to the mock data array.
    `expect((result as any).data || result).toEqual([mockData]);`
-   
+
 2. **Fixing Mock Parameters**:
    Updated the test inputs and `toHaveBeenCalledWith` assertions to include the `{ page: 1, limit: 10 }` pagination object alongside the resource IDs.
 
 3. **Injecting Prisma `count` Mocks**:
    Updated the global `jest.mock('@flowlyx/database', ...)` declarations within all service specs to include a mock for `.count()`.
+
    ```typescript
    findMany: jest.fn(),
    count: jest.fn().mockResolvedValue(1),

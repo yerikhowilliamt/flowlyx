@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspacesController } from './workspaces.controller';
 import { WorkspacesService } from './workspaces.service';
@@ -48,16 +49,16 @@ describe('WorkspacesController', () => {
   describe('findAll', () => {
     it.skip('should call service findAllByOrganizationId if org id is provided', async () => {
       mockService.findAllByOrganizationId.mockResolvedValue([{ id: '1' }]);
-      const result = await controller.findAll({ page: 1, limit: 10 } as unknown, '123');
+      const result = await controller.findAll({ page: 1, limit: 10 } as any, '123');
       expect(result).toEqual([{ id: '1' }]);
       expect(service.findAllByOrganizationId).toHaveBeenCalledWith('123', {
         page: 1,
         limit: 10,
-      } as unknown);
+      } as any);
     });
 
     it('should return empty array if org id is not provided', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as unknown);
+      const result = await controller.findAll({ page: 1, limit: 10 } as any);
       expect(result).toEqual([]);
       expect(service.findAllByOrganizationId).not.toHaveBeenCalled();
     });
