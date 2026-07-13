@@ -17,6 +17,7 @@ import { BoardsModule } from './modules/boards/boards.module';
 import { ListsModule } from './modules/lists/lists.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { SubtasksModule } from './modules/subtasks/subtasks.module';
+import { LabelsModule } from './modules/labels/labels.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { SubtasksModule } from './modules/subtasks/subtasks.module';
     ListsModule,
     TasksModule,
     SubtasksModule,
+    LabelsModule,
   ],
   controllers: [],
   providers: [],
