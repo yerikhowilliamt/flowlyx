@@ -5,7 +5,7 @@ const updateTaskSchema = z.object({
   title: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).optional(),
   order: z.number().optional(),
-  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+  priorityId: z.string().uuid().optional(),
   status: z.enum(['ACTIVE', 'ARCHIVED']).optional(),
 });
 
