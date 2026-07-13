@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { NotFoundException } from '@nestjs/common';

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { SubtasksController } from './subtasks.controller';
 import { SubtasksService } from './subtasks.service';
@@ -61,16 +60,27 @@ describe('SubtasksController', () => {
     it('should return subtasks if taskId is provided', async () => {
       mockSubtasksService.findAllByTaskId.mockResolvedValue([mockSubtask]);
 
-      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'task-1');
-      expect((result as any).data || result).toEqual([mockSubtask]);
+      const result = await controller.findAll(
+        {
+          page: 1,
+          limit: 10,
+        } as unknown as import('../../core/pagination/pagination.dto').PaginationDto,
+        'task-1',
+      );
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockSubtask,
+      ]);
       expect(mockSubtasksService.findAllByTaskId).toHaveBeenCalledWith('task-1', {
         page: 1,
         limit: 10,
-      } as any);
+      } as never);
     });
 
     it('should return empty array if taskId is not provided', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as any);
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
       expect(result).toEqual([]);
       expect(mockSubtasksService.findAllByTaskId).not.toHaveBeenCalled();
     });

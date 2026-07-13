@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
@@ -72,17 +71,28 @@ describe('ProjectsController', () => {
       service.findAllByWorkspaceId.mockResolvedValueOnce({
         data: [mockProject],
         meta: {},
-      } as any);
-      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'workspace-1');
-      expect((result as any).data || result).toEqual([mockProject]);
+      } as never);
+      const result = await controller.findAll(
+        {
+          page: 1,
+          limit: 10,
+        } as unknown as import('../../core/pagination/pagination.dto').PaginationDto,
+        'workspace-1',
+      );
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockProject,
+      ]);
       expect(service.findAllByWorkspaceId).toHaveBeenCalledWith('workspace-1', {
         page: 1,
         limit: 10,
-      } as any);
+      } as never);
     });
 
     it('should return empty array if no workspaceId provided', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as any);
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
       expect(result).toEqual([]);
       expect(service.findAllByWorkspaceId).not.toHaveBeenCalled();
     });

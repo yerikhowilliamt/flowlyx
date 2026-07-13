@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { LabelsController } from './labels.controller';
 import { LabelsService } from './labels.service';
@@ -69,24 +68,44 @@ describe('LabelsController', () => {
     it.skip('should return labels by taskId if provided', async () => {
       mockLabelsService.findByTaskId.mockResolvedValue([mockLabel]);
 
-      const result = await controller.findAll({ page: 1, limit: 10 } as any, undefined, 'task-1');
-      expect((result as any).data || result).toEqual([mockLabel]);
+      const result = await controller.findAll(
+        {
+          page: 1,
+          limit: 10,
+        } as unknown as import('../../core/pagination/pagination.dto').PaginationDto,
+        undefined,
+        'task-1',
+      );
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockLabel,
+      ]);
       expect(mockLabelsService.findByTaskId).toHaveBeenCalledWith('task-1');
     });
 
     it('should return labels by projectId if provided', async () => {
       mockLabelsService.findAllByProjectId.mockResolvedValue([mockLabel]);
 
-      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'project-1');
-      expect((result as any).data || result).toEqual([mockLabel]);
+      const result = await controller.findAll(
+        {
+          page: 1,
+          limit: 10,
+        } as unknown as import('../../core/pagination/pagination.dto').PaginationDto,
+        'project-1',
+      );
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockLabel,
+      ]);
       expect(mockLabelsService.findAllByProjectId).toHaveBeenCalledWith('project-1', {
         page: 1,
         limit: 10,
-      } as any);
+      } as never);
     });
 
     it('should return empty array if no query params', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as any);
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
       expect(result).toEqual([]);
     });
   });

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrioritiesController } from './priorities.controller';
 import { PrioritiesService } from './priorities.service';
@@ -56,12 +55,21 @@ describe('PrioritiesController', () => {
     it('should return array if projectId provided', async () => {
       mockPrioritiesService.findAllByProjectId.mockResolvedValue([{ id: 'id-1' }]);
 
-      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'project-1');
+      const result = await controller.findAll(
+        {
+          page: 1,
+          limit: 10,
+        } as unknown as import('../../core/pagination/pagination.dto').PaginationDto,
+        'project-1',
+      );
       expect(result).toEqual([{ id: 'id-1' }]);
     });
 
     it('should return empty if projectId not provided', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as any);
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
       expect(result).toEqual([]);
     });
   });

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { BoardsService } from './boards.service';
 import { prisma } from '@flowlyx/database';
@@ -72,8 +71,10 @@ describe('BoardsService', () => {
       const result = await service.findAllByProjectId('project-1', {
         page: 1,
         limit: 10,
-      } as any);
-      expect((result as any).data || result).toEqual([mockBoard]);
+      } as never);
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockBoard,
+      ]);
       expect(prisma.board.findMany).toHaveBeenCalledWith({ where: { projectId: 'project-1' } });
     });
   });

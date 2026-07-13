@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { LabelsService } from './labels.service';
 import { prisma } from '@flowlyx/database';
@@ -89,8 +88,10 @@ describe('LabelsService', () => {
       const result = await service.findAllByProjectId('project-1', {
         page: 1,
         limit: 10,
-      } as any);
-      expect((result as any).data || result).toEqual([mockLabel]);
+      } as never);
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockLabel,
+      ]);
       expect(prisma.label.findMany).toHaveBeenCalledWith({
         where: { projectId: 'project-1' },
         orderBy: { name: 'asc' },
@@ -176,8 +177,13 @@ describe('LabelsService', () => {
   describe('findByTaskId', () => {
     it('should return labels for a task', async () => {
       (prisma.taskLabel.findMany as jest.Mock).mockResolvedValueOnce([mockTaskLabel]);
-      const result = await service.findByTaskId('task-1', { page: 1, limit: 10 } as any);
-      expect((result as any).data || result).toEqual([mockLabel]);
+      const result = await service.findByTaskId('task-1', {
+        page: 1,
+        limit: 10,
+      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockLabel,
+      ]);
     });
   });
 });

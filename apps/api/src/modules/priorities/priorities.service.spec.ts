@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrioritiesService } from './priorities.service';
 import { PrismaClient } from '@prisma/client';
@@ -64,9 +63,11 @@ describe('PrioritiesService', () => {
       const result = await service.findAllByProjectId('project-1', {
         page: 1,
         limit: 10,
-      } as any);
+      } as never);
 
-      expect((result as any).data || result).toEqual([{ id: 'id-1' }]);
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        { id: 'id-1' },
+      ]);
     });
   });
 
