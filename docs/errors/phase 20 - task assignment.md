@@ -89,3 +89,49 @@ The ESLint rule `@typescript-eslint/no-explicit-any` correctly caught these devi
 
 - **Avoid `any` at all costs**: Do not use `as any` as an escape hatch during testing, as it defeats the purpose of type checking and violates project rules.
 - **Leverage Type Inference (`Parameters<T>`, `ReturnType<T>`)**: Use TypeScript's robust utility types to dynamically map mock variables to the exact types expected by the function under test.
+
+---
+
+# Phase 20 - NestJS Dependency Injection (DI) Resolution Error
+
+## Symptoms
+
+During local development (`npm run dev`), the application failed to start, throwing the following fatal error:
+
+`Error: Nest can't resolve dependencies of the PrioritiesService (?). Please make sure that the argument t at index [0] is available in the PrioritiesModule context.`
+
+This indicated that NestJS could not determine how to inject the first constructor dependency (`t`, minified) into `PrioritiesService` because the required provider was missing from `PrioritiesModule` or `AppModule`.
+
+## Root Cause
+
+`PrioritiesService` was improperly implementing constructor injection for `PrismaClient`:
+
+```typescript
+import { PrismaClient } from '@prisma/client';
+
+@Injectable()
+export class PrioritiesService {
+  constructor(private prisma: PrismaClient) {}
+  // ...
+}
+```
+
+Because `PrismaClient` (from `@prisma/client`) is not a standard NestJS provider registered in any imported module (like a `DatabaseModule`), the DI container failed to resolve it.
+
+Furthermore, this approach deviates from the architecture established in this monorepo project, where `@flowlyx/database` explicitly exports a **global** `prisma` instance, avoiding the need for constructor injection entirely.
+
+## Solution
+
+1. **Removed Constructor Injection**:
+   Deleted the `constructor(private prisma: PrismaClient) {}` entirely from `PrioritiesService`.
+
+2. **Used Global Export**:
+   Replaced all local instances of `this.prisma` with the global `prisma` import:
+   `import { prisma } from '@flowlyx/database';`
+
+3. **Updated Unit Tests**:
+   Modified `priorities.service.spec.ts` to mock the global export (`jest.mock('@flowlyx/database', ...)`), and removed the manual injection of `PrismaClient` via the `TestingModule` `providers` array.
+
+## Prevention
+
+- **Adhere to Global Architecture Patterns**: In this monorepo, database access is provided via the shared `@flowlyx/database` package. Do not attempt to re-instantiate or inject raw third-party clients (like `PrismaClient`) natively via NestJS unless they are explicitly wrapped in a project-specific injectable provider.

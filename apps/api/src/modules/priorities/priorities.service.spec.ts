@@ -1,18 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrioritiesService } from './priorities.service';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@flowlyx/database';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
-const mockPrismaClient = {
-  priority: {
-    findFirst: jest.fn(),
-    findUnique: jest.fn(),
-    findMany: jest.fn(),
-    count: jest.fn().mockResolvedValue(1),
-    create: jest.fn(),
-    update: jest.fn(),
+jest.mock('@flowlyx/database', () => ({
+  prisma: {
+    priority: {
+      findFirst: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      count: jest.fn().mockResolvedValue(1),
+      create: jest.fn(),
+      update: jest.fn(),
+    },
   },
-};
+}));
 
 describe('PrioritiesService', () => {
   let service: PrioritiesService;
@@ -20,13 +22,7 @@ describe('PrioritiesService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PrioritiesService,
-        {
-          provide: PrismaClient,
-          useValue: mockPrismaClient,
-        },
-      ],
+      providers: [PrioritiesService],
     }).compile();
 
     service = module.get<PrioritiesService>(PrioritiesService);
@@ -38,7 +34,7 @@ describe('PrioritiesService', () => {
 
   describe('create', () => {
     it('should throw ConflictException if priority with same name exists', async () => {
-      mockPrismaClient.priority.findFirst.mockResolvedValue({ id: 'existing' });
+      (prisma.priority.findFirst as jest.Mock).mockResolvedValue({ id: 'existing' });
 
       await expect(
         service.create({ projectId: 'project-1', name: 'High' }, 'user-1'),
@@ -46,19 +42,19 @@ describe('PrioritiesService', () => {
     });
 
     it('should create priority successfully', async () => {
-      mockPrismaClient.priority.findFirst.mockResolvedValue(null);
-      mockPrismaClient.priority.create.mockResolvedValue({ id: 'new-id' });
+      (prisma.priority.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.priority.create as jest.Mock).mockResolvedValue({ id: 'new-id' });
 
       const result = await service.create({ projectId: 'project-1', name: 'High' }, 'user-1');
 
       expect(result).toEqual({ id: 'new-id' });
-      expect(mockPrismaClient.priority.create).toHaveBeenCalled();
+      expect(prisma.priority.create).toHaveBeenCalled();
     });
   });
 
   describe('findAllByProjectId', () => {
     it('should return an array of priorities', async () => {
-      mockPrismaClient.priority.findMany.mockResolvedValue([{ id: 'id-1' }]);
+      (prisma.priority.findMany as jest.Mock).mockResolvedValue([{ id: 'id-1' }]);
 
       const result = await service.findAllByProjectId('project-1', {
         page: 1,
@@ -73,13 +69,13 @@ describe('PrioritiesService', () => {
 
   describe('findById', () => {
     it('should throw NotFoundException if priority not found', async () => {
-      mockPrismaClient.priority.findUnique.mockResolvedValue(null);
+      (prisma.priority.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(service.findById('id-1')).rejects.toThrow(NotFoundException);
     });
 
     it('should return priority if found', async () => {
-      mockPrismaClient.priority.findUnique.mockResolvedValue({ id: 'id-1' });
+      (prisma.priority.findUnique as jest.Mock).mockResolvedValue({ id: 'id-1' });
 
       const result = await service.findById('id-1');
 
@@ -89,12 +85,12 @@ describe('PrioritiesService', () => {
 
   describe('update', () => {
     it('should update priority successfully', async () => {
-      mockPrismaClient.priority.findUnique.mockResolvedValue({
+      (prisma.priority.findUnique as jest.Mock).mockResolvedValue({
         id: 'id-1',
         projectId: 'project-1',
       });
-      mockPrismaClient.priority.findFirst.mockResolvedValue(null);
-      mockPrismaClient.priority.update.mockResolvedValue({ id: 'id-1', name: 'Updated' });
+      (prisma.priority.findFirst as jest.Mock).mockResolvedValue(null);
+      (prisma.priority.update as jest.Mock).mockResolvedValue({ id: 'id-1', name: 'Updated' });
 
       const result = await service.update('id-1', { name: 'Updated' }, 'user-1');
 
@@ -104,8 +100,11 @@ describe('PrioritiesService', () => {
 
   describe('remove', () => {
     it('should mark priority as deleted', async () => {
-      mockPrismaClient.priority.findUnique.mockResolvedValue({ id: 'id-1' });
-      mockPrismaClient.priority.update.mockResolvedValue({ id: 'id-1', deletedAt: new Date() });
+      (prisma.priority.findUnique as jest.Mock).mockResolvedValue({ id: 'id-1' });
+      (prisma.priority.update as jest.Mock).mockResolvedValue({
+        id: 'id-1',
+        deletedAt: new Date(),
+      });
 
       const result = await service.remove('id-1', 'user-1');
 
