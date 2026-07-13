@@ -63,13 +63,16 @@ describe('TasksController', () => {
     it('should return tasks if listId is provided', async () => {
       mockTasksService.findAllByListId.mockResolvedValue([mockTask]);
 
-      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'list-1');
-      expect((result as any).data || result).toEqual([mockTask]);
-      expect(service.findAllByListId).toHaveBeenCalledWith('list-1', { page: 1, limit: 10 } as any);
+      const result = await controller.findAll({ page: 1, limit: 10 } as unknown, 'list-1');
+      expect((result as unknown).data || result).toEqual([mockTask]);
+      expect(service.findAllByListId).toHaveBeenCalledWith('list-1', {
+        page: 1,
+        limit: 10,
+      } as unknown);
     });
 
     it('should return empty array if listId is not provided', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as any);
+      const result = await controller.findAll({ page: 1, limit: 10 } as unknown);
       expect(result).toEqual([]);
       expect(service.findAllByListId).not.toHaveBeenCalled();
     });

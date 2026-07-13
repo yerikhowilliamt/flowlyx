@@ -17,6 +17,7 @@ export class SerializeInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, handler: CallHandler): Observable<unknown> {
     return handler.handle().pipe(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       map((data: any) => {
         const dto = this.dto;
         const dtoClass = Array.isArray(dto) ? dto[0] : dto;

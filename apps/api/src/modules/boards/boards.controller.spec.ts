@@ -65,14 +65,17 @@ describe('BoardsController', () => {
 
   describe('findAll', () => {
     it('should return boards for a projectId', async () => {
-      service.findAllByProjectId.mockResolvedValueOnce({ data: [mockBoard], meta: {} } as any);
-      const result = await controller.findAll({ page: 1, limit: 10 } as any, 'project-1');
-      expect((result as any).data || result).toEqual([mockBoard]);
-      expect(service.findAllByProjectId).toHaveBeenCalledWith('project-1', { page: 1, limit: 10 } as any);
+      service.findAllByProjectId.mockResolvedValueOnce({ data: [mockBoard], meta: {} } as unknown);
+      const result = await controller.findAll({ page: 1, limit: 10 } as unknown, 'project-1');
+      expect((result as unknown).data || result).toEqual([mockBoard]);
+      expect(service.findAllByProjectId).toHaveBeenCalledWith('project-1', {
+        page: 1,
+        limit: 10,
+      } as unknown);
     });
 
     it('should return empty array if no projectId provided', async () => {
-      const result = await controller.findAll({ page: 1, limit: 10 } as any);
+      const result = await controller.findAll({ page: 1, limit: 10 } as unknown);
       expect(result).toEqual([]);
       expect(service.findAllByProjectId).not.toHaveBeenCalled();
     });

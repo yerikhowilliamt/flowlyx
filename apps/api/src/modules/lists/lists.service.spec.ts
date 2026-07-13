@@ -32,7 +32,6 @@ describe('ListsService', () => {
   };
 
   beforeEach(async () => {
-
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [ListsService],
@@ -70,8 +69,8 @@ describe('ListsService', () => {
   describe('findAllByBoardId', () => {
     it.skip('should return lists for a board', async () => {
       (prisma.list.findMany as jest.Mock).mockResolvedValueOnce([mockList]);
-      const result = await service.findAllByBoardId('board-1', { page: 1, limit: 10 } as any);
-      expect((result as any).data || result).toEqual([mockList]);
+      const result = await service.findAllByBoardId('board-1', { page: 1, limit: 10 } as unknown);
+      expect((result as unknown).data || result).toEqual([mockList]);
       expect(prisma.list.findMany).toHaveBeenCalledWith({
         where: { boardId: 'board-1' },
         orderBy: { order: 'asc' },

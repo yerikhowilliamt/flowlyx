@@ -16,7 +16,7 @@ export class LabelsService {
   }
 
   async findAllByProjectId(projectId: string, query: PaginationDto) {
-    const { page, limit, sortBy, sortOrder, search } = query;
+    const { page, limit, search } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.LabelWhereInput = { projectId };
@@ -83,7 +83,7 @@ export class LabelsService {
   }
 
   async findByTaskId(taskId: string, query: PaginationDto) {
-    const { page, limit, sortBy, sortOrder, search } = query;
+    const { page, limit, search } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.TaskLabelWhereInput = { taskId };

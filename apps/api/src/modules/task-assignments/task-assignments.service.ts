@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
-import { prisma, TaskAssignment, Prisma } from '@flowlyx/database';
+import { prisma, Prisma } from '@flowlyx/database';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
 import { CreateTaskAssignmentDto } from './dto/create-task-assignment.dto';

@@ -31,7 +31,6 @@ describe('BoardsService', () => {
   };
 
   beforeEach(async () => {
-
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [BoardsService],
@@ -69,8 +68,11 @@ describe('BoardsService', () => {
   describe('findAllByProjectId', () => {
     it.skip('should return boards for a project', async () => {
       (prisma.board.findMany as jest.Mock).mockResolvedValueOnce([mockBoard]);
-      const result = await service.findAllByProjectId('project-1', { page: 1, limit: 10 } as any);
-      expect((result as any).data || result).toEqual([mockBoard]);
+      const result = await service.findAllByProjectId('project-1', {
+        page: 1,
+        limit: 10,
+      } as unknown);
+      expect((result as unknown).data || result).toEqual([mockBoard]);
       expect(prisma.board.findMany).toHaveBeenCalledWith({ where: { projectId: 'project-1' } });
     });
   });
