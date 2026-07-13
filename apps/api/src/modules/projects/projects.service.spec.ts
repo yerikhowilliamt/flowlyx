@@ -7,6 +7,7 @@ jest.mock('@flowlyx/database', () => ({
     project: {
       create: jest.fn(),
       findMany: jest.fn(),
+      count: jest.fn().mockResolvedValue(1),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),

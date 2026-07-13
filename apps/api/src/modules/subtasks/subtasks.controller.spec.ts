@@ -60,13 +60,27 @@ describe('SubtasksController', () => {
     it('should return subtasks if taskId is provided', async () => {
       mockSubtasksService.findAllByTaskId.mockResolvedValue([mockSubtask]);
 
-      const result = await controller.findAll('task-1');
-      expect(result).toEqual([mockSubtask]);
-      expect(mockSubtasksService.findAllByTaskId).toHaveBeenCalledWith('task-1');
+      const result = await controller.findAll(
+        {
+          page: 1,
+          limit: 10,
+        } as unknown as import('../../core/pagination/pagination.dto').PaginationDto,
+        'task-1',
+      );
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockSubtask,
+      ]);
+      expect(mockSubtasksService.findAllByTaskId).toHaveBeenCalledWith('task-1', {
+        page: 1,
+        limit: 10,
+      } as never);
     });
 
     it('should return empty array if taskId is not provided', async () => {
-      const result = await controller.findAll();
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
       expect(result).toEqual([]);
       expect(mockSubtasksService.findAllByTaskId).not.toHaveBeenCalled();
     });

@@ -1,6 +1,7 @@
 import { ProjectMemberResponse, ProjectMemberSummary } from '../../models/project-member.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { PaginationDto } from '../../core/pagination';
 import { ProjectMembersService } from './project-members.service';
 import { CreateProjectMemberDto } from './dto/create-project-member.dto';
 import { UpdateProjectMemberDto } from './dto/update-project-member.dto';
@@ -30,8 +31,8 @@ export class ProjectMembersController {
   @ApiOperation({ summary: 'Get all members of a project' })
   @ApiOkResponse({ type: [ProjectMemberSummary] })
   @Serialize([ProjectMemberSummary])
-  findAll(@Param('projectId') projectId: string) {
-    return this.projectMembersService.findAll(projectId);
+  findAll(@Param('projectId') projectId: string, @Query() query: PaginationDto) {
+    return this.projectMembersService.findAll(projectId, query);
   }
   @ApiOperation({ summary: 'Update a projectmember' })
   @ApiOkResponse({ type: ProjectMemberResponse })

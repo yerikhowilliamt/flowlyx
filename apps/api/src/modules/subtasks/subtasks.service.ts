@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateSubtaskDto } from './dto/create-subtask.dto';
 import { UpdateSubtaskDto } from './dto/update-subtask.dto';
-import { prisma, Subtask } from '@flowlyx/database';
+import { prisma, Subtask, Prisma } from '@flowlyx/database';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class SubtasksService {
@@ -13,11 +15,26 @@ export class SubtasksService {
     return prisma.subtask.create({ data: createSubtaskDto });
   }
 
-  async findAllByTaskId(taskId: string): Promise<Subtask[]> {
-    return prisma.subtask.findMany({
-      where: { taskId },
-      orderBy: { order: 'asc' },
-    });
+  async findAllByTaskId(taskId: string, query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.SubtaskWhereInput = { taskId };
+    if (search) {
+      where.title = { contains: search, mode: 'insensitive' };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.subtask.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.subtask.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string): Promise<Subtask> {

@@ -1,5 +1,6 @@
 import { ProjectResponse, ProjectSummary } from '../../models/project.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 import {
   Controller,
   Get,
@@ -50,10 +51,10 @@ export class ProjectsController {
   @ApiOkResponse({ type: [ProjectSummary] })
   @Serialize([ProjectSummary])
   @Get()
-  async findAll(@Query('workspaceId') workspaceId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('workspaceId') workspaceId?: string) {
     if (workspaceId) {
       this.logger.log(`Fetching projects for workspaceId: ${workspaceId}`);
-      return this.projectsService.findAllByWorkspaceId(workspaceId);
+      return this.projectsService.findAllByWorkspaceId(workspaceId, query);
     }
     this.logger.log('Fetching all projects is not supported without workspaceId, returning empty');
     return [];

@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateListDto } from './dto/create-list.dto';
 import { UpdateListDto } from './dto/update-list.dto';
-import { prisma, List } from '@flowlyx/database';
+import { prisma, List, Prisma } from '@flowlyx/database';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class ListsService {
@@ -13,11 +15,26 @@ export class ListsService {
     return prisma.list.create({ data: createListDto });
   }
 
-  async findAllByBoardId(boardId: string): Promise<List[]> {
-    return prisma.list.findMany({
-      where: { boardId },
-      orderBy: { order: 'asc' },
-    });
+  async findAllByBoardId(boardId: string, query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ListWhereInput = { boardId };
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.list.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder }, // order field should still be supported, but default is createdAt usually. User can pass sortBy='order'
+      }),
+      prisma.list.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string): Promise<List> {

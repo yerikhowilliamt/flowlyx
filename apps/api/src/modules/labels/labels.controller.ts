@@ -1,5 +1,6 @@
 import { LabelResponse, LabelSummary } from '../../models/label.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 import {
   Controller,
   Get,
@@ -47,14 +48,14 @@ export class LabelsController {
   @ApiOkResponse({ type: [LabelSummary] })
   @Serialize([LabelSummary])
   @Get()
-  async findAll(@Query('projectId') projectId?: string, @Query('taskId') taskId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('projectId') projectId?: string, @Query('taskId') taskId?: string) {
     if (taskId) {
       this.logger.log(`Fetching labels for taskId: ${taskId}`);
-      return this.labelsService.findByTaskId(taskId);
+      return this.labelsService.findByTaskId(taskId, query);
     }
     if (projectId) {
       this.logger.log(`Fetching labels for projectId: ${projectId}`);
-      return this.labelsService.findAllByProjectId(projectId);
+      return this.labelsService.findAllByProjectId(projectId, query);
     }
     return [];
   }

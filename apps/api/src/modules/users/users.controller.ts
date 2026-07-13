@@ -8,6 +8,7 @@ import {
   UseGuards,
   Req,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -20,6 +21,7 @@ import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { RolesGuard } from '../rbac/guards/roles.guard';
 import { Roles } from '../rbac/decorators/roles.decorator';
 import { Role } from '../rbac/enums/role.enum';
+import { PaginationDto } from '../../core/pagination';
 
 interface RequestWithUser extends Request {
   user: User;
@@ -49,8 +51,8 @@ export class UsersController {
   @Serialize([UserSummary])
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get()
-  async findAll() {
-    return this.usersService.findAll();
+  async findAll(@Query() query: PaginationDto) {
+    return this.usersService.findAll(query);
   }
 
   @ApiOperation({ summary: 'Get a user by ID' })

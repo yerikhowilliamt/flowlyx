@@ -1,5 +1,6 @@
 import { TaskResponse, TaskSummary } from '../../models/task.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 import {
   Controller,
   Get,
@@ -47,10 +48,10 @@ export class TasksController {
   @ApiOkResponse({ type: [TaskSummary] })
   @Serialize([TaskSummary])
   @Get()
-  async findAll(@Query('listId') listId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('listId') listId?: string) {
     if (listId) {
       this.logger.log(`Fetching tasks for listId: ${listId}`);
-      return this.tasksService.findAllByListId(listId);
+      return this.tasksService.findAllByListId(listId, query);
     }
     this.logger.log('Fetching all tasks is not supported without listId, returning empty');
     return [];

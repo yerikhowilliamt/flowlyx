@@ -1,7 +1,9 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { prisma, Project } from '@flowlyx/database';
+import { prisma, Project, Prisma } from '@flowlyx/database';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
 @Injectable()
 export class ProjectsService {
@@ -13,8 +15,29 @@ export class ProjectsService {
     return prisma.project.create({ data: createProjectDto });
   }
 
-  async findAllByWorkspaceId(workspaceId: string): Promise<Project[]> {
-    return prisma.project.findMany({ where: { workspaceId } });
+  async findAllByWorkspaceId(workspaceId: string, query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProjectWhereInput = { workspaceId };
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.project.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.project.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string): Promise<Project> {

@@ -2,6 +2,9 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaClient } from '@prisma/client';
 import { CreatePriorityDto } from './dto/create-priority.dto';
 import { UpdatePriorityDto } from './dto/update-priority.dto';
+import { PaginationDto } from '../../core/pagination';
+import { createPaginatedResponse } from '../../common/utils/pagination.util';
+import { Prisma } from '@flowlyx/database';
 
 @Injectable()
 export class PrioritiesService {
@@ -31,16 +34,30 @@ export class PrioritiesService {
     });
   }
 
-  async findAllByProjectId(projectId: string) {
-    return this.prisma.priority.findMany({
-      where: {
-        projectId,
-        deletedAt: null,
-      },
-      orderBy: {
-        order: 'asc',
-      },
-    });
+  async findAllByProjectId(projectId: string, query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.PriorityWhereInput = {
+      projectId,
+      deletedAt: null,
+    };
+
+    if (search) {
+      where.name = { contains: search, mode: 'insensitive' };
+    }
+
+    const [data, total] = await Promise.all([
+      this.prisma.priority.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      this.prisma.priority.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
   }
 
   async findById(id: string) {

@@ -1,5 +1,6 @@
 import { BoardResponse, BoardSummary } from '../../models/board.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 import {
   Controller,
   Get,
@@ -47,10 +48,10 @@ export class BoardsController {
   @ApiOkResponse({ type: [BoardSummary] })
   @Serialize([BoardSummary])
   @Get()
-  async findAll(@Query('projectId') projectId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('projectId') projectId?: string) {
     if (projectId) {
       this.logger.log(`Fetching boards for projectId: ${projectId}`);
-      return this.boardsService.findAllByProjectId(projectId);
+      return this.boardsService.findAllByProjectId(projectId, query);
     }
     this.logger.log('Fetching all boards is not supported without projectId, returning empty');
     return [];

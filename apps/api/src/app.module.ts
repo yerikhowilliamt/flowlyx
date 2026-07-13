@@ -19,6 +19,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
 import { SubtasksModule } from './modules/subtasks/subtasks.module';
 import { LabelsModule } from './modules/labels/labels.module';
 import { PrioritiesModule } from './modules/priorities/priorities.module';
+import { TaskAssignmentsModule } from './modules/task-assignments/task-assignments.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { PrioritiesModule } from './modules/priorities/priorities.module';
     SubtasksModule,
     LabelsModule,
     PrioritiesModule,
+    TaskAssignmentsModule,
   ],
   controllers: [],
   providers: [],

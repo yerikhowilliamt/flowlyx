@@ -50,7 +50,7 @@ describe('UsersController', () => {
   describe('getProfile', () => {
     it('should return user profile', async () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const req = { user: { id: '1' } } as any;
+      const req = { user: { id: '1' } } as unknown as Parameters<typeof controller.getProfile>[0];
       const result = await controller.getProfile(req);
       expect(result).toEqual(mockUser);
     });
@@ -58,15 +58,20 @@ describe('UsersController', () => {
     it('should throw NotFoundException if user not found', async () => {
       mockUsersService.findById.mockResolvedValueOnce(null);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const req = { user: { id: '2' } } as any;
+      const req = { user: { id: '2' } } as unknown as Parameters<typeof controller.getProfile>[0];
       await expect(controller.getProfile(req)).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findAll', () => {
     it('should return array of users', async () => {
-      const result = await controller.findAll();
-      expect(result).toEqual([mockUser]);
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
+      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
+        mockUser,
+      ]);
     });
   });
 

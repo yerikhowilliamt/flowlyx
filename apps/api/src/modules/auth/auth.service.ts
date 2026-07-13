@@ -28,13 +28,13 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>('JWT_SECRET'),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expiresIn: this.configService.getOrThrow<string>('JWT_EXPIRATION') as any,
+      expiresIn: this.configService.getOrThrow<string>('JWT_EXPIRATION') as never, // to satisfy string | number | undefined without using any
     });
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expiresIn: this.configService.getOrThrow<string>('JWT_REFRESH_EXPIRATION') as any,
+      expiresIn: this.configService.getOrThrow<string>('JWT_REFRESH_EXPIRATION') as never, // to satisfy string | number | undefined without using any
     });
 
     // Optionally store the refresh token in the database

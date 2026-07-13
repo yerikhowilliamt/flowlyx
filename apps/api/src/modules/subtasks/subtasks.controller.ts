@@ -1,5 +1,6 @@
 import { SubtaskResponse, SubtaskSummary } from '../../models/subtask.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { PaginationDto } from '../../core/pagination';
 import {
   Controller,
   Get,
@@ -47,10 +48,10 @@ export class SubtasksController {
   @ApiOkResponse({ type: [SubtaskSummary] })
   @Serialize([SubtaskSummary])
   @Get()
-  async findAll(@Query('taskId') taskId?: string) {
+  async findAll(@Query() query: PaginationDto, @Query('taskId') taskId?: string) {
     if (taskId) {
       this.logger.log(`Fetching subtasks for taskId: ${taskId}`);
-      return this.subtasksService.findAllByTaskId(taskId);
+      return this.subtasksService.findAllByTaskId(taskId, query);
     }
     return [];
   }
