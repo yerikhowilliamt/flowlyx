@@ -27,7 +27,7 @@ describe('TasksService', () => {
     title: 'Task 1',
     description: null,
     order: 0,
-    priority: 'MEDIUM',
+    priorityId: 'some-priority-id',
     status: 'ACTIVE',
   };
 

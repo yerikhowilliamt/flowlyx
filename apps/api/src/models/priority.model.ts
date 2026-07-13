@@ -1,30 +1,26 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class TaskResponse {
+export class PriorityResponse {
   @ApiProperty()
   @Expose()
   id!: string;
 
-  @ApiProperty({ name: 'list_id' })
-  @Expose({ name: 'list_id' })
-  listId!: string;
+  @ApiProperty({ name: 'project_id' })
+  @Expose({ name: 'project_id' })
+  projectId!: string;
 
   @ApiProperty()
   @Expose()
-  title!: string;
+  name!: string;
 
-  @ApiPropertyOptional()
+  @ApiProperty()
   @Expose()
-  description?: string | null;
+  color!: string;
 
   @ApiProperty()
   @Expose()
   order!: number;
-
-  @ApiPropertyOptional({ name: 'priority_id' })
-  @Expose({ name: 'priority_id' })
-  priorityId?: string | null;
 
   @ApiProperty()
   @Expose()
@@ -51,26 +47,26 @@ export class TaskResponse {
   updatedBy?: string | null;
 }
 
-export class TaskSummary {
+export class PrioritySummary {
   @ApiProperty()
   @Expose()
   id!: string;
 
-  @ApiProperty({ name: 'list_id' })
-  @Expose({ name: 'list_id' })
-  listId!: string;
+  @ApiProperty({ name: 'project_id' })
+  @Expose({ name: 'project_id' })
+  projectId!: string;
 
   @ApiProperty()
   @Expose()
-  title!: string;
+  name!: string;
+
+  @ApiProperty()
+  @Expose()
+  color!: string;
 
   @ApiProperty()
   @Expose()
   order!: number;
-
-  @ApiPropertyOptional({ name: 'priority_id' })
-  @Expose({ name: 'priority_id' })
-  priorityId?: string | null;
 
   @ApiProperty()
   @Expose()

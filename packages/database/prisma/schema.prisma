@@ -119,10 +119,11 @@ model Project {
   description String? @map("description")
   status      String  @default("ACTIVE") @map("status")
 
-  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  members   ProjectMember[]
-  boards    Board[]
-  labels    Label[]
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members    ProjectMember[]
+  boards     Board[]
+  labels     Label[]
+  priorities Priority[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -199,13 +200,13 @@ model Task {
   title       String  @map("title")
   description String? @map("description")
   order       Float   @default(0) @map("order")
-  priority    String  @default("MEDIUM") @map("priority")
+  priorityId  String? @map("priority_id") @db.Uuid
   status      String  @default("ACTIVE") @map("status")
 
   list       List        @relation(fields: [listId], references: [id], onDelete: Cascade)
+  priority   Priority?   @relation(fields: [priorityId], references: [id])
   subtasks   Subtask[]
   taskLabels TaskLabel[]
-
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -238,11 +239,11 @@ model Subtask {
 }
 
 model Label {
-  id        String  @id @default(uuid()) @db.Uuid
-  projectId String  @map("project_id") @db.Uuid
-  name      String  @map("name")
-  color     String  @default("#6B7280") @map("color")
-  status    String  @default("ACTIVE") @map("status")
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  name      String @map("name")
+  color     String @default("#6B7280") @map("color")
+  status    String @default("ACTIVE") @map("status")
 
   project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   taskLabels TaskLabel[]
@@ -271,4 +272,26 @@ model TaskLabel {
 
   @@unique([taskId, labelId])
   @@map("task_labels")
+}
+
+model Priority {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  name      String @map("name")
+  color     String @default("#6B7280") @map("color")
+  order     Float  @default(0) @map("order")
+  status    String @default("ACTIVE") @map("status")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@unique([projectId, name])
+  @@map("priorities")
 }
