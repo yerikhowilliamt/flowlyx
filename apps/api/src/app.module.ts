@@ -28,6 +28,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { TimeTrackingModule } from './modules/time-tracking/time-tracking.module';
 import { SearchModule } from './modules/search/search.module';
+import { RealtimeModule } from './modules/realtime/realtime.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { SearchModule } from './modules/search/search.module';
     CalendarModule,
     TimeTrackingModule,
     SearchModule,
+    RealtimeModule,
   ],
   controllers: [],
   providers: [],
