@@ -29,6 +29,7 @@ import { CalendarModule } from './modules/calendar/calendar.module';
 import { TimeTrackingModule } from './modules/time-tracking/time-tracking.module';
 import { SearchModule } from './modules/search/search.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
+import { StorageModule } from './modules/storage/storage.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
     TimeTrackingModule,
     SearchModule,
     RealtimeModule,
+    StorageModule,
   ],
   controllers: [],
   providers: [],
