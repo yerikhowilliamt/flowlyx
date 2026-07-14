@@ -9,6 +9,7 @@ const updateTaskSchema = z.object({
   status: z.enum(['ACTIVE', 'ARCHIVED']).optional(),
   startDate: z.string().datetime().optional(),
   dueDate: z.string().datetime().optional(),
+  reminderAt: z.string().datetime().optional(),
 });
 
 export class UpdateTaskDto extends createZodDto(updateTaskSchema) {}
