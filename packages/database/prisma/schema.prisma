@@ -25,6 +25,7 @@ model User {
   taskComments        TaskComment[]
   commentMentions     TaskCommentMention[]
   taskAttachments     TaskAttachment[]
+  timeEntries         TimeEntry[]
   activities          Activity[]
   notifications       Notification[]
 
@@ -219,6 +220,7 @@ model Task {
   taskAssignments TaskAssignment[]
   comments        TaskComment[]
   attachments     TaskAttachment[]
+  timeEntries     TimeEntry[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -429,4 +431,27 @@ model Notification {
   updatedBy String?   @map("updated_by") @db.Uuid
 
   @@map("notifications")
+}
+
+model TimeEntry {
+  id          String    @id @default(uuid()) @db.Uuid
+  taskId      String    @map("task_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  startTime   DateTime  @map("start_time")
+  endTime     DateTime? @map("end_time")
+  duration    Int?      @map("duration") // in seconds
+  description String?   @map("description")
+  status      String    @default("ACTIVE") @map("status")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("time_entries")
 }
