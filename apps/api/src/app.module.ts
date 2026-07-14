@@ -26,6 +26,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
+import { TimeTrackingModule } from './modules/time-tracking/time-tracking.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { CalendarModule } from './modules/calendar/calendar.module';
     ActivitiesModule,
     NotificationsModule,
     CalendarModule,
+    TimeTrackingModule,
   ],
   controllers: [],
   providers: [],
