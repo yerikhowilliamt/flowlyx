@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { v2 as cloudinary } from 'cloudinary';
 import { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
-import * as streamifier from 'streamifier';
+import { Readable } from 'stream';
 
 @Injectable()
 export class CloudinaryService {
@@ -28,7 +28,7 @@ export class CloudinaryService {
         },
       );
 
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+      Readable.from(file.buffer).pipe(uploadStream);
     });
   }
 
