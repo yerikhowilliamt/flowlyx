@@ -21,6 +21,8 @@ import { LabelsModule } from './modules/labels/labels.module';
 import { PrioritiesModule } from './modules/priorities/priorities.module';
 import { TaskAssignmentsModule } from './modules/task-assignments/task-assignments.module';
 import { TaskCommentsModule } from './modules/task-comments/task-comments.module';
+import { TaskAttachmentsModule } from './modules/task-attachments/task-attachments.module';
+import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -45,6 +47,8 @@ import { TaskCommentsModule } from './modules/task-comments/task-comments.module
     PrioritiesModule,
     TaskAssignmentsModule,
     TaskCommentsModule,
+    TaskAttachmentsModule,
+    CloudinaryModule,
   ],
   controllers: [],
   providers: [],
