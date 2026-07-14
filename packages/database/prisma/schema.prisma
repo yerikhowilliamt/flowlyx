@@ -24,6 +24,7 @@ model User {
   taskAssignments     TaskAssignment[]
   taskComments        TaskComment[]
   commentMentions     TaskCommentMention[]
+  taskAttachments     TaskAttachment[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -212,6 +213,7 @@ model Task {
   taskLabels      TaskLabel[]
   taskAssignments TaskAssignment[]
   comments        TaskComment[]
+  attachments     TaskAttachment[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -354,4 +356,27 @@ model TaskCommentMention {
 
   @@unique([commentId, userId])
   @@map("task_comment_mentions")
+}
+
+model TaskAttachment {
+  id        String  @id @default(uuid()) @db.Uuid
+  taskId    String  @map("task_id") @db.Uuid
+  userId    String  @map("user_id") @db.Uuid
+  fileName  String  @map("file_name")
+  fileUrl   String  @map("file_url")
+  fileSize  Int?    @map("file_size") // In bytes
+  fileType  String? @map("file_type") // MIME type
+  status    String  @default("ACTIVE") @map("status")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("task_attachments")
 }
