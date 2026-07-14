@@ -22,6 +22,8 @@ model User {
   workspaceMembers    WorkspaceMember[]
   projectMembers      ProjectMember[]
   taskAssignments     TaskAssignment[]
+  taskComments        TaskComment[]
+  commentMentions     TaskCommentMention[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -209,6 +211,7 @@ model Task {
   subtasks        Subtask[]
   taskLabels      TaskLabel[]
   taskAssignments TaskAssignment[]
+  comments        TaskComment[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -312,4 +315,43 @@ model TaskAssignment {
 
   @@unique([taskId, userId])
   @@map("task_assignments")
+}
+
+model TaskComment {
+  id        String  @id @default(uuid()) @db.Uuid
+  taskId    String  @map("task_id") @db.Uuid
+  userId    String  @map("user_id") @db.Uuid
+  parentId  String? @map("parent_id") @db.Uuid
+  content   String  @map("content") // Supports Markdown/Rich text
+  status    String  @default("ACTIVE") @map("status")
+
+  task      Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    TaskComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   TaskComment[] @relation("CommentReplies")
+  mentions  TaskCommentMention[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("task_comments")
+}
+
+model TaskCommentMention {
+  id        String @id @default(uuid()) @db.Uuid
+  commentId String @map("comment_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+
+  comment   TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([commentId, userId])
+  @@map("task_comment_mentions")
 }
