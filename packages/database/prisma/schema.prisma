@@ -25,6 +25,7 @@ model User {
   taskComments        TaskComment[]
   commentMentions     TaskCommentMention[]
   taskAttachments     TaskAttachment[]
+  activities          Activity[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -304,9 +305,9 @@ model Priority {
 }
 
 model TaskAssignment {
-  id        String @id @default(uuid()) @db.Uuid
-  taskId    String @map("task_id") @db.Uuid
-  userId    String @map("user_id") @db.Uuid
+  id     String @id @default(uuid()) @db.Uuid
+  taskId String @map("task_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -320,18 +321,18 @@ model TaskAssignment {
 }
 
 model TaskComment {
-  id        String  @id @default(uuid()) @db.Uuid
-  taskId    String  @map("task_id") @db.Uuid
-  userId    String  @map("user_id") @db.Uuid
-  parentId  String? @map("parent_id") @db.Uuid
-  content   String  @map("content") // Supports Markdown/Rich text
-  status    String  @default("ACTIVE") @map("status")
+  id       String  @id @default(uuid()) @db.Uuid
+  taskId   String  @map("task_id") @db.Uuid
+  userId   String  @map("user_id") @db.Uuid
+  parentId String? @map("parent_id") @db.Uuid
+  content  String  @map("content") // Supports Markdown/Rich text
+  status   String  @default("ACTIVE") @map("status")
 
-  task      Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent    TaskComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies   TaskComment[] @relation("CommentReplies")
-  mentions  TaskCommentMention[]
+  task     Task                 @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   TaskComment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  TaskComment[]        @relation("CommentReplies")
+  mentions TaskCommentMention[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -348,8 +349,8 @@ model TaskCommentMention {
   commentId String @map("comment_id") @db.Uuid
   userId    String @map("user_id") @db.Uuid
 
-  comment   TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // --- Audit Fields ---
   createdAt DateTime @default(now()) @map("created_at")
@@ -359,14 +360,14 @@ model TaskCommentMention {
 }
 
 model TaskAttachment {
-  id        String  @id @default(uuid()) @db.Uuid
-  taskId    String  @map("task_id") @db.Uuid
-  userId    String  @map("user_id") @db.Uuid
-  fileName  String  @map("file_name")
-  fileUrl   String  @map("file_url")
-  fileSize  Int?    @map("file_size") // In bytes
-  fileType  String? @map("file_type") // MIME type
-  status    String  @default("ACTIVE") @map("status")
+  id       String  @id @default(uuid()) @db.Uuid
+  taskId   String  @map("task_id") @db.Uuid
+  userId   String  @map("user_id") @db.Uuid
+  fileName String  @map("file_name")
+  fileUrl  String  @map("file_url")
+  fileSize Int?    @map("file_size") // In bytes
+  fileType String? @map("file_type") // MIME type
+  status   String  @default("ACTIVE") @map("status")
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -379,4 +380,26 @@ model TaskAttachment {
   updatedBy String?   @map("updated_by") @db.Uuid
 
   @@map("task_attachments")
+}
+
+model Activity {
+  id         String @id @default(uuid()) @db.Uuid
+  entityId   String @map("entity_id") @db.Uuid
+  entityType String @map("entity_type")
+  userId     String @map("user_id") @db.Uuid
+  action     String @map("action")
+  details    Json?  @map("details")
+  status     String @default("ACTIVE") @map("status")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@index([entityId, entityType])
+  @@map("activities")
 }
