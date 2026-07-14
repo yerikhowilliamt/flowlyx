@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageController } from './storage.controller';
+import { Request } from 'express';
 import { StorageService } from './storage.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { FileEntity } from './entities/file.entity';
@@ -28,8 +29,10 @@ describe('StorageController', () => {
   });
 
   describe('uploadFile', () => {
-    it('should call storageService.uploadFile and return FileResponseDto', async () => {
-      const mockReq = { user: { id: 'test-user-id' } };
+    it('should call storageService.uploadFile and return FileEntity', async () => {
+      const mockReq = { user: { id: 'test-user-id' } } as unknown as Request & {
+        user: { id: string };
+      };
       const mockFile = { originalname: 'test.png' } as Express.Multer.File;
       const dto: UploadFileDto = { workspaceId: 'workspace-1' };
 

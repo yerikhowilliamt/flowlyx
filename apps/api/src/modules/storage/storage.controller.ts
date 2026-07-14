@@ -8,6 +8,7 @@ import {
   HttpCode,
   HttpStatus,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { Request } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -21,7 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { StorageService } from './storage.service';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { FileResponseDto } from './dto/file-response.dto';
+import { FileEntity } from './entities/file.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Storage')
@@ -57,16 +58,18 @@ export class StorageController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'File successfully uploaded',
-    type: FileResponseDto,
+    type: FileEntity,
   })
   @UseInterceptors(FileInterceptor('file'))
   async uploadFile(
     @Req() req: Request & { user?: { id: string } },
     @UploadedFile() file: Express.Multer.File,
     @Body() uploadFileDto: UploadFileDto,
-  ): Promise<FileResponseDto> {
+  ): Promise<FileEntity> {
+    if (!req.user) {
+      throw new BadRequestException('User context is missing');
+    }
     const userId = req.user.id;
-    const fileEntity = await this.storageService.uploadFile(file, uploadFileDto, userId);
-    return new FileResponseDto(fileEntity);
+    return this.storageService.uploadFile(file, uploadFileDto, userId);
   }
 }

@@ -4,7 +4,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { StorageRepository } from './storage.repository';
+import { prisma } from '@flowlyx/database';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { UploadFileDto } from './dto/upload-file.dto';
 import { FileEntity } from './entities/file.entity';
@@ -14,10 +14,7 @@ import { requestContext } from '../../core/middleware/request-context.middleware
 export class StorageService {
   private readonly logger = new Logger(StorageService.name);
 
-  constructor(
-    private readonly storageRepository: StorageRepository,
-    private readonly cloudinaryService: CloudinaryService,
-  ) {}
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
 
   async uploadFile(
     file: Express.Multer.File,
@@ -40,17 +37,18 @@ export class StorageService {
       const uploadResult = await this.cloudinaryService.uploadFile(file, folder);
 
       // 2. Save to Database
-      const fileRecord = await this.storageRepository.create({
-        workspaceId: dto.workspaceId,
-        projectId: dto.projectId,
-        uploaderId: userId,
-        originalName: file.originalname,
-        fileUrl: uploadResult.secure_url,
-        fileSize: file.size,
-        fileType: file.mimetype,
-        status: 'ACTIVE',
-        createdBy: userId,
-      });
+      const fileRecord = (await prisma.file.create({
+        data: {
+          workspaceId: dto.workspaceId,
+          projectId: dto.projectId,
+          uploaderId: userId,
+          originalName: file.originalname,
+          fileUrl: uploadResult.secure_url,
+          fileSize: file.size,
+          fileType: file.mimetype,
+          createdBy: userId,
+        },
+      })) as unknown as FileEntity;
 
       this.logger.log(
         `[${correlationId}] File successfully uploaded and saved with ID ${fileRecord.id}`,
@@ -66,6 +64,6 @@ export class StorageService {
   }
 
   async getFileById(id: string): Promise<FileEntity | null> {
-    return this.storageRepository.findById(id);
+    return prisma.file.findUnique({ where: { id } }) as unknown as FileEntity;
   }
 }

@@ -1,43 +1,43 @@
 # Pull Request
 
 **1. Conventional Commit**
-feat(realtime): implement socket.io gateway for real-time updates
+feat(storage): implement file storage module (phase 31)
 
 **2. Branch Name**
-feature/phase-30-real-time-updates-socket-io-
+feature/phase-31-file-storage
 
 **3. Pull Request Title**
-feat: [Phase 30] Real-time Updates (Socket.IO)
+feat: [Phase 31] File Storage
 
 **4. Pull Request Description**
 FLOWLYX DEVELOPMENT PHASE
-Phase Number: 30
-Phase Name: Real-time Updates (Socket.IO)
+Phase Number: 31
+Phase Name: File Storage
 
 **5. Summary**
-This PR implements the foundational Real-time Updates infrastructure using Socket.IO. It introduces the `RealtimeModule` and `RealtimeGateway` which handle client socket connections, JWT-based authentication, and room management (join/leave rooms). This centralized gateway approach adheres to the Clean Architecture guidelines and ensures REST API remains the primary mutator while the WebSocket acts as a one-way broadcasting channel to subscribed clients.
+This PR implements the core functionality for generalized File Storage as required by the Collaboration phase. It introduces a Centralized File Entity in Prisma that associates uploaded files with a `Workspace`, `Project`, and the uploading `User`. A new `StorageModule` was created containing `StorageController`, `StorageService`, and `StorageRepository` to abstract the upload process via `CloudinaryService` and register the resulting metadata in the database.
 
 **6. Files Changed**
-- `apps/api/package.json`: Added `@nestjs/platform-socket.io`, `@nestjs/websockets`, and `socket.io` dependencies.
-- `apps/api/src/modules/realtime/realtime.module.ts`: Created the real-time module.
-- `apps/api/src/modules/realtime/realtime.gateway.ts`: Created the real-time gateway with JWT auth and room management.
-- `apps/api/src/app.module.ts`: Imported `RealtimeModule`.
+- `packages/database/prisma/schema.prisma`: Added the `File` model and its relations to `User`, `Workspace`, and `Project`.
+- `apps/api/src/app.module.ts`: Registered `StorageModule`.
+- `apps/api/src/modules/storage/*`: Created DTOs, File Entity, Controller, Service, and Repository for handling unified file uploads.
 
 **7. Testing Evidence**
-- ✅ Build successful
-- ✅ Verified JWT extraction and validation logic in `handleConnection`.
-- ✅ Verified Type Check and ESLint locally.
+- ✅ Build successful and Prisma client generated.
+- ✅ Unit tests passing for `StorageService` and `StorageController`.
+- ✅ Linter and type check passing.
 
 **8. Breaking Changes**
 None.
 
 **9. Migration Notes**
-None.
+Make sure to apply Prisma migrations in your database using `npm run db:push` or `npx prisma migrate dev` before starting the application, to create the new `files` table.
 
 **10. Rollback Plan**
 Revert this PR.
 
 **11. Reviewer Checklist**
-- [ ] Architecture follows Handbook (Centralized Connection + Feature-First Emitters approach)
-- [ ] Authentication implemented on socket connection
-- [ ] Build passes
+- [ ] Architecture follows Handbook (Clean Architecture, Feature-First).
+- [ ] Centralized File entity properly stores Cloudinary metadata.
+- [ ] JWT Auth and validations are applied to the endpoints.
+- [ ] Build passes and tests pass.

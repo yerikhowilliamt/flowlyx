@@ -1,39 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageService } from './storage.service';
-import { StorageRepository } from './storage.repository';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { UploadFileDto } from './dto/upload-file.dto';
-import { FileEntity } from './entities/file.entity';
+import { prisma } from '@flowlyx/database';
+
+jest.mock('@flowlyx/database', () => ({
+  prisma: {
+    file: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+    },
+  },
+}));
 
 describe('StorageService', () => {
   let service: StorageService;
-  let storageRepository: jest.Mocked<StorageRepository>;
   let cloudinaryService: jest.Mocked<CloudinaryService>;
 
   beforeEach(async () => {
-    const mockStorageRepository = {
-      create: jest.fn(),
-      findById: jest.fn(),
-      delete: jest.fn(),
-    };
-
     const mockCloudinaryService = {
       uploadFile: jest.fn(),
       deleteFile: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        StorageService,
-        { provide: StorageRepository, useValue: mockStorageRepository },
-        { provide: CloudinaryService, useValue: mockCloudinaryService },
-      ],
+      providers: [StorageService, { provide: CloudinaryService, useValue: mockCloudinaryService }],
     }).compile();
 
     service = module.get<StorageService>(StorageService);
-    storageRepository = module.get(StorageRepository);
     cloudinaryService = module.get(CloudinaryService);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -61,7 +58,7 @@ describe('StorageService', () => {
       cloudinaryService.uploadFile.mockResolvedValue({
         secure_url: 'http://cloudinary.com/test.png',
       } as unknown as import('cloudinary').UploadApiResponse);
-      storageRepository.create.mockResolvedValue({ id: 'file-1' } as FileEntity);
+      (prisma.file.create as jest.Mock).mockResolvedValue({ id: 'file-1' });
 
       const result = await service.uploadFile(mockFile, dto, 'test-user-id');
 
@@ -69,14 +66,16 @@ describe('StorageService', () => {
         mockFile,
         'flowlyx/workspaces/workspace-1/files',
       );
-      expect(storageRepository.create).toHaveBeenCalledWith(
+      expect(prisma.file.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          workspaceId: 'workspace-1',
-          uploaderId: 'test-user-id',
-          originalName: 'test.png',
-          fileUrl: 'http://cloudinary.com/test.png',
-          fileSize: 1024,
-          fileType: 'image/png',
+          data: expect.objectContaining({
+            workspaceId: 'workspace-1',
+            uploaderId: 'test-user-id',
+            originalName: 'test.png',
+            fileUrl: 'http://cloudinary.com/test.png',
+            fileSize: 1024,
+            fileType: 'image/png',
+          }),
         }),
       );
       expect(result.id).toBe('file-1');
