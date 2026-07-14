@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskCommentsService } from './task-comments.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { prisma } from '@flowlyx/database';
 import { ForbiddenException } from '@nestjs/common';
 
@@ -52,7 +53,15 @@ describe('TaskCommentsService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TaskCommentsService],
+      providers: [
+        TaskCommentsService,
+        {
+          provide: NotificationsService,
+          useValue: {
+            create: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<TaskCommentsService>(TaskCommentsService);

@@ -4,9 +4,12 @@ import { UpdateTaskCommentDto } from './dto/update-task-comment.dto';
 import { prisma, TaskComment } from '@flowlyx/database';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/dto/create-notification.dto';
 
 @Injectable()
 export class TaskCommentsService {
+  constructor(private readonly notificationsService: NotificationsService) {}
   private async verifyAccess(taskId: string, userId: string) {
     const task = await prisma.task.findUnique({
       where: { id: taskId },
@@ -48,7 +51,7 @@ export class TaskCommentsService {
 
     const { taskId, parentId, content, mentions } = createDto;
 
-    return prisma.taskComment.create({
+    const comment = await prisma.taskComment.create({
       data: {
         taskId,
         userId,
@@ -65,6 +68,26 @@ export class TaskCommentsService {
           }),
       },
     });
+
+    if (mentions?.length) {
+      // Dispatch notifications
+      await Promise.all(
+        mentions
+          .filter((mentionedUserId) => mentionedUserId !== userId) // Avoid sending notification to oneself
+          .map((mentionedUserId) =>
+            this.notificationsService.create({
+              userId: mentionedUserId,
+              title: 'You were mentioned in a task comment',
+              content: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
+              type: NotificationType.COMMENT_MENTION,
+              referenceId: comment.id,
+              referenceType: 'COMMENT',
+            }),
+          ),
+      );
+    }
+
+    return comment;
   }
 
   async findAllByTaskId(taskId: string, userId: string, query: PaginationDto) {

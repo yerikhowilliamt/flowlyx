@@ -1,48 +1,43 @@
-# Pull Request: [Phase 28] Search
+# Pull Request
 
-## 1. Conventional Commit
-feat(search): implement search module
+**1. Conventional Commit**
+feat(mentions): implement mention notifications in task comments
 
-## 2. Branch Name
-feature/phase-28-search
+**2. Branch Name**
+feature/phase-29-mentions
 
-## 3. Pull Request Title
-feat(search): implement search module
+**3. Pull Request Title**
+feat: [Phase 29] Mentions
 
-## 4. Pull Request Description
-This PR implements the global search functionality required by Phase 28. Following the ponytail lazy mode, it avoids over-engineering by using a simple concurrent queries approach (`Promise.all` with ILIKE queries over Tasks, Projects, Workspaces) instead of requiring a separate Search Engine infrastructure. It implements a unified `/search` endpoint returning grouped results.
+**4. Pull Request Description**
+FLOWLYX DEVELOPMENT PHASE
+Phase Number: 29
+Phase Name: Mentions
 
-## 5. Summary
-- Created `SearchQueryDto` for query validation and configuration (limit, search string).
-- Created `SearchService` to handle parallel queries to Tasks, Projects, and Workspaces.
-- Created `SearchController` to expose the REST API endpoint.
-- Added `SearchModule` to `AppModule`.
-- Updated error documentation for Phase 28 to log the trade-offs of this approach.
+**5. Summary**
+This PR implements the core functionality for Mentions as required by the Collaboration phase. It wires up the `TaskCommentsService` to automatically trigger `NotificationsService` and create notifications for users who are mentioned inside a task comment. The frontend will rely on the existing `project-members` endpoint to fetch mentionable users, adhering to the "simplest working solution" and preventing unnecessary boilerplate.
 
-## 6. Files Changed
-- apps/api/src/app.module.ts
-- apps/api/src/modules/search/* (Controller, Service, DTO, Module)
-- docs/errors/phase 28 - search.md
+**6. Files Changed**
+- `apps/api/src/modules/task-comments/task-comments.module.ts`: Imported `NotificationsModule`
+- `apps/api/src/modules/task-comments/task-comments.service.ts`: Dispatched notifications via `NotificationsService` in the `create` method
+- `apps/api/src/modules/task-comments/task-comments.service.spec.ts`: Added mocks for `NotificationsService`
 
-## 7. Testing Evidence
-- Build passes (npm run build)
-- Lint passes (npm run lint)
+**7. Testing Evidence**
+- ✅ Unit Tests passed (`npm run test -- task-comments`)
+- ✅ Build successful
+- ✅ Manual logic verification for self-mention edge case.
 
-## 8. Breaking Changes
-- None.
+**8. Breaking Changes**
+None.
 
-## 9. Migration Notes
-- None.
+**9. Migration Notes**
+None. Database schema already supports mentions and notifications.
 
-## 10. Rollback Plan
-- Revert this commit.
+**10. Rollback Plan**
+Revert this PR. No database changes to rollback.
 
-## 11. Reviewer Checklist
-- [x] Handbook followed (ponytail mode: YAGNI, grouped parallel queries)
-- [x] Architecture approved
-- [x] Documentation updated
-- [x] Validation implemented (DTO)
-- [x] Build passing
-- [x] Type Check passing
-- [x] ESLint passing
-- [x] GitHub Actions passing
+**11. Reviewer Checklist**
+- [ ] Architecture follows Handbook (Synchronous pattern used for minimal complexity)
+- [ ] Logic implemented properly for notification creation
+- [ ] Unit Tests pass
+- [ ] Build passes
