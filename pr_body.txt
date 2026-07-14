@@ -1,44 +1,44 @@
-# Pull Request: [Phase 27] Time Tracking
+# Pull Request: [Phase 28] Search
 
 ## 1. Conventional Commit
-feat(time-tracking): implement time tracking module
+feat(search): implement search module
 
 ## 2. Branch Name
-feature/phase-27-time-tracking
+feature/phase-28-search
 
 ## 3. Pull Request Title
-feat(time-tracking): implement time tracking module
+feat(search): implement search module
 
 ## 4. Pull Request Description
-This PR implements the Time Tracking feature required by Phase 27. Following the ponytail lazy mode, it avoids over-engineering by using a simple `TimeEntry` schema that is directly tied to `Task`. It implements the standard CRUD endpoints and logic to start and stop timers without complex state machines or background jobs.
+This PR implements the global search functionality required by Phase 28. Following the ponytail lazy mode, it avoids over-engineering by using a simple concurrent queries approach (`Promise.all` with ILIKE queries over Tasks, Projects, Workspaces) instead of requiring a separate Search Engine infrastructure. It implements a unified `/search` endpoint returning grouped results.
 
 ## 5. Summary
-- Added `TimeEntry` model to `schema.prisma` with relations to `Task` and `User`.
-- Created `CreateTimeEntryDto` and `UpdateTimeEntryDto` for validation.
-- Created `TimeEntryRepository` and `TimeEntryService` to handle core logic (starting/stopping timers, duration calculation).
-- Created `TimeEntryController` to expose REST API endpoints.
-- Added `TimeTrackingModule` to `AppModule`.
+- Created `SearchQueryDto` for query validation and configuration (limit, search string).
+- Created `SearchService` to handle parallel queries to Tasks, Projects, and Workspaces.
+- Created `SearchController` to expose the REST API endpoint.
+- Added `SearchModule` to `AppModule`.
+- Updated error documentation for Phase 28 to log the trade-offs of this approach.
 
 ## 6. Files Changed
-- packages/database/prisma/schema.prisma
 - apps/api/src/app.module.ts
-- apps/api/src/modules/time-tracking/* (Controllers, Services, Repositories, DTOs, Module)
+- apps/api/src/modules/search/* (Controller, Service, DTO, Module)
+- docs/errors/phase 28 - search.md
 
 ## 7. Testing Evidence
 - Build passes (npm run build)
-- Manual API validation via typings.
+- Lint passes (npm run lint)
 
 ## 8. Breaking Changes
-- None. This is a newly added module.
+- None.
 
 ## 9. Migration Notes
-- Requires running `npx prisma generate` and applying schema changes to DB.
+- None.
 
 ## 10. Rollback Plan
-- Revert this commit and drop `time_entries` table from database.
+- Revert this commit.
 
 ## 11. Reviewer Checklist
-- [x] Handbook followed (ponytail mode: YAGNI, no unnecessary abstractions)
+- [x] Handbook followed (ponytail mode: YAGNI, grouped parallel queries)
 - [x] Architecture approved
 - [x] Documentation updated
 - [x] Validation implemented (DTO)
