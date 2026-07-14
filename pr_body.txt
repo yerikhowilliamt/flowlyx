@@ -1,0 +1,36 @@
+## Summary
+Implement Phase 25: Calendar Module.
+Added `startDate` and `dueDate` directly into the `Task` entity as per "ponytail" simplified approach, avoiding the overhead of creating a separate `Event` entity. Created a dedicated `CalendarModule` and endpoint to query tasks based on date range and workspace/project context.
+
+## Files Changed
+- `apps/api/src/app.module.ts`: Registered `CalendarModule`
+- `apps/api/src/models/task.model.ts`: Added `startDate` and `dueDate` fields to Swagger models.
+- `apps/api/src/modules/tasks/dto/create-task.dto.ts` & `update-task.dto.ts`: Added Zod validation for dates.
+- `apps/api/src/modules/calendar/*`: Added controller, service, module, and DTO files.
+- `packages/database/prisma/schema.prisma`: Added `startDate` and `dueDate` to `Task` model.
+- `docs/errors/phase 25 - calendar.md`: Error documentation for interactive migration errors.
+
+## Testing Evidence
+- ✅ Unit Tests for `CalendarService` and `CalendarController` cover workspace/project filtering logic.
+- ✅ Tested DB push via `npx prisma db push`.
+- ✅ TypeScript compiled successfully via `npm run build`.
+- ✅ Linter and type check passes.
+
+## Breaking Changes
+None. New optional fields were added to Tasks. Backward compatibility is maintained.
+
+## Migration Notes
+Apply database changes before deploying. Since Prisma migrations could not be generated interactively, `prisma db push` was used. Run migrations or sync schema carefully on staging/production environments.
+
+## Rollback Plan
+- Revert this PR.
+- Remove `startDate` and `dueDate` from `Task` table manually if strictly needed (otherwise they are harmless optional fields).
+
+## Reviewer Checklist
+- [ ] Code follows Flowlyx Engineering Handbook
+- [ ] Architecture approved
+- [ ] Swagger updated
+- [ ] Validation implemented
+- [ ] Tests passing
+- [ ] Build passing
+- [ ] Error Documentation updated (if needed)

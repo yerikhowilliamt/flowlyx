@@ -30,6 +30,14 @@ export class TaskResponse {
   @Expose()
   status!: string;
 
+  @ApiPropertyOptional({ name: 'start_date' })
+  @Expose({ name: 'start_date' })
+  startDate?: Date | null;
+
+  @ApiPropertyOptional({ name: 'due_date' })
+  @Expose({ name: 'due_date' })
+  dueDate?: Date | null;
+
   @ApiProperty({ name: 'created_at' })
   @Expose({ name: 'created_at' })
   createdAt!: Date;
@@ -75,4 +83,12 @@ export class TaskSummary {
   @ApiProperty()
   @Expose()
   status!: string;
+
+  @ApiPropertyOptional({ name: 'start_date' })
+  @Expose({ name: 'start_date' })
+  startDate?: Date | null;
+
+  @ApiPropertyOptional({ name: 'due_date' })
+  @Expose({ name: 'due_date' })
+  dueDate?: Date | null;
 }

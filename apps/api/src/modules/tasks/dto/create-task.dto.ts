@@ -7,6 +7,8 @@ const createTaskSchema = z.object({
   description: z.string().max(2000).optional(),
   order: z.number().optional(),
   priorityId: z.string().uuid().optional(),
+  startDate: z.string().datetime().optional(),
+  dueDate: z.string().datetime().optional(),
 });
 
 export class CreateTaskDto extends createZodDto(createTaskSchema) {}

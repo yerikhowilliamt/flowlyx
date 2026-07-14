@@ -208,6 +208,8 @@ model Task {
   order       Float   @default(0) @map("order")
   priorityId  String? @map("priority_id") @db.Uuid
   status      String  @default("ACTIVE") @map("status")
+  startDate   DateTime? @map("start_date")
+  dueDate     DateTime? @map("due_date")
 
   list            List             @relation(fields: [listId], references: [id], onDelete: Cascade)
   priority        Priority?        @relation(fields: [priorityId], references: [id])
