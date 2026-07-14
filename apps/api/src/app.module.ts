@@ -24,6 +24,7 @@ import { TaskCommentsModule } from './modules/task-comments/task-comments.module
 import { TaskAttachmentsModule } from './modules/task-attachments/task-attachments.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { ActivitiesModule } from './modules/activities/activities.module';
     TaskAttachmentsModule,
     CloudinaryModule,
     ActivitiesModule,
+    NotificationsModule,
   ],
   controllers: [],
   providers: [],

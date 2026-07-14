@@ -26,6 +26,7 @@ model User {
   commentMentions     TaskCommentMention[]
   taskAttachments     TaskAttachment[]
   activities          Activity[]
+  notifications       Notification[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -402,4 +403,27 @@ model Activity {
 
   @@index([entityId, entityType])
   @@map("activities")
+}
+
+model Notification {
+  id            String  @id @default(uuid()) @db.Uuid
+  userId        String  @map("user_id") @db.Uuid
+  title         String  @map("title")
+  content       String  @map("content")
+  type          String  @map("type")
+  isRead        Boolean @default(false) @map("is_read")
+  referenceId   String? @map("reference_id") @db.Uuid
+  referenceType String? @map("reference_type")
+  status        String  @default("ACTIVE") @map("status")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("notifications")
 }
