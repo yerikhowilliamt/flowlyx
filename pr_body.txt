@@ -1,43 +1,43 @@
 # Pull Request
 
 **1. Conventional Commit**
-feat(mentions): implement mention notifications in task comments
+feat(realtime): implement socket.io gateway for real-time updates
 
 **2. Branch Name**
-feature/phase-29-mentions
+feature/phase-30-real-time-updates-socket-io-
 
 **3. Pull Request Title**
-feat: [Phase 29] Mentions
+feat: [Phase 30] Real-time Updates (Socket.IO)
 
 **4. Pull Request Description**
 FLOWLYX DEVELOPMENT PHASE
-Phase Number: 29
-Phase Name: Mentions
+Phase Number: 30
+Phase Name: Real-time Updates (Socket.IO)
 
 **5. Summary**
-This PR implements the core functionality for Mentions as required by the Collaboration phase. It wires up the `TaskCommentsService` to automatically trigger `NotificationsService` and create notifications for users who are mentioned inside a task comment. The frontend will rely on the existing `project-members` endpoint to fetch mentionable users, adhering to the "simplest working solution" and preventing unnecessary boilerplate.
+This PR implements the foundational Real-time Updates infrastructure using Socket.IO. It introduces the `RealtimeModule` and `RealtimeGateway` which handle client socket connections, JWT-based authentication, and room management (join/leave rooms). This centralized gateway approach adheres to the Clean Architecture guidelines and ensures REST API remains the primary mutator while the WebSocket acts as a one-way broadcasting channel to subscribed clients.
 
 **6. Files Changed**
-- `apps/api/src/modules/task-comments/task-comments.module.ts`: Imported `NotificationsModule`
-- `apps/api/src/modules/task-comments/task-comments.service.ts`: Dispatched notifications via `NotificationsService` in the `create` method
-- `apps/api/src/modules/task-comments/task-comments.service.spec.ts`: Added mocks for `NotificationsService`
+- `apps/api/package.json`: Added `@nestjs/platform-socket.io`, `@nestjs/websockets`, and `socket.io` dependencies.
+- `apps/api/src/modules/realtime/realtime.module.ts`: Created the real-time module.
+- `apps/api/src/modules/realtime/realtime.gateway.ts`: Created the real-time gateway with JWT auth and room management.
+- `apps/api/src/app.module.ts`: Imported `RealtimeModule`.
 
 **7. Testing Evidence**
-- ✅ Unit Tests passed (`npm run test -- task-comments`)
 - ✅ Build successful
-- ✅ Manual logic verification for self-mention edge case.
+- ✅ Verified JWT extraction and validation logic in `handleConnection`.
+- ✅ Verified Type Check and ESLint locally.
 
 **8. Breaking Changes**
 None.
 
 **9. Migration Notes**
-None. Database schema already supports mentions and notifications.
+None.
 
 **10. Rollback Plan**
-Revert this PR. No database changes to rollback.
+Revert this PR.
 
 **11. Reviewer Checklist**
-- [ ] Architecture follows Handbook (Synchronous pattern used for minimal complexity)
-- [ ] Logic implemented properly for notification creation
-- [ ] Unit Tests pass
+- [ ] Architecture follows Handbook (Centralized Connection + Feature-First Emitters approach)
+- [ ] Authentication implemented on socket connection
 - [ ] Build passes
