@@ -7,6 +7,8 @@ const updateTaskSchema = z.object({
   order: z.number().optional(),
   priorityId: z.string().uuid().optional(),
   status: z.enum(['ACTIVE', 'ARCHIVED']).optional(),
+  startDate: z.string().datetime().optional(),
+  dueDate: z.string().datetime().optional(),
 });
 
 export class UpdateTaskDto extends createZodDto(updateTaskSchema) {}
