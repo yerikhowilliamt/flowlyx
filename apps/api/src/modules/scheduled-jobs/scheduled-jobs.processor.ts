@@ -1,33 +1,20 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
+import { Logger } from '@nestjs/common';
+import { BaseProcessor } from '../../core/base/base.processor';
 import { SCHEDULED_JOBS_QUEUE } from './scheduled-jobs.constants';
-import { PinoLogger } from 'nestjs-pino';
 
 @Processor(SCHEDULED_JOBS_QUEUE)
-export class ScheduledJobsProcessor extends WorkerHost {
-  constructor(private readonly logger: PinoLogger) {
-    super();
-    this.logger.setContext(ScheduledJobsProcessor.name);
-  }
+export class ScheduledJobsProcessor extends BaseProcessor {
+  protected readonly logger = new Logger(ScheduledJobsProcessor.name);
 
-  async process(job: Job<unknown, unknown, string>): Promise<unknown> {
-    this.logger.info(
-      { jobId: job.id, jobName: job.name, data: job.data },
-      'Processing scheduled job',
-    );
+  async handle(job: Job<unknown, unknown, string>): Promise<unknown> {
+    this.logger.log(`Processing scheduled job ${job.name} with data: ${JSON.stringify(job.data)}`);
 
-    try {
-      switch (job.name) {
-        default:
-          this.logger.warn({ jobName: job.name }, 'Unknown scheduled job name encountered');
-      }
-      return { success: true, timestamp: new Date().toISOString() };
-    } catch (error) {
-      this.logger.error(
-        { jobId: job.id, jobName: job.name, error },
-        'Error processing scheduled job',
-      );
-      throw error;
+    switch (job.name) {
+      default:
+        this.logger.warn(`Unknown scheduled job name encountered: ${job.name}`);
     }
+    return { success: true, timestamp: new Date().toISOString() };
   }
 }

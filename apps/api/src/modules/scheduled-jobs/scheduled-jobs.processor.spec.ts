@@ -1,38 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScheduledJobsProcessor } from './scheduled-jobs.processor';
-import { PinoLogger } from 'nestjs-pino';
 import { Job } from 'bullmq';
 
 describe('ScheduledJobsProcessor', () => {
   let processor: ScheduledJobsProcessor;
-  let loggerMock: Record<string, jest.Mock>;
+  let loggerWarnSpy: jest.SpyInstance;
 
   beforeEach(async () => {
-    loggerMock = {
-      setContext: jest.fn(),
-      info: jest.fn(),
-      error: jest.fn(),
-      warn: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        ScheduledJobsProcessor,
-        {
-          provide: PinoLogger,
-          useValue: loggerMock,
-        },
-      ],
+      providers: [ScheduledJobsProcessor],
     }).compile();
 
     processor = module.get<ScheduledJobsProcessor>(ScheduledJobsProcessor);
+
+    // Mock the logger protected property
+    loggerWarnSpy = jest.spyOn(processor['logger'], 'warn').mockImplementation();
+    jest.spyOn(processor['logger'], 'log').mockImplementation();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
     expect(processor).toBeDefined();
   });
 
-  describe('process', () => {
+  describe('handle', () => {
     it('should log a warning for unknown jobs', async () => {
       const mockJob = {
         id: '2',
@@ -40,11 +34,10 @@ describe('ScheduledJobsProcessor', () => {
         data: {},
       } as Job;
 
-      const result = await processor.process(mockJob);
+      const result = await processor.handle(mockJob);
 
-      expect(loggerMock.warn).toHaveBeenCalledWith(
-        { jobName: 'unknown-job' },
-        'Unknown scheduled job name encountered',
+      expect(loggerWarnSpy).toHaveBeenCalledWith(
+        'Unknown scheduled job name encountered: unknown-job',
       );
       expect(result).toEqual({ success: true, timestamp: expect.any(String) });
     });

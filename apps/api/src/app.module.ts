@@ -38,6 +38,7 @@ import { QueueModule } from './modules/queue/queue.module';
 import { EmailModule } from './modules/email/email.module';
 import { ScheduledJobsModule } from './modules/scheduled-jobs/scheduled-jobs.module';
 import { CacheModule } from './modules/cache/cache.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({

@@ -1,4 +1,4 @@
-import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Processor } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -6,10 +6,12 @@ import * as nodemailer from 'nodemailer';
 import { SendEmailDto } from './dto/send-email.dto';
 import { EnvConfig } from '../../core/config/env.validation';
 
+import { BaseProcessor } from '../../core/base/base.processor';
+
 @Processor('email-queue')
 @Injectable()
-export class EmailProcessor extends WorkerHost {
-  private readonly logger = new Logger(EmailProcessor.name);
+export class EmailProcessor extends BaseProcessor {
+  protected readonly logger = new Logger(EmailProcessor.name);
   private transporter: nodemailer.Transporter;
   private readonly defaultFrom: string;
 
@@ -31,28 +33,17 @@ export class EmailProcessor extends WorkerHost {
     });
   }
 
-  async process(job: Job<SendEmailDto, unknown, string>): Promise<unknown> {
+  async handle(job: Job<SendEmailDto, unknown, string>): Promise<unknown> {
     const { to, subject, text, html } = job.data;
 
-    this.logger.log(`Processing email job ${job.id} to ${to}`);
+    const info = await this.transporter.sendMail({
+      from: this.defaultFrom,
+      to,
+      subject,
+      text,
+      html,
+    });
 
-    try {
-      const info = await this.transporter.sendMail({
-        from: this.defaultFrom,
-        to,
-        subject,
-        text,
-        html,
-      });
-
-      this.logger.log(`Email sent successfully: ${info.messageId}`);
-      return { success: true, messageId: info.messageId };
-    } catch (error) {
-      this.logger.error(
-        `Failed to send email to ${to}`,
-        error instanceof Error ? error.stack : 'Unknown error',
-      );
-      throw error;
-    }
+    return { success: true, messageId: info.messageId };
   }
 }
