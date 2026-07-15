@@ -1,0 +1,50 @@
+## Pull Request: [Phase 34] Organization Billing (Placeholder)
+
+**Conventional Commit**: `feat(api): implement organization billing placeholder`
+**Branch Name**: `feature/phase-34-organization-billing-placeholder-`
+**Target Branch**: `dev`
+
+---
+
+## Pull Request Description
+This PR implements the **Organization Billing (Placeholder)** feature as required in Phase 34. A mock API architecture has been created to provide early contract (DTOs) support for Frontend integration without database overhead. All development strictly adheres to the Flowlyx Engineering Handbook.
+
+## Summary
+- **Zod DTOs**: Created robust DTO contracts for requests and responses.
+- **Mock Service**: Returned static mock data conforming to DTOs in `OrganizationBillingService`.
+- **Controller Setup**: Built `OrganizationBillingController` mapped to `/organizations/:organizationId/billing`, equipped with Swagger, `JwtAuthGuard`, and `RolesGuard`.
+- **RBAC Refactor**: Cleaned up an unnecessary interface abstraction in `users.controller.ts` favoring the existing `@CurrentUser` decorator (Ponytail review improvement).
+- **Error Documentation**: Logged `phase 34 - organization billing placeholder.md` recording an initial mismatch with the global `Role` enum definitions that was fixed.
+
+## Files Changed
+### Added
+- `apps/api/src/modules/organization-billing/organization-billing.module.ts`
+- `apps/api/src/modules/organization-billing/organization-billing.controller.ts`
+- `apps/api/src/modules/organization-billing/organization-billing.service.ts`
+- `apps/api/src/modules/organization-billing/dto/organization-billing.dto.ts`
+- `docs/errors/phase 34 - organization billing placeholder.md`
+
+### Modified
+- `apps/api/src/app.module.ts`
+- `apps/api/src/modules/users/users.controller.ts`
+
+## Testing Evidence
+- [x] ESLint passed successfully (`npm run lint` - 0 errors).
+- [x] Compilation passed (`npm run build`).
+
+## Breaking Changes
+None. This is a newly added, self-contained mock module. Refactoring in `users.controller.ts` preserves existing functionality.
+
+## Migration Notes
+No database migrations are required for this phase as it only introduces a mock architecture.
+
+## Rollback Plan
+Simply revert this PR to remove the `OrganizationBillingModule` and its associated files.
+
+## Reviewer Checklist
+- [ ] Architecture followed (Clean Architecture, Feature-First).
+- [ ] DTO validasi via Zod.
+- [ ] Swagger API definitions mapped accurately.
+- [ ] Linter passing.
+- [ ] Build passing.
+- [ ] Bebas dari potensi over-engineering (Sudah disetujui melalui Ponytail Review).

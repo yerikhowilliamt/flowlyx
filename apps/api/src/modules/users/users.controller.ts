@@ -6,15 +6,13 @@ import {
   Param,
   Body,
   UseGuards,
-  Req,
   NotFoundException,
   Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Request } from 'express';
-import { User } from '@flowlyx/database';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { UserResponse, UserSummary } from '../../models/user.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
@@ -23,10 +21,6 @@ import { Roles } from '../rbac/decorators/roles.decorator';
 import { Role } from '../rbac/enums/role.enum';
 import { PaginationDto } from '../../core/pagination';
 import { SuccessResponse } from '../../models/api.model';
-
-interface RequestWithUser extends Request {
-  user: User;
-}
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -39,8 +33,8 @@ export class UsersController {
   @ApiOkResponse({ type: UserResponse })
   @Serialize(UserResponse)
   @Get('me')
-  async getProfile(@Req() req: RequestWithUser) {
-    const user = await this.usersService.findById(req.user.id);
+  async getProfile(@CurrentUser('id') userId: string) {
+    const user = await this.usersService.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }

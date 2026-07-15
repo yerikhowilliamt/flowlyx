@@ -32,6 +32,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { OrganizationBillingModule } from './modules/organization-billing/organization-billing.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     StorageModule,
     AuditLogsModule,
     SettingsModule,
+    OrganizationBillingModule,
   ],
   controllers: [],
   providers: [],
