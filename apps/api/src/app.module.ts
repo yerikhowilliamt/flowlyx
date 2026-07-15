@@ -36,6 +36,7 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { OrganizationBillingModule } from './modules/organization-billing/organization-billing.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { EmailModule } from './modules/email/email.module';
+import { ScheduledJobsModule } from './modules/scheduled-jobs/scheduled-jobs.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -74,6 +75,7 @@ import { EmailModule } from './modules/email/email.module';
     OrganizationBillingModule,
     QueueModule,
     EmailModule,
+    ScheduledJobsModule,
   ],
   controllers: [],
   providers: [],
