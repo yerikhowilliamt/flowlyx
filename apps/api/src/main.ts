@@ -4,7 +4,7 @@ import { ResponseInterceptor } from './core/response/response.interceptor';
 import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './core/exceptions/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ZodValidationPipe } from 'nestjs-zod';
+import { ZodValidationPipe, patchNestJsSwagger } from 'nestjs-zod';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -23,6 +23,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ZodValidationPipe());
 
   // 4. Swagger
+  patchNestJsSwagger();
   const config = new DocumentBuilder()
     .setTitle('Flowlyx API')
     .setDescription('Enterprise Project Management Platform API')

@@ -1,18 +1,11 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 
-export class SearchQueryDto {
-  @ApiPropertyOptional({ description: 'The search keyword' })
-  @IsOptional()
-  @IsString()
-  q?: string;
+const searchQuerySchema = z.object({
+  q: z.string().optional().describe('The search keyword'),
+  limit: z
+    .preprocess((val) => (val ? Number(val) : 10), z.number().min(1).max(50).default(10))
+    .describe('Limit results per entity (max 50)'),
+});
 
-  @ApiPropertyOptional({ description: 'Limit results per entity (max 50)', default: 10 })
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @Max(50)
-  limit?: number = 10;
-}
+export class SearchQueryDto extends createZodDto(searchQuerySchema) {}
