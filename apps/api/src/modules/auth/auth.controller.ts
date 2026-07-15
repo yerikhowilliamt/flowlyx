@@ -1,7 +1,8 @@
-import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBody } from '@nestjs/swagger';
 import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { Request, Response } from 'express';
 import { User } from '@flowlyx/database';
@@ -27,6 +28,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Login user' })
+  @ApiBody({ type: LoginDto })
   @ApiOkResponse({ description: 'User successfully logged in, returning access token' })
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
