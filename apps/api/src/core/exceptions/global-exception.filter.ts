@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
-import { Prisma } from '@flowlyx/database';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -26,41 +25,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const responseBody = exception.getResponse() as Record<string, unknown>;
-      errorCode = (responseBody.error as string) || errorCode;
-      message = (responseBody.message as string) || exception.message;
-
-      // Override default generic NestJS 'Forbidden resource' message
-      if (status === HttpStatus.FORBIDDEN && message === 'Forbidden resource') {
-        message = 'You do not have sufficient permissions or roles to access this resource.';
-      }
     } else if (exception instanceof ZodError) {
       status = HttpStatus.BAD_REQUEST;
       errorCode = 'VALIDATION_ERROR';
       message = 'Input validation failed';
       details = exception.errors;
-    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      if (exception.code === 'P2002') {
-        status = HttpStatus.CONFLICT;
-        errorCode = 'UNIQUE_CONSTRAINT_FAILED';
-        const fields = Array.isArray(exception.meta?.target)
-          ? exception.meta.target.join(', ')
-          : (exception.meta?.target as string) || 'value';
-        message = `A record with this ${fields} already exists.`;
-      } else if (exception.code === 'P2025') {
-        status = HttpStatus.NOT_FOUND;
-        errorCode = 'RECORD_NOT_FOUND';
-        message = (exception.meta?.cause as string) || 'The requested record was not found.';
-      } else if (exception.code === 'P2003') {
-        status = HttpStatus.BAD_REQUEST;
-        errorCode = 'FOREIGN_KEY_CONSTRAINT_FAILED';
-        const field = (exception.meta?.field_name as string) || 'Related record';
-        message = `${field} not found or invalid.`;
-      } else {
-        status = HttpStatus.BAD_REQUEST;
-        errorCode = 'DATABASE_ERROR';
-        message = 'A database error occurred.';
-      }
     } else if (exception instanceof Error) {
       message = exception.message;
     }

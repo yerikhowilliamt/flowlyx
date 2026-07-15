@@ -44,7 +44,9 @@ export class ProjectRolesGuard implements CanActivate {
     }
 
     if (!user || !projectId) {
-      return false;
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this project to perform this action.',
+      );
     }
 
     const member = await prisma.projectMember.findFirst({
@@ -59,6 +61,11 @@ export class ProjectRolesGuard implements CanActivate {
       throw new ForbiddenException('User is not a member of this project');
     }
 
-    return requiredRoles.includes(member.role as ProjectRole);
+    if (!requiredRoles.includes(member.role as ProjectRole)) {
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this project to perform this action.',
+      );
+    }
+    return true;
   }
 }
