@@ -43,7 +43,7 @@ describe('EmailProcessor', () => {
     expect(processor).toBeDefined();
   });
 
-  describe('process', () => {
+  describe('handle', () => {
     it('should send email using nodemailer', async () => {
       const job = {
         id: 'job1',
@@ -54,7 +54,7 @@ describe('EmailProcessor', () => {
         },
       };
 
-      const result = await processor.process(
+      const result = await processor.handle(
         job as unknown as import('bullmq').Job<
           import('./dto/send-email.dto').SendEmailDto,
           unknown,
