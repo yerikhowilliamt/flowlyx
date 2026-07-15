@@ -10,7 +10,9 @@ export class ProjectsService {
   async create(createProjectDto: CreateProjectDto): Promise<Project> {
     const existing = await prisma.project.findUnique({ where: { slug: createProjectDto.slug } });
     if (existing) {
-      throw new ConflictException('Project with this slug already exists');
+      throw new ConflictException(
+        'A project with this slug already exists. Please choose another one.',
+      );
     }
     return prisma.project.create({ data: createProjectDto });
   }

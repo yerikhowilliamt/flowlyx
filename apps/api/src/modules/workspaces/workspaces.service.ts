@@ -12,7 +12,9 @@ export class WorkspacesService {
       where: { slug: createWorkspaceDto.slug },
     });
     if (existing) {
-      throw new ConflictException('Workspace with this slug already exists');
+      throw new ConflictException(
+        'A workspace with this slug already exists. Please choose another one.',
+      );
     }
     return prisma.workspace.create({ data: createWorkspaceDto });
   }

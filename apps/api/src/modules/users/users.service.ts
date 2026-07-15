@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { prisma, User, Prisma } from '@flowlyx/database';
@@ -8,6 +8,12 @@ import { createPaginatedResponse } from '../../common/utils/pagination.util';
 @Injectable()
 export class UsersService {
   async create(createUserDto: CreateUserDto & { passwordHash: string }): Promise<User> {
+    const existing = await this.findByEmail(createUserDto.email);
+    if (existing) {
+      throw new ConflictException(
+        'This email is already registered. Please use a different email address.',
+      );
+    }
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...data } = createUserDto;
     return prisma.user.create({ data });

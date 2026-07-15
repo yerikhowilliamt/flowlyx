@@ -29,7 +29,7 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(context)).toBe(true);
   });
 
-  it('should return false if user has no role', () => {
+  it('should throw ForbiddenException if user has no role', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.ADMIN]);
     const context = {
       getHandler: jest.fn(),
@@ -39,7 +39,7 @@ describe('RolesGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    expect(guard.canActivate(context)).toBe(false);
+    expect(() => guard.canActivate(context)).toThrow();
   });
 
   it('should return true if user has required role', () => {
@@ -55,7 +55,7 @@ describe('RolesGuard', () => {
     expect(guard.canActivate(context)).toBe(true);
   });
 
-  it('should return false if user does not have required role', () => {
+  it('should throw ForbiddenException if user does not have required role', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([Role.SUPER_ADMIN]);
     const context = {
       getHandler: jest.fn(),
@@ -65,6 +65,6 @@ describe('RolesGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    expect(guard.canActivate(context)).toBe(false);
+    expect(() => guard.canActivate(context)).toThrow();
   });
 });

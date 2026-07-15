@@ -12,7 +12,9 @@ export class OrganizationsService {
       where: { slug: createOrganizationDto.slug },
     });
     if (existing) {
-      throw new ConflictException('Organization with this slug already exists');
+      throw new ConflictException(
+        'An organization with this slug already exists. Please choose another one.',
+      );
     }
     return prisma.organization.create({ data: createOrganizationDto });
   }
