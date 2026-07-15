@@ -31,6 +31,7 @@ import { SearchModule } from './modules/search/search.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
+import { SettingsModule } from './modules/settings/settings.module';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
     RealtimeModule,
     StorageModule,
     AuditLogsModule,
+    SettingsModule,
   ],
   controllers: [],
   providers: [],

@@ -521,3 +521,23 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model Setting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique @map("key")
+  value       String   @map("value") // Can be JSON string or text
+  type        String   @default("STRING") @map("type") // STRING, BOOLEAN, JSON, NUMBER
+  group       String   @default("GENERAL") @map("group") // GENERAL, SYSTEM, SECURITY
+  description String?  @map("description")
+  isPublic    Boolean  @default(false) @map("is_public") // If it's exposed to unauthenticated users
+  status      String   @default("ACTIVE") @map("status")
+
+  // --- Audit Fields ---
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  createdBy   String?   @map("created_by") @db.Uuid
+  updatedBy   String?   @map("updated_by") @db.Uuid
+
+  @@map("settings")
+}
+

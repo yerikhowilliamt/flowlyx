@@ -22,6 +22,7 @@ import { RolesGuard } from '../rbac/guards/roles.guard';
 import { Roles } from '../rbac/decorators/roles.decorator';
 import { Role } from '../rbac/enums/role.enum';
 import { PaginationDto } from '../../core/pagination';
+import { SuccessResponse } from '../../models/api.model';
 
 interface RequestWithUser extends Request {
   user: User;
@@ -77,6 +78,7 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Delete a user' })
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Serialize(SuccessResponse)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     await this.usersService.delete(id);

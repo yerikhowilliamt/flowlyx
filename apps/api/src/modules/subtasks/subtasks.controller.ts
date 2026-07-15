@@ -1,3 +1,4 @@
+import { SuccessResponse } from '../../models/api.model';
 import { SubtaskResponse, SubtaskSummary } from '../../models/subtask.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
@@ -72,6 +73,7 @@ export class SubtasksController {
     return this.subtasksService.update(id, updateSubtaskDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {

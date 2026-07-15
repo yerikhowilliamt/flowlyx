@@ -1,3 +1,4 @@
+import { SuccessResponse } from '../../models/api.model';
 import { ProjectResponse, ProjectSummary } from '../../models/project.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
@@ -86,6 +87,7 @@ export class ProjectsController {
     return this.projectsService.update(id, updateProjectDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @UseGuards(WorkspaceRolesGuard)
   @WorkspaceRoles(WorkspaceRole.ADMIN)

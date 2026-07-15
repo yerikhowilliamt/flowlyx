@@ -1,3 +1,4 @@
+import { SuccessResponse } from '../../models/api.model';
 import { TaskCommentResponse } from '../../models/task-comment.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
@@ -74,6 +75,7 @@ export class TaskCommentsController {
     return this.taskCommentsService.update(id, user.id, updateDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@CurrentUser() user: User, @Param('id') id: string) {
