@@ -488,6 +488,25 @@ model File {
   @@map("files")
 }
 
+model SystemConfiguration {
+  id          String  @id @default(uuid()) @db.Uuid
+  key         String  @unique @map("key")
+  value       Json    @map("value")
+  type        String  @default("string") @map("type") // e.g. "string", "number", "boolean", "json"
+  description String? @map("description")
+  isPublic    Boolean @default(false) @map("is_public")
+  status      String  @default("ACTIVE") @map("status")
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("system_configurations")
+}
+
 model AuditLog {
   id           String    @id @default(uuid()) @db.Uuid
   workspaceId  String?   @map("workspace_id") @db.Uuid
@@ -540,4 +559,3 @@ model Setting {
 
   @@map("settings")
 }
-

@@ -30,6 +30,7 @@ import { TimeTrackingModule } from './modules/time-tracking/time-tracking.module
 import { SearchModule } from './modules/search/search.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { SystemConfigurationModule } from './modules/system-configuration/system-configuration.module';
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { OrganizationBillingModule } from './modules/organization-billing/organization-billing.module';
@@ -66,6 +67,7 @@ import { OrganizationBillingModule } from './modules/organization-billing/organi
     SearchModule,
     RealtimeModule,
     StorageModule,
+    SystemConfigurationModule,
     AuditLogsModule,
     SettingsModule,
     OrganizationBillingModule,
