@@ -34,7 +34,7 @@ import { SystemConfigurationModule } from './modules/system-configuration/system
 import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { OrganizationBillingModule } from './modules/organization-billing/organization-billing.module';
-
+import { QueueModule } from './modules/queue/queue.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -71,6 +71,7 @@ import { OrganizationBillingModule } from './modules/organization-billing/organi
     AuditLogsModule,
     SettingsModule,
     OrganizationBillingModule,
+    QueueModule,
   ],
   controllers: [],
   providers: [],

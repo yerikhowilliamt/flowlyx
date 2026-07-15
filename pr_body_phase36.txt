@@ -1,0 +1,43 @@
+# Pull Request Details
+
+**Branch Name:** `feature/phase-36-queue-system-bullmq-`
+**Commit Message:** `feat(platform): implement phase 36 queue system (bullmq)`
+**PR Title:** `feat(platform): implement phase 36 queue system (bullmq)`
+
+## Description
+This PR implements the Queue System (BullMQ) module for Flowlyx as part of Phase 36. It lays down the foundation for asynchronous background job processing.
+
+## Summary
+- Added `bullmq` and `@nestjs/bullmq` dependencies.
+- Added `REDIS_HOST`, `REDIS_PORT`, and `REDIS_PASSWORD` validation in Zod `env.validation.ts`.
+- Integrated a `redis:7-alpine` container instance into `docker-compose.yml`.
+- Created a global `QueueModule` to register the `BullModule.forRootAsync` configuration.
+- Imported `QueueModule` into `AppModule`.
+
+## Files Changed
+- `package.json` & `package-lock.json`
+- `docker-compose.yml`
+- `apps/api/.env`
+- `apps/api/src/core/config/env.validation.ts`
+- `apps/api/src/app.module.ts`
+- `apps/api/src/modules/queue/queue.module.ts`
+
+## Testing Evidence
+- ESLint passed (`npm run lint`).
+- TypeScript compiler passed (`tsc --noEmit`).
+- Application built successfully (`nest build`).
+
+## Breaking Changes
+- **None**
+
+## Migration Notes
+- Requires a running Redis instance. Deployments must ensure the new environment variables are configured.
+
+## Rollback Plan
+- Revert the commit and remove Redis environment configurations if deployment fails.
+
+## Reviewer Checklist
+- [ ] Code follows Clean Architecture principles
+- [ ] Dependencies injected correctly
+- [ ] Centralized configuration follows Feature First Architecture
+- [ ] Error handling & validations applied
