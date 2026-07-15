@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { prisma, ProjectMember, Prisma } from '@flowlyx/database';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
@@ -8,6 +8,15 @@ import { UpdateProjectMemberDto } from './dto/update-project-member.dto';
 @Injectable()
 export class ProjectMembersService {
   async create(createProjectMemberDto: CreateProjectMemberDto): Promise<ProjectMember> {
+    const existing = await prisma.projectMember.findFirst({
+      where: {
+        projectId: createProjectMemberDto.projectId,
+        userId: createProjectMemberDto.userId,
+      },
+    });
+    if (existing) {
+      throw new ConflictException('This user is already a member of the project.');
+    }
     return prisma.projectMember.create({ data: createProjectMemberDto });
   }
 

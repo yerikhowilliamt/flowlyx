@@ -29,6 +29,7 @@ import {
 import { OrganizationResponse, OrganizationSummary } from '../../models/organization.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
+import { SuccessResponse } from '../../models/api.model';
 
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -87,6 +88,7 @@ export class OrganizationsController {
     return this.organizationsService.update(id, updateOrganizationDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @UseGuards(OrganizationRolesGuard)
   @OrganizationRoles(OrganizationRole.OWNER)

@@ -29,7 +29,9 @@ export class OrganizationRolesGuard implements CanActivate {
       request.body.organizationId;
 
     if (!user || !organizationId) {
-      return false;
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this organization to perform this action.',
+      );
     }
 
     const member = await prisma.organizationMember.findUnique({
@@ -45,6 +47,11 @@ export class OrganizationRolesGuard implements CanActivate {
       throw new ForbiddenException('User is not a member of this organization');
     }
 
-    return requiredRoles.includes(member.role as OrganizationRole);
+    if (!requiredRoles.includes(member.role as OrganizationRole)) {
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this organization to perform this action.',
+      );
+    }
+    return true;
   }
 }

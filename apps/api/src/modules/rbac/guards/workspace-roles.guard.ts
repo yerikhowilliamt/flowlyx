@@ -29,7 +29,9 @@ export class WorkspaceRolesGuard implements CanActivate {
       request.body.workspaceId;
 
     if (!user || !workspaceId) {
-      return false;
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this workspace to perform this action.',
+      );
     }
 
     const member = await prisma.workspaceMember.findUnique({
@@ -45,6 +47,11 @@ export class WorkspaceRolesGuard implements CanActivate {
       throw new ForbiddenException('User is not a member of this workspace');
     }
 
-    return requiredRoles.includes(member.role as WorkspaceRole);
+    if (!requiredRoles.includes(member.role as WorkspaceRole)) {
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this workspace to perform this action.',
+      );
+    }
+    return true;
   }
 }

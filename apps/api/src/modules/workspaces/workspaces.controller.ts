@@ -1,3 +1,4 @@
+import { SuccessResponse } from '../../models/api.model';
 import { WorkspaceResponse, WorkspaceSummary } from '../../models/workspace.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
@@ -88,6 +89,7 @@ export class WorkspacesController {
     return this.workspacesService.update(id, updateWorkspaceDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @UseGuards(WorkspaceRolesGuard)
   @WorkspaceRoles(WorkspaceRole.ADMIN)

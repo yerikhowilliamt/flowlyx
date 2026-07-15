@@ -6,6 +6,9 @@ import { TimeEntryService } from '../services/time-entry.service';
 import { CreateTimeEntryDto } from '../dto/create-time-entry.dto';
 import { UpdateTimeEntryDto } from '../dto/update-time-entry.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import { SuccessResponse } from '../../../models/api.model';
+import { Serialize } from '../../../common/interceptors/serialize.interceptor';
+import { TimeEntryResponse } from '../../../models/time-entry.model';
 
 @ApiTags('Time Tracking')
 @ApiBearerAuth()
@@ -14,6 +17,7 @@ import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 export class TimeEntryController {
   constructor(private readonly timeEntryService: TimeEntryService) {}
 
+  @Serialize(TimeEntryResponse)
   @Post()
   @ApiOperation({ summary: 'Create a new time entry or start a timer' })
   @ApiResponse({ status: 201, description: 'Time entry created successfully' })
@@ -39,6 +43,7 @@ export class TimeEntryController {
     return this.timeEntryService.update(id, req.user.id, updateDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a time entry' })
   @ApiResponse({ status: 200, description: 'Time entry deleted successfully' })
@@ -46,6 +51,7 @@ export class TimeEntryController {
     return this.timeEntryService.delete(id);
   }
 
+  @Serialize(TimeEntryResponse)
   @Get('tasks/:taskId')
   @ApiOperation({ summary: 'Get all time entries for a task' })
   @ApiResponse({ status: 200, description: 'Time entries retrieved successfully' })

@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import { Role } from '../enums/role.enum';
@@ -21,9 +21,16 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest<{ user: User }>();
 
     if (!user || !user.role) {
-      return false;
+      throw new ForbiddenException(
+        'Access denied: This action requires system administrator privileges.',
+      );
     }
 
-    return requiredRoles.includes(user.role as Role);
+    if (!requiredRoles.includes(user.role as Role)) {
+      throw new ForbiddenException(
+        'Access denied: This action requires system administrator privileges.',
+      );
+    }
+    return true;
   }
 }

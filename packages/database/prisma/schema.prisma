@@ -29,6 +29,7 @@ model User {
   activities          Activity[]
   notifications       Notification[]
   uploadedFiles       File[]
+  auditLogs           AuditLog[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -50,6 +51,7 @@ model Organization {
 
   members    OrganizationMember[]
   workspaces Workspace[]
+  auditLogs  AuditLog[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -91,6 +93,7 @@ model Workspace {
   members      WorkspaceMember[]
   projects     Project[]
   files        File[]
+  auditLogs    AuditLog[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -134,6 +137,7 @@ model Project {
   labels     Label[]
   priorities Priority[]
   files      File[]
+  auditLogs  AuditLog[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -501,4 +505,57 @@ model SystemConfiguration {
   updatedBy String?   @map("updated_by") @db.Uuid
 
   @@map("system_configurations")
+}
+
+model AuditLog {
+  id           String    @id @default(uuid()) @db.Uuid
+  workspaceId  String?   @map("workspace_id") @db.Uuid
+  organizationId String? @map("organization_id") @db.Uuid
+  projectId    String?   @map("project_id") @db.Uuid
+  userId       String?   @map("user_id") @db.Uuid
+  action       String    @map("action")
+  resourceType String    @map("resource_type")
+  resourceId   String?   @map("resource_id")
+  details      Json?     @map("details")
+  ipAddress    String?   @map("ip_address")
+  userAgent    String?   @map("user_agent")
+  status       String    @default("ACTIVE") @map("status")
+
+  workspace    Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // --- Audit Fields ---
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+  createdBy    String?   @map("created_by") @db.Uuid
+  updatedBy    String?   @map("updated_by") @db.Uuid
+
+  @@index([workspaceId])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+model Setting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique @map("key")
+  value       String   @map("value") // Can be JSON string or text
+  type        String   @default("STRING") @map("type") // STRING, BOOLEAN, JSON, NUMBER
+  group       String   @default("GENERAL") @map("group") // GENERAL, SYSTEM, SECURITY
+  description String?  @map("description")
+  isPublic    Boolean  @default(false) @map("is_public") // If it's exposed to unauthenticated users
+  status      String   @default("ACTIVE") @map("status")
+
+  // --- Audit Fields ---
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  createdBy   String?   @map("created_by") @db.Uuid
+  updatedBy   String?   @map("updated_by") @db.Uuid
+
+  @@map("settings")
 }

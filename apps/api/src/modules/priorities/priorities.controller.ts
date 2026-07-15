@@ -32,6 +32,7 @@ import {
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PriorityResponse, PrioritySummary } from '../../models/priority.model';
 import { PaginationDto } from '../../core/pagination';
+import { SuccessResponse } from '../../models/api.model';
 
 @ApiTags('Priorities')
 @ApiBearerAuth()
@@ -94,6 +95,7 @@ export class PrioritiesController {
 
   @ApiOperation({ summary: 'Delete a priority' })
   @ProjectRoles(ProjectRole.ADMIN, ProjectRole.PROJECT_MANAGER)
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string, @CurrentUser() user: User) {

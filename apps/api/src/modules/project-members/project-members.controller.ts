@@ -1,7 +1,19 @@
+import { SuccessResponse } from '../../models/api.model';
 import { ProjectMemberResponse, ProjectMemberSummary } from '../../models/project-member.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { PaginationDto } from '../../core/pagination';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ProjectMembersService } from './project-members.service';
 import { CreateProjectMemberDto } from './dto/create-project-member.dto';
 import { UpdateProjectMemberDto } from './dto/update-project-member.dto';
@@ -11,9 +23,12 @@ import {
   ApiResponse,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 @ApiTags('project-members')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('project-members')
 export class ProjectMembersController {
   constructor(private readonly projectMembersService: ProjectMembersService) {}
@@ -27,6 +42,7 @@ export class ProjectMembersController {
     return this.projectMembersService.create(createProjectMemberDto);
   }
 
+  @Serialize([ProjectMemberSummary])
   @Get('project/:projectId')
   @ApiOperation({ summary: 'Get all members of a project' })
   @ApiOkResponse({ type: [ProjectMemberSummary] })
@@ -43,6 +59,7 @@ export class ProjectMembersController {
     return this.projectMembersService.update(id, updateProjectMemberDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @ApiOperation({ summary: 'Remove a project member' })
   delete(@Param('id') id: string) {

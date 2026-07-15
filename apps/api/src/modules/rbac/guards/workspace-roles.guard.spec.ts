@@ -81,7 +81,7 @@ describe('WorkspaceRolesGuard', () => {
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it('should return false if user does not have required workspace role', async () => {
+  it('should throw ForbiddenException if user does not have required workspace role', async () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([WorkspaceRole.ADMIN]);
     (prisma.workspaceMember.findUnique as jest.Mock).mockResolvedValue({
       role: WorkspaceRole.MEMBER,
@@ -100,6 +100,6 @@ describe('WorkspaceRolesGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    expect(await guard.canActivate(context)).toBe(false);
+    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
 });
