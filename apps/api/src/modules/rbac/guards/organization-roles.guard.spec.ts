@@ -81,7 +81,7 @@ describe('OrganizationRolesGuard', () => {
     expect(await guard.canActivate(context)).toBe(true);
   });
 
-  it('should return false if user does not have required organization role', async () => {
+  it('should throw ForbiddenException if user does not have required organization role', async () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([OrganizationRole.OWNER]);
     (prisma.organizationMember.findUnique as jest.Mock).mockResolvedValue({
       role: OrganizationRole.MEMBER,
@@ -100,6 +100,6 @@ describe('OrganizationRolesGuard', () => {
       }),
     } as unknown as ExecutionContext;
 
-    expect(await guard.canActivate(context)).toBe(false);
+    await expect(guard.canActivate(context)).rejects.toThrow(ForbiddenException);
   });
 });
