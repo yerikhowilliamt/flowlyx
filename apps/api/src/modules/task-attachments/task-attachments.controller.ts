@@ -22,6 +22,9 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TaskAttachmentsService } from './task-attachments.service';
+import { SuccessResponse } from '../../models/api.model';
+import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { TaskAttachmentResponse } from '../../models/task-attachment.model';
 
 @ApiTags('Task Attachments')
 @ApiBearerAuth()
@@ -30,6 +33,7 @@ import { TaskAttachmentsService } from './task-attachments.service';
 export class TaskAttachmentsController {
   constructor(private readonly taskAttachmentsService: TaskAttachmentsService) {}
 
+  @Serialize(TaskAttachmentResponse)
   @Post()
   @ApiOperation({ summary: 'Upload a task attachment' })
   @ApiConsumes('multipart/form-data')
@@ -82,6 +86,7 @@ export class TaskAttachmentsController {
     return this.taskAttachmentsService.updateAttachment(taskId, attachmentId, req.user.id, file);
   }
 
+  @Serialize(TaskAttachmentResponse)
   @Get()
   @ApiOperation({ summary: 'Get all attachments for a task' })
   @ApiResponse({ status: 200, description: 'Return all task attachments' })
@@ -89,6 +94,7 @@ export class TaskAttachmentsController {
     return this.taskAttachmentsService.getAttachments(taskId, req.user.id);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a task attachment' })
   @ApiResponse({ status: 200, description: 'Attachment deleted successfully' })

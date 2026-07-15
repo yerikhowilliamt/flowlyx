@@ -1,3 +1,4 @@
+import { SuccessResponse } from '../../models/api.model';
 import { ProjectMemberResponse, ProjectMemberSummary } from '../../models/project-member.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import {
@@ -41,6 +42,7 @@ export class ProjectMembersController {
     return this.projectMembersService.create(createProjectMemberDto);
   }
 
+  @Serialize([ProjectMemberSummary])
   @Get('project/:projectId')
   @ApiOperation({ summary: 'Get all members of a project' })
   @ApiOkResponse({ type: [ProjectMemberSummary] })
@@ -57,6 +59,7 @@ export class ProjectMembersController {
     return this.projectMembersService.update(id, updateProjectMemberDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @ApiOperation({ summary: 'Remove a project member' })
   delete(@Param('id') id: string) {

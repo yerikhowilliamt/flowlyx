@@ -15,6 +15,9 @@ import { CreateActivityDto } from './dto/create-activity.dto';
 import { FindActivitiesDto } from './dto/find-activities.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { ActivityResponse } from '../../models/activity.model';
+
 @ApiTags('Activities')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -22,6 +25,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class ActivitiesController {
   constructor(private readonly activitiesService: ActivitiesService) {}
 
+  @Serialize(ActivityResponse)
   @Post()
   @ApiOperation({ summary: 'Create a new activity log' })
   @ApiResponse({ status: HttpStatus.CREATED, description: 'Activity created successfully' })
@@ -30,6 +34,7 @@ export class ActivitiesController {
     return this.activitiesService.create(createActivityDto);
   }
 
+  @Serialize(ActivityResponse)
   @Get('entity/:entityId')
   @ApiOperation({ summary: 'Get activities by entity ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of activities retrieved successfully' })
@@ -37,6 +42,7 @@ export class ActivitiesController {
     return this.activitiesService.findByEntityId(entityId, query);
   }
 
+  @Serialize(ActivityResponse)
   @Get(':id')
   @ApiOperation({ summary: 'Get activity by ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Activity retrieved successfully' })

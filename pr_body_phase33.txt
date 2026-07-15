@@ -1,0 +1,50 @@
+# Pull Request
+
+**1. Conventional Commit**
+feat(settings): implement settings module and global serialize interceptor (phase 33)
+
+**2. Branch Name**
+feature/phase-33-settings
+
+**3. Pull Request Title**
+feat: [Phase 33] Settings Module & Global Response Standardization
+
+**4. Pull Request Description**
+FLOWLYX DEVELOPMENT PHASE
+Phase Number: 33
+Phase Name: Settings Module & Global Serialization
+
+**5. Summary**
+This PR introduces the `SettingsModule` enabling Super Admins to manage global application parameters, and standardizes the entire Flowlyx API response architecture by enforcing `@Serialize()` and `@ApiOkResponse()` across 23 controllers.
+
+Key Changes:
+- **Settings Module**: CRUD endpoints (`/settings`), guarded by `JwtAuthGuard` and `RolesGuard(Role.SUPER_ADMIN)`. Uses Zod for validation schemas.
+- **Global Serialization**: Applied `@Serialize()` decorators uniformly across all API routes to strip sensitive data and standardise object shapes (e.g. `SuccessResponse`, `DomainSummary`, `DomainResponse`).
+- **Response Models Bootstrap**: Generated missing standard DTO return models for all endpoint domains.
+- **Cleanup**: Cleaned up repetitive Guard & Roles decorators, hoisting them to class-level configurations.
+
+**6. Files Changed**
+- `packages/database/prisma/schema.prisma`: Added `Setting` entity.
+- `apps/api/src/modules/settings/*`: Full Settings feature module setup.
+- `apps/api/src/models/*`: New `.model.ts` classes for explicit API typing.
+- `apps/api/src/modules/**/*`: Uniform application of `@Serialize(...)` across 23 standard resource controllers.
+- `docs/errors/phase 33 - settings.md`: Documented challenges encountered regarding TS schema export and ESLint types.
+
+**7. Testing Evidence**
+- ✅ Build successful and Prisma client re-generated.
+- ✅ Unit tests passing (100% execution).
+- ✅ Linting (eslint strict typing check) successfully cleared.
+
+**8. Breaking Changes**
+None.
+
+**9. Migration Notes**
+Apply Prisma migrations (`npm run db:push`) before testing locally due to the newly created `settings` table.
+
+**10. Rollback Plan**
+Revert this PR.
+
+**11. Reviewer Checklist**
+- [ ] Settings table correctly applies unique constraints and Zod schema validation.
+- [ ] `@Serialize` decorators deployed globally to encapsulate returning metadata.
+- [ ] No `any` type overrides present in new test files.

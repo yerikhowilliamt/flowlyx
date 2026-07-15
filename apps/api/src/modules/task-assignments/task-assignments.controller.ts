@@ -27,6 +27,7 @@ import {
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
 import { TaskAssignmentResponse, TaskAssignmentSummary } from '../../models/task-assignment.model';
+import { SuccessResponse } from '../../models/api.model';
 
 @ApiTags('Task Assignments')
 @ApiBearerAuth()
@@ -61,6 +62,7 @@ export class TaskAssignmentsController {
   }
 
   @ApiOperation({ summary: 'Remove a task assignment' })
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {

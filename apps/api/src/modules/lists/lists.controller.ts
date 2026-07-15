@@ -1,3 +1,4 @@
+import { SuccessResponse } from '../../models/api.model';
 import { ListResponse, ListSummary } from '../../models/list.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
@@ -73,6 +74,7 @@ export class ListsController {
     return this.listsService.update(id, updateListDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {

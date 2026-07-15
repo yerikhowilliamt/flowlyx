@@ -1,3 +1,4 @@
+import { SuccessResponse } from '../../models/api.model';
 import { LabelResponse, LabelSummary } from '../../models/label.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
@@ -48,7 +49,11 @@ export class LabelsController {
   @ApiOkResponse({ type: [LabelSummary] })
   @Serialize([LabelSummary])
   @Get()
-  async findAll(@Query() query: PaginationDto, @Query('projectId') projectId?: string, @Query('taskId') taskId?: string) {
+  async findAll(
+    @Query() query: PaginationDto,
+    @Query('projectId') projectId?: string,
+    @Query('taskId') taskId?: string,
+  ) {
     if (taskId) {
       this.logger.log(`Fetching labels for taskId: ${taskId}`);
       return this.labelsService.findByTaskId(taskId, query);
@@ -76,6 +81,7 @@ export class LabelsController {
     return this.labelsService.update(id, updateLabelDto);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
@@ -83,6 +89,7 @@ export class LabelsController {
     await this.labelsService.remove(id);
   }
 
+  @Serialize(LabelResponse)
   @Post(':labelId/tasks/:taskId')
   @HttpCode(HttpStatus.CREATED)
   async addToTask(@Param('labelId') labelId: string, @Param('taskId') taskId: string) {
@@ -90,6 +97,7 @@ export class LabelsController {
     return this.labelsService.addToTask(labelId, taskId);
   }
 
+  @Serialize(SuccessResponse)
   @Delete(':labelId/tasks/:taskId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeFromTask(@Param('labelId') labelId: string, @Param('taskId') taskId: string) {

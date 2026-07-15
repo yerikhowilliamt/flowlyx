@@ -47,3 +47,8 @@ export class ApiResponse<T = unknown> {
   @ApiPropertyOptional()
   timestamp?: string;
 }
+
+export class SuccessResponse {
+  @ApiProperty({ example: true })
+  success!: boolean;
+}

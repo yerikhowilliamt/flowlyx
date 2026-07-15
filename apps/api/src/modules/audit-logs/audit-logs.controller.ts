@@ -4,6 +4,9 @@ import { AuditLogsService } from './audit-logs.service';
 import { FindAuditLogsDto } from './dto/find-audit-logs.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+import { Serialize } from '../../common/interceptors/serialize.interceptor';
+import { AuditLogResponse, AuditLogSummary } from '../../models/audit-log.model';
+
 @ApiTags('Audit Logs')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
@@ -11,6 +14,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class AuditLogsController {
   constructor(private readonly auditLogsService: AuditLogsService) {}
 
+  @Serialize([AuditLogSummary])
   @Get()
   @ApiOperation({ summary: 'Get audit logs with filters' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of audit logs retrieved successfully' })
@@ -18,6 +22,7 @@ export class AuditLogsController {
     return this.auditLogsService.findAll(query);
   }
 
+  @Serialize(AuditLogResponse)
   @Get(':id')
   @ApiOperation({ summary: 'Get audit log by ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Audit log retrieved successfully' })
