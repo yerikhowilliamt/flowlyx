@@ -18,14 +18,9 @@ export class ScheduledJobsProcessor extends WorkerHost {
 
     try {
       switch (job.name) {
-        case 'system-heartbeat':
-          this.logger.info('System heartbeat executed successfully.');
-          // Perform any heartbeat related tasks here
-          break;
         default:
           this.logger.warn({ jobName: job.name }, 'Unknown scheduled job name encountered');
       }
-
       return { success: true, timestamp: new Date().toISOString() };
     } catch (error) {
       this.logger.error(

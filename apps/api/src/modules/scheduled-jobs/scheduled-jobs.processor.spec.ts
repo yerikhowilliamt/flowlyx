@@ -33,19 +33,6 @@ describe('ScheduledJobsProcessor', () => {
   });
 
   describe('process', () => {
-    it('should process system-heartbeat successfully', async () => {
-      const mockJob = {
-        id: '1',
-        name: 'system-heartbeat',
-        data: {},
-      } as Job;
-
-      const result = await processor.process(mockJob);
-
-      expect(loggerMock.info).toHaveBeenCalledWith('System heartbeat executed successfully.');
-      expect(result).toEqual({ success: true, timestamp: expect.any(String) });
-    });
-
     it('should log a warning for unknown jobs', async () => {
       const mockJob = {
         id: '2',
