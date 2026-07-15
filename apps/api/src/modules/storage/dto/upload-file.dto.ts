@@ -1,14 +1,9 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
+import { z } from 'zod';
+import { createZodDto } from 'nestjs-zod';
 
-export class UploadFileDto {
-  @ApiProperty({ description: 'The ID of the workspace this file belongs to' })
-  @IsNotEmpty()
-  @IsUUID()
-  workspaceId!: string;
+const uploadFileSchema = z.object({
+  workspaceId: z.string().uuid(),
+  projectId: z.string().uuid().optional(),
+});
 
-  @ApiPropertyOptional({ description: 'The ID of the project this file belongs to (optional)' })
-  @IsOptional()
-  @IsUUID()
-  projectId?: string;
-}
+export class UploadFileDto extends createZodDto(uploadFileSchema) {}
