@@ -38,15 +38,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       if (exception.code === 'P2002') {
         status = HttpStatus.CONFLICT;
         errorCode = 'UNIQUE_CONSTRAINT_FAILED';
-        message = 'A record with this value already exists.';
+        const fields = Array.isArray(exception.meta?.target)
+          ? exception.meta.target.join(', ')
+          : (exception.meta?.target as string) || 'value';
+        message = `A record with this ${fields} already exists.`;
       } else if (exception.code === 'P2025') {
         status = HttpStatus.NOT_FOUND;
         errorCode = 'RECORD_NOT_FOUND';
-        message = 'The requested record was not found.';
+        message = (exception.meta?.cause as string) || 'The requested record was not found.';
       } else if (exception.code === 'P2003') {
         status = HttpStatus.BAD_REQUEST;
         errorCode = 'FOREIGN_KEY_CONSTRAINT_FAILED';
-        message = 'Related record not found.';
+        const field = (exception.meta?.field_name as string) || 'Related record';
+        message = `${field} not found or invalid.`;
       } else {
         status = HttpStatus.BAD_REQUEST;
         errorCode = 'DATABASE_ERROR';
