@@ -1,0 +1,48 @@
+# Pull Request Details
+
+**Branch Name:** `feature/phase-37-email-service`
+**Commit Message:** `feat(platform): implement phase 37 email service`
+**PR Title:** `feat(platform): implement phase 37 email service`
+
+## Description
+This PR implements the Email Service module for Flowlyx as part of Phase 37. It integrates `nodemailer` with `BullMQ` to enable asynchronous email delivery, avoiding blockages on the main API thread.
+
+## Summary
+- Added `nodemailer` and `@types/nodemailer` as dependencies.
+- Added validation for SMTP configuration (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`) inside `env.validation.ts`.
+- Created `EmailModule`, `EmailService`, and `EmailProcessor`.
+- Configured a background worker (`email-queue`) to process outgoing emails.
+- Added full test coverage for the Email module.
+- Resolved and documented linter issues related to strict `any` typing in `docs/errors/phase 37 - email service.md`.
+
+## Files Changed
+- `apps/api/package.json` & `apps/api/package-lock.json`
+- `apps/api/src/core/config/env.validation.ts`
+- `apps/api/src/app.module.ts`
+- `apps/api/src/modules/email/dto/send-email.dto.ts`
+- `apps/api/src/modules/email/email.module.ts`
+- `apps/api/src/modules/email/email.service.ts`
+- `apps/api/src/modules/email/email.processor.ts`
+- `apps/api/src/modules/email/email.service.spec.ts`
+- `apps/api/src/modules/email/email.processor.spec.ts`
+- `docs/errors/phase 37 - email service.md`
+
+## Testing Evidence
+- ✅ ESLint passed (`npm run lint`).
+- ✅ TypeScript compiler passed (`npm run type-check`).
+- ✅ Unit Tests passed (`npm run test` with 232 successful suites).
+
+## Breaking Changes
+- **None**
+
+## Migration Notes
+- Applications must now define SMTP variables (`SMTP_HOST`, `SMTP_PORT`, etc.) in the `.env` file to function. It defaults to `localhost:1025` which can be intercepted by tools like Mailpit/Mailhog during local development.
+
+## Rollback Plan
+- Revert the commit and remove SMTP variables from deployment configs.
+
+## Reviewer Checklist
+- [x] Code follows Clean Architecture principles
+- [x] Background processing correctly implemented using BullMQ
+- [x] Centralized configuration follows Feature First Architecture
+- [x] Linter, tests, and typings passing

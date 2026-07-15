@@ -11,6 +11,11 @@ export const envSchema = z.object({
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.string().transform(Number).default('6379'),
   REDIS_PASSWORD: z.string().optional(),
+  SMTP_HOST: z.string().default('localhost'),
+  SMTP_PORT: z.string().transform(Number).default('1025'),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM: z.string().email().default('noreply@flowlyx.com'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
