@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { Prisma } from '@flowlyx/database';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -33,6 +34,24 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       errorCode = 'VALIDATION_ERROR';
       message = 'Input validation failed';
       details = exception.errors;
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      if (exception.code === 'P2002') {
+        status = HttpStatus.CONFLICT;
+        errorCode = 'UNIQUE_CONSTRAINT_FAILED';
+        message = 'A record with this value already exists.';
+      } else if (exception.code === 'P2025') {
+        status = HttpStatus.NOT_FOUND;
+        errorCode = 'RECORD_NOT_FOUND';
+        message = 'The requested record was not found.';
+      } else if (exception.code === 'P2003') {
+        status = HttpStatus.BAD_REQUEST;
+        errorCode = 'FOREIGN_KEY_CONSTRAINT_FAILED';
+        message = 'Related record not found.';
+      } else {
+        status = HttpStatus.BAD_REQUEST;
+        errorCode = 'DATABASE_ERROR';
+        message = 'A database error occurred.';
+      }
     } else if (exception instanceof Error) {
       message = exception.message;
     }
