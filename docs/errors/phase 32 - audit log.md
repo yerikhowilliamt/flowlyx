@@ -10,7 +10,9 @@ _(Selama implementasi modul Audit Logs, ditemukan beberapa masalah terkait pengg
 2. **Module Resolution Error**: `PaginationDto` could not be found when importing it into `find-audit-logs.dto.ts`.
 3. **Swagger `.describe()` Boilerplate**: Writing explicit `.describe('...')` for every field in Zod schemas (e.g., `workspaceId: z.string().describe('Workspace ID')`) created massive redundant boilerplate across 40+ DTOs.
 4. **Vague Global Error Messages**: The `GlobalExceptionFilter` was masking contextual logic by mapping Prisma errors (e.g., `P2002`) and Guard rejections to generic fallback messages (like "An unexpected error occurred" or "A record with this value already exists"), confusing end-users.
+   _(Pesan Error Global yang Samar: `GlobalExceptionFilter` menutupi logika kontekstual dengan mengubah error Prisma dan penolakan Guard menjadi pesan generik, sehingga membingungkan pengguna akhir.)_
 5. **Unit Test Failures Post-Refactor**: After modifying the RBAC guards to explicitly throw `ForbiddenException`, 4 unit tests failed because they were hardcoded to expect the guards to return `false`.
+   _(Kegagalan Unit Test Pasca-Refactor: Setelah memodifikasi RBAC guard untuk melempar `ForbiddenException` secara eksplisit, 4 unit test gagal karena dikodekan secara kaku untuk mengharapkan guard mengembalikan nilai `false`.)_
 
 ## Root Cause (Akar Masalah)
 
@@ -18,7 +20,9 @@ _(Selama implementasi modul Audit Logs, ditemukan beberapa masalah terkait pengg
 2. **Relative Pathing**: The DTO was located deep in the module (`apps/api/src/modules/audit-logs/dto/`), requiring a specific relative path to reach the core directory `../../../core/pagination/pagination.dto`.
 3. **Swagger Integration**: While `nestjs-zod` handles validation, without proper global configuration, developers feel forced to write manual textual descriptions for Swagger to understand the schema types, which contradicts the "Ponytail" principle (lazy/efficient coding).
 4. **Over-reliance on Global Filters**: Attempting to handle all database unique constraints globally prevented sending highly specific, contextual English error messages tailored to the action the user was performing. Additionally, a refactor accidentally dropped the `responseBody` extraction from `HttpException`, masking intentional error messages.
+   _(Ketergantungan Berlebih pada Filter Global: Mencoba menangani semua constraint unik database secara global mencegah pengiriman pesan error spesifik dan kontekstual. Selain itu, refactor secara tidak sengaja menghilangkan ekstraksi `responseBody` dari `HttpException`, sehingga menyembunyikan pesan error kustom.)_
 5. **Brittle Test Expectations**: The RBAC tests strictly expected boolean logic (`false`) rather than validating the full HTTP response lifecycle (Exceptions).
+   _(Ekspektasi Test yang Rapuh: Test RBAC dengan kaku mengharapkan logika boolean (`false`) alih-alih memvalidasi siklus respons HTTP secara penuh (Exception).)_
 
 ## Solution (Solusi)
 
