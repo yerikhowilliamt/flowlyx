@@ -25,6 +25,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
+      const responseBody = exception.getResponse() as Record<string, unknown>;
+      errorCode = (responseBody.error as string) || errorCode;
+      message = (responseBody.message as string) || exception.message;
     } else if (exception instanceof ZodError) {
       status = HttpStatus.BAD_REQUEST;
       errorCode = 'VALIDATION_ERROR';
