@@ -35,6 +35,7 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { OrganizationBillingModule } from './modules/organization-billing/organization-billing.module';
 import { QueueModule } from './modules/queue/queue.module';
+import { EmailModule } from './modules/email/email.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -72,6 +73,7 @@ import { QueueModule } from './modules/queue/queue.module';
     SettingsModule,
     OrganizationBillingModule,
     QueueModule,
+    EmailModule,
   ],
   controllers: [],
   providers: [],
