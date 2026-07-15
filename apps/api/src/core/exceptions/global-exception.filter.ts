@@ -29,6 +29,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const responseBody = exception.getResponse() as Record<string, unknown>;
       errorCode = (responseBody.error as string) || errorCode;
       message = (responseBody.message as string) || exception.message;
+
+      // Override default generic NestJS 'Forbidden resource' message
+      if (status === HttpStatus.FORBIDDEN && message === 'Forbidden resource') {
+        message = 'You do not have sufficient permissions or roles to access this resource.';
+      }
     } else if (exception instanceof ZodError) {
       status = HttpStatus.BAD_REQUEST;
       errorCode = 'VALIDATION_ERROR';
