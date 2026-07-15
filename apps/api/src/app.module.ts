@@ -30,6 +30,7 @@ import { TimeTrackingModule } from './modules/time-tracking/time-tracking.module
 import { SearchModule } from './modules/search/search.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
 import { StorageModule } from './modules/storage/storage.module';
+import { SystemConfigurationModule } from './modules/system-configuration/system-configuration.module';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { StorageModule } from './modules/storage/storage.module';
     SearchModule,
     RealtimeModule,
     StorageModule,
+    SystemConfigurationModule,
   ],
   controllers: [],
   providers: [],
