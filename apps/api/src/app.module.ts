@@ -40,6 +40,7 @@ import { QueueModule } from './modules/queue/queue.module';
 import { EmailModule } from './modules/email/email.module';
 import { ScheduledJobsModule } from './modules/scheduled-jobs/scheduled-jobs.module';
 import { CacheModule } from './modules/cache/cache.module';
+import { PerformanceModule } from './core/performance/performance.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { CacheModule } from './modules/cache/cache.module';
     EmailModule,
     ScheduledJobsModule,
     CacheModule,
+    PerformanceModule,
   ],
   controllers: [],
   providers: [
