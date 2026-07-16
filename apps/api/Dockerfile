@@ -20,10 +20,10 @@ WORKDIR /app
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/out/package-lock.json ./package-lock.json
 
-# Install dependencies
-RUN npm install
+# Install dependencies (ignore scripts to avoid husky error)
+RUN npm install --ignore-scripts
 
-# Build the project
+# Build the project (which includes prisma generate)
 COPY --from=pruner /app/out/full/ .
 RUN npx turbo run build --filter=@flowlyx/api
 
@@ -40,12 +40,13 @@ ENV NODE_ENV production
 # Install only production dependencies
 COPY --from=pruner /app/out/json/ .
 COPY --from=pruner /app/out/package-lock.json ./package-lock.json
-RUN npm install --omit=dev
+RUN npm install --omit=dev --ignore-scripts
 
-# Copy built application and required local packages
+# Copy built application, local packages, and generated prisma client
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Change ownership to non-root user
 RUN chown -R node:node /app
