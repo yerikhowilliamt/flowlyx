@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ListsController } from './lists.controller';
 import { ListsService } from './lists.service';
@@ -29,6 +31,8 @@ describe('ListsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ListsController],
       providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
         {
           provide: ListsService,
           useValue: mockListsService,

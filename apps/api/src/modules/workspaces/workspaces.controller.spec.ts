@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { WorkspacesController } from './workspaces.controller';
 import { WorkspacesService } from './workspaces.service';
@@ -19,7 +21,11 @@ describe('WorkspacesController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [WorkspacesController],
-      providers: [{ provide: WorkspacesService, useValue: mockService }],
+      providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
+        { provide: WorkspacesService, useValue: mockService },
+      ],
     }).compile();
 
     controller = module.get<WorkspacesController>(WorkspacesController);
