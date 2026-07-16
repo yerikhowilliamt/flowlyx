@@ -50,3 +50,39 @@ Karena saat ini fokus utama fase adalah Observability, dan semua tes logika berl
 
 - **Standardisasi Test Setup**: Pastikan template modul test baru selalu mengikutsertakan fase penutupan aplikasi atau _disconnect_ dari _third-party service_.
 - Secara berkala menjalankan `jest --detectOpenHandles` di lokal untuk memburu koneksi spesifik mana (Prisma, Redis, HTTP Server) yang tidak tertutup dengan sempurna dan memperbaikinya.
+
+---
+
+# Phase 43 - Linter/TypeScript Strict Typing Error (No Explicit Any)
+
+## Symptoms (Gejala)
+
+Saat mencoba melakukan _commit_ kode untuk integrasi Loki melalui _Husky pre-commit hook_, CI/CD pipeline internal gagal pada langkah `eslint --fix` dengan pesan error:
+
+`C:\Users\Yerikho\Project\Flowlyx\apps\api\src\core\logger\logger.module.ts 20:26 error Unexpected any. Specify a different type @typescript-eslint/no-explicit-any`
+
+## Root Cause (Akar Masalah)
+
+Error ini disebabkan oleh penerapan tipe `any` (`null as any`) saat mendefinisikan elemen _array_ `targets` pada konfigurasi `pino-loki` secara kondisional berdasarkan `NODE_ENV`. Karena proyek ini memiliki kebijakan linting ketat untuk melarang penggunaan `any` dalam segala situasi, _linter_ menolak untuk me-_compile_ dan me-_commit_ perubahan.
+
+## Investigation (Investigasi)
+
+- Analisis kode pada `logger.module.ts` menunjukkan adanya logika operator ternary (`condition ? object : (null as any)`) dalam array transport Pino.
+- Pendekatan ini dipakai untuk menyaring _log target_ yang tidak dipakai di _production_, tetapi bertentangan dengan standar Typescript.
+
+## Solution (Solusi)
+
+Mengganti logika inisialisasi _array_ kondisional dengan memanfaatkan fitur **Spread Operator** `...(...)` dan array kosong `[]`, sehingga TypeScript secara otomatis bisa melakukan _infer_ tipe tanpa memerlukan _casting_ `any`.
+
+```typescript
+targets: [
+  ...(process.env.NODE_ENV !== 'production'
+    ? [{ target: 'pino-pretty', options: { ... } }]
+    : []),
+  { target: 'pino-loki', options: { ... } },
+]
+```
+
+## Prevention (Pencegahan)
+
+- Selalu manfaatkan **Spread Operator** atau **Array.filter()** yang dikombinasikan dengan Type Guards (seperti `Boolean`) untuk menangani elemen _array_ kondisional, menghindari penggunaan _casting_ eksplisit (_type coercion_) seperti `as any` atau `as unknown`.
