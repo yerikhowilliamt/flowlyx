@@ -43,7 +43,17 @@ services:
     volumes:
       - flowlyx_grafana_data:/var/lib/grafana
 
+  loki:
+    image: grafana/loki:latest
+    container_name: flowlyx-loki
+    ports:
+      - '3100:3100'
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - flowlyx_loki_data:/tmp/loki
+
 volumes:
   flowlyx_new_db_data:
   flowlyx_redis_data:
   flowlyx_grafana_data:
+  flowlyx_loki_data:
