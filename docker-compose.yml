@@ -25,6 +25,25 @@ services:
     volumes:
       - flowlyx_redis_data:/data
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: flowlyx-prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: flowlyx-grafana
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - flowlyx_grafana_data:/var/lib/grafana
+
 volumes:
   flowlyx_new_db_data:
   flowlyx_redis_data:
+  flowlyx_grafana_data:

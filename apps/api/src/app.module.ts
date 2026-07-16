@@ -41,6 +41,7 @@ import { EmailModule } from './modules/email/email.module';
 import { ScheduledJobsModule } from './modules/scheduled-jobs/scheduled-jobs.module';
 import { CacheModule } from './modules/cache/cache.module';
 import { PerformanceModule } from './core/performance/performance.module';
+import { MetricsModule } from './core/metrics/metrics.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { PerformanceModule } from './core/performance/performance.module';
     ScheduledJobsModule,
     CacheModule,
     PerformanceModule,
+    MetricsModule,
   ],
   controllers: [],
   providers: [
