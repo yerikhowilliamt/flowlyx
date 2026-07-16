@@ -7,16 +7,29 @@ import { randomUUID } from 'crypto';
     PinoLoggerModule.forRoot({
       pinoHttp: {
         genReqId: (req) => req.headers['x-correlation-id'] || randomUUID(),
-        transport:
-          process.env.NODE_ENV !== 'production'
-            ? {
-                target: 'pino-pretty',
-                options: {
-                  singleLine: true,
-                  colorize: true,
-                },
-              }
-            : undefined,
+        transport: {
+          targets: [
+            ...(process.env.NODE_ENV !== 'production'
+              ? [
+                  {
+                    target: 'pino-pretty',
+                    options: {
+                      singleLine: true,
+                      colorize: true,
+                    },
+                  },
+                ]
+              : []),
+            {
+              target: 'pino-loki',
+              options: {
+                batching: true,
+                interval: 5,
+                host: process.env.LOKI_URL || 'http://localhost:3100',
+              },
+            },
+          ],
+        },
         level: process.env.NODE_ENV !== 'production' ? 'debug' : 'info',
       },
     }),
