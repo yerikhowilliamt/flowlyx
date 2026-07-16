@@ -1,27 +1,25 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { CreateSettingDto } from './dto/create-setting.dto';
 import { UpdateSettingDto } from './dto/update-setting.dto';
-import { SettingsRepository } from './settings.repository';
-import { Setting, Prisma } from '@flowlyx/database';
+import { Setting, prisma, Prisma } from '@flowlyx/database';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
-// Removed LoggerService import
 
 @Injectable()
 export class SettingsService {
   private readonly logger = new Logger(SettingsService.name);
 
-  constructor(private readonly settingsRepository: SettingsRepository) {}
-
   async create(createSettingDto: CreateSettingDto, userId: string): Promise<Setting> {
-    const existing = await this.settingsRepository.findByKey(createSettingDto.key);
+    const existing = await prisma.setting.findUnique({ where: { key: createSettingDto.key } });
     if (existing) {
       throw new ConflictException(`Setting with key '${createSettingDto.key}' already exists`);
     }
 
-    const setting = await this.settingsRepository.create({
-      ...createSettingDto,
-      createdBy: userId,
+    const setting = await prisma.setting.create({
+      data: {
+        ...createSettingDto,
+        createdBy: userId,
+      },
     });
 
     this.logger.log(`Created new setting: ${setting.key}`);
@@ -45,18 +43,21 @@ export class SettingsService {
       ];
     }
 
-    const [data, total] = await this.settingsRepository.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { [sortBy]: sortOrder },
-    });
+    const [data, total] = await Promise.all([
+      prisma.setting.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.setting.count({ where }),
+    ]);
 
     return createPaginatedResponse(data, total, page, limit);
   }
 
   async findByKey(key: string): Promise<Setting> {
-    const setting = await this.settingsRepository.findByKey(key);
+    const setting = await prisma.setting.findUnique({ where: { key } });
     if (!setting) {
       throw new NotFoundException(`Setting with key '${key}' not found`);
     }
@@ -64,7 +65,7 @@ export class SettingsService {
   }
 
   async findById(id: string): Promise<Setting> {
-    const setting = await this.settingsRepository.findById(id);
+    const setting = await prisma.setting.findUnique({ where: { id } });
     if (!setting) {
       throw new NotFoundException(`Setting with ID '${id}' not found`);
     }
@@ -75,15 +76,20 @@ export class SettingsService {
     const setting = await this.findById(id);
 
     if (updateSettingDto.key && updateSettingDto.key !== setting.key) {
-      const existing = await this.settingsRepository.findByKey(updateSettingDto.key);
+      const existing = await prisma.setting.findUnique({ where: { key: updateSettingDto.key } });
       if (existing) {
         throw new ConflictException(`Setting with key '${updateSettingDto.key}' already exists`);
       }
     }
 
-    const updatedSetting = await this.settingsRepository.update(id, {
-      ...updateSettingDto,
-      updatedBy: userId,
+    const data: Prisma.SettingUpdateInput = { ...updateSettingDto, updatedBy: userId };
+    if (updateSettingDto.value !== undefined) {
+      data.value = updateSettingDto.value;
+    }
+
+    const updatedSetting = await prisma.setting.update({
+      where: { id },
+      data,
     });
 
     this.logger.log(`Updated setting: ${updatedSetting.key}`);
@@ -92,7 +98,7 @@ export class SettingsService {
 
   async delete(id: string): Promise<boolean> {
     const setting = await this.findById(id);
-    await this.settingsRepository.delete(id);
+    await prisma.setting.delete({ where: { id } });
     this.logger.log(`Deleted setting: ${setting.key}`);
     return true;
   }
