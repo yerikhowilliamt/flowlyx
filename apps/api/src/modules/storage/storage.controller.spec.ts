@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageController } from './storage.controller';
 import { Request } from 'express';
@@ -17,7 +19,11 @@ describe('StorageController', () => {
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [StorageController],
-      providers: [{ provide: StorageService, useValue: mockStorageService }],
+      providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
+        { provide: StorageService, useValue: mockStorageService },
+      ],
     }).compile();
 
     controller = module.get<StorageController>(StorageController);

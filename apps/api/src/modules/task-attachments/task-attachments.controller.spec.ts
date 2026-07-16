@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskAttachmentsController } from './task-attachments.controller';
 import { TaskAttachmentsService } from './task-attachments.service';
@@ -26,6 +28,8 @@ describe('TaskAttachmentsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TaskAttachmentsController],
       providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
         {
           provide: TaskAttachmentsService,
           useValue: mockService,

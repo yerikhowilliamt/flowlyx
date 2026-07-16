@@ -1,29 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'nestjs-zod/z';
 import { SystemConfigurationType } from '../../../models/system-configuration.model';
 
-export class CreateSystemConfigurationDto {
-  @ApiProperty({ description: 'Unique configuration key' })
-  @IsString()
-  @IsNotEmpty()
-  key!: string;
+const createSystemConfigurationSchema = z.object({
+  key: z.string().min(1).describe('Unique configuration key'),
+  value: z.any().describe('Configuration value'),
+  type: z.nativeEnum(SystemConfigurationType).describe('Type of the value'),
+  description: z.string().optional().describe('Configuration description'),
+  isPublic: z.boolean().optional().describe('Is public'),
+});
 
-  @ApiProperty({ description: 'Configuration value' })
-  @IsNotEmpty()
-  value!: unknown;
-
-  @ApiProperty({ enum: SystemConfigurationType, description: 'Type of the value' })
-  @IsEnum(SystemConfigurationType)
-  @IsNotEmpty()
-  type!: SystemConfigurationType;
-
-  @ApiPropertyOptional({ description: 'Configuration description' })
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  @ApiPropertyOptional({ description: 'Is public' })
-  @IsBoolean()
-  @IsOptional()
-  isPublic?: boolean;
-}
+export class CreateSystemConfigurationDto extends createZodDto(createSystemConfigurationSchema) {}

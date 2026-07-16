@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskCommentsController } from './task-comments.controller';
 import { TaskCommentsService } from './task-comments.service';
@@ -27,6 +29,8 @@ describe('TaskCommentsController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TaskCommentsController],
       providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
         {
           provide: TaskCommentsService,
           useValue: mockService,

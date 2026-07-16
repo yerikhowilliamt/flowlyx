@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { CalendarController } from './calendar.controller';
 import { CalendarService } from './calendar.service';
@@ -10,6 +12,8 @@ describe('CalendarController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CalendarController],
       providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
         {
           provide: CalendarService,
           useValue: {

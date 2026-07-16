@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrioritiesController } from './priorities.controller';
 import { PrioritiesService } from './priorities.service';
@@ -21,6 +23,8 @@ describe('PrioritiesController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PrioritiesController],
       providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
         {
           provide: PrioritiesService,
           useValue: mockPrioritiesService,

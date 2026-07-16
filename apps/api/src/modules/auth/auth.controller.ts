@@ -1,17 +1,20 @@
 import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBody } from '@nestjs/swagger';
-import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { LocalAuthGuard } from './guards/local-auth.guard';
-import { Request, Response } from 'express';
-import { User } from '@flowlyx/database';
+
+import { Response } from 'express';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { UserResponse } from '../../models/user.model';
-
-interface RequestWithUser extends Request {
-  user: User;
-}
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -31,10 +34,13 @@ export class AuthController {
   @ApiBody({ type: LoginDto })
   @ApiOkResponse({ description: 'User successfully logged in, returning access token' })
   @HttpCode(HttpStatus.OK)
-  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response) {
-    const tokens = await this.authService.login(req.user);
+  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: Response) {
+    const user = await this.authService.validateUser(loginDto.email, loginDto.password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const tokens = await this.authService.login(user);
 
     res.cookie('Refresh', tokens.refreshToken, {
       httpOnly: true,

@@ -1,3 +1,5 @@
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TaskAssignmentsController } from './task-assignments.controller';
 import { TaskAssignmentsService } from './task-assignments.service';
@@ -8,7 +10,11 @@ describe('TaskAssignmentsController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [TaskAssignmentsController],
-      providers: [{ provide: TaskAssignmentsService, useValue: {} }],
+      providers: [
+        { provide: JwtService, useValue: {} },
+        { provide: ConfigService, useValue: {} },
+        { provide: TaskAssignmentsService, useValue: {} },
+      ],
     }).compile();
 
     controller = module.get<TaskAssignmentsController>(TaskAssignmentsController);
