@@ -42,6 +42,7 @@ import { ScheduledJobsModule } from './modules/scheduled-jobs/scheduled-jobs.mod
 import { CacheModule } from './modules/cache/cache.module';
 import { PerformanceModule } from './core/performance/performance.module';
 import { MetricsModule } from './core/metrics/metrics.module';
+import { ReleaseCandidateModule } from './modules/release-candidate/release-candidate.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { MetricsModule } from './core/metrics/metrics.module';
     CacheModule,
     PerformanceModule,
     MetricsModule,
+    ReleaseCandidateModule,
   ],
   controllers: [],
   providers: [
