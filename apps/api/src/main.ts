@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
+import compression from 'compression';
 import { ResponseInterceptor } from './core/response/response.interceptor';
 import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './core/exceptions/global-exception.filter';
@@ -14,6 +15,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.enableCors();
   app.use(helmet());
+  app.use(compression());
   // 1. Logger
   const logger = app.get(Logger);
   app.useLogger(logger);
