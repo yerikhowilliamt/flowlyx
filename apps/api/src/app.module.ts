@@ -4,6 +4,8 @@ import { LoggerModule } from './core/logger/logger.module';
 import { validateEnv } from './core/config/env.validation';
 import { CorrelationIdMiddleware } from './core/middleware/correlation-id.middleware';
 import { RequestContextMiddleware } from './core/middleware/request-context.middleware';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { HealthModule } from './core/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -41,6 +43,12 @@ import { CacheModule } from './modules/cache/cache.module';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 100,
+      },
+    ]),
     ConfigModule.forRoot({
       isGlobal: true,
       validate: validateEnv,
@@ -81,7 +89,12 @@ import { CacheModule } from './modules/cache/cache.module';
     CacheModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
