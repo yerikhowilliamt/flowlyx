@@ -1,5 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import helmet from 'helmet';
 import { ResponseInterceptor } from './core/response/response.interceptor';
 import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './core/exceptions/global-exception.filter';
@@ -11,6 +12,8 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.setGlobalPrefix('api');
+  app.enableCors();
+  app.use(helmet());
   // 1. Logger
   const logger = app.get(Logger);
   app.useLogger(logger);
