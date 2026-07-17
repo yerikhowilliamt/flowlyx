@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 import { UsersService } from '../users/users.service';
 import { RegisterDto } from './dto/register.dto';
-import { User } from '@flowlyx/database';
+import { User, prisma } from '@flowlyx/database';
 
 @Injectable()
 export class AuthService {
@@ -19,10 +19,36 @@ export class AuthService {
 
     if (!user) throw new NotFoundException('Invalid Email or Password');
 
-    if (user && (await argon2.verify(user.passwordHash, pass))) {
+    if (user && user.passwordHash && (await argon2.verify(user.passwordHash, pass))) {
       return user;
     }
     return null;
+  }
+
+  async validateOAuthLogin(profile: {
+    email: string;
+    name: string;
+    googleId: string;
+    avatarUrl?: string;
+  }): Promise<User> {
+    let user = await this.usersService.findByEmail(profile.email);
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: profile.email,
+          name: profile.name,
+          googleId: profile.googleId,
+          avatarUrl: profile.avatarUrl,
+          isEmailVerified: true,
+        },
+      });
+    } else if (!user.googleId) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { googleId: profile.googleId },
+      });
+    }
+    return user;
   }
 
   async login(user: User) {
