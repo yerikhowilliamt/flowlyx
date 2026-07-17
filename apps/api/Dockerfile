@@ -54,7 +54,7 @@ RUN chown -R node:node /app
 USER node
 
 # Expose port
-EXPOSE 3000
+EXPOSE 4000
 
 # Start the application
 CMD ["npm", "run", "start:prod", "-w", "@flowlyx/api"]
