@@ -20,14 +20,18 @@ import { randomUUID } from 'crypto';
                   },
                 ]
               : []),
-            {
-              target: 'pino-loki',
-              options: {
-                batching: true,
-                interval: 5,
-                host: process.env.LOKI_URL || 'http://localhost:3100',
-              },
-            },
+            ...(process.env.LOKI_URL
+              ? [
+                  {
+                    target: 'pino-loki',
+                    options: {
+                      batching: true,
+                      interval: 5,
+                      host: process.env.LOKI_URL,
+                    },
+                  },
+                ]
+              : []),
           ],
         },
         level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
