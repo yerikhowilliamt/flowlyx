@@ -1,7 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { prisma } from '@flowlyx/database';
-// @ts-expect-error Midtrans does not have types
 import midtransClient from 'midtrans-client';
 import * as crypto from 'crypto';
 import { UpdatePlanRequestDto } from './dto/organization-billing.dto';
