@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
@@ -16,6 +16,9 @@ export class AuthService {
 
   async validateUser(email: string, pass: string): Promise<User | null> {
     const user = await this.usersService.findByEmail(email);
+
+    if (!user) throw new NotFoundException('Invalid Email or Password');
+
     if (user && (await argon2.verify(user.passwordHash, pass))) {
       return user;
     }
@@ -38,7 +41,7 @@ export class AuthService {
     });
 
     // Optionally store the refresh token in the database
-    // await this.usersService.updateRefreshToken(user.id, refreshToken);
+    await this.usersService.updateRefreshToken(user.id, refreshToken);
 
     return {
       accessToken,

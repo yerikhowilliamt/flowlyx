@@ -68,19 +68,55 @@ describe('TasksService', () => {
   });
 
   describe('findAllByListId', () => {
-    it.skip('should return tasks for a list', async () => {
+    it('should return tasks for a list', async () => {
       (prisma.task.findMany as jest.Mock).mockResolvedValueOnce([mockTask]);
-      const result = await service.findAllByListId('list-1', {
+      (prisma.task.count as jest.Mock).mockResolvedValueOnce(1);
+      
+      const query = {
         page: 1,
         limit: 10,
-      } as unknown as import('../../core/pagination/pagination.dto').PaginationDto);
-      expect('data' in (result as object) ? (result as { data: unknown }).data : result).toEqual([
-        mockTask,
-      ]);
+        sortBy: 'order',
+        sortOrder: 'asc' as const,
+      };
+
+      const result = await service.findAllByListId('list-1', query);
+      
+      expect(result.data).toEqual([mockTask]);
+      expect(result.meta.total).toBe(1);
       expect(prisma.task.findMany).toHaveBeenCalledWith({
         where: { listId: 'list-1' },
+        skip: 0,
+        take: 10,
         orderBy: { order: 'asc' },
       });
+      expect(prisma.task.count).toHaveBeenCalledWith({
+        where: { listId: 'list-1' },
+      });
+    });
+
+    it('should apply search filter if search is provided', async () => {
+      (prisma.task.findMany as jest.Mock).mockResolvedValueOnce([mockTask]);
+      (prisma.task.count as jest.Mock).mockResolvedValueOnce(1);
+      
+      const query = {
+        page: 1,
+        limit: 10,
+        sortBy: 'order',
+        sortOrder: 'asc' as const,
+        search: 'test task',
+      };
+
+      const result = await service.findAllByListId('list-1', query);
+      
+      expect(result.data).toEqual([mockTask]);
+      expect(prisma.task.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { 
+            listId: 'list-1',
+            title: { contains: 'test task', mode: 'insensitive' }
+          },
+        })
+      );
     });
   });
 
