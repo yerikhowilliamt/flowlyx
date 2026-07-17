@@ -47,7 +47,7 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/apps/api/package.json ./apps/api/package.json
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 # Change ownership to non-root user
 RUN chown -R node:node /app
 
