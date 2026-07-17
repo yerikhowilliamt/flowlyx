@@ -26,6 +26,7 @@ describe('ProjectRolesGuard', () => {
     expect(guard).toBeDefined();
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createMockContext = (requestOptions: any) =>
     ({
       getHandler: jest.fn(),
@@ -33,7 +34,7 @@ describe('ProjectRolesGuard', () => {
       switchToHttp: () => ({
         getRequest: () => requestOptions,
       }),
-    } as unknown as ExecutionContext);
+    }) as unknown as ExecutionContext;
 
   it('should return true if no roles are required', async () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(null);
@@ -113,7 +114,9 @@ describe('ProjectRolesGuard', () => {
 
   it('should extract projectId from priorities route', async () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([ProjectRole.ADMIN]);
-    (prisma.priority.findUnique as jest.Mock).mockResolvedValue({ projectId: 'project_from_priority' });
+    (prisma.priority.findUnique as jest.Mock).mockResolvedValue({
+      projectId: 'project_from_priority',
+    });
     (prisma.projectMember.findFirst as jest.Mock).mockResolvedValue({ role: ProjectRole.ADMIN });
 
     const context = createMockContext({
@@ -126,9 +129,14 @@ describe('ProjectRolesGuard', () => {
 
     const result = await guard.canActivate(context);
     expect(result).toBe(true);
-    expect(prisma.priority.findUnique).toHaveBeenCalledWith({ where: { id: 'priority1' }, select: { projectId: true } });
-    expect(prisma.projectMember.findFirst).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ projectId: 'project_from_priority' })
-    }));
+    expect(prisma.priority.findUnique).toHaveBeenCalledWith({
+      where: { id: 'priority1' },
+      select: { projectId: true },
+    });
+    expect(prisma.projectMember.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ projectId: 'project_from_priority' }),
+      }),
+    );
   });
 });

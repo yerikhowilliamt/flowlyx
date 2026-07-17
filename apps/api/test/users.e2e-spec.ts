@@ -45,7 +45,7 @@ describe('Users Module (e2e)', () => {
     const user = await prisma.user.create({
       data: testUser,
     });
-    
+
     userId = user.id;
 
     // Generate JWT token
@@ -76,9 +76,7 @@ describe('Users Module (e2e)', () => {
   });
 
   it('/users/me (GET) - fail without token', async () => {
-    await request(app.getHttpServer())
-      .get('/users/me')
-      .expect(401);
+    await request(app.getHttpServer()).get('/users/me').expect(401);
   });
 
   it('/users/:id (GET) - success', async () => {
@@ -106,8 +104,8 @@ describe('Users Module (e2e)', () => {
 
   it('/users/:id (PATCH) - success with avatar upload', async () => {
     // We mock a file upload by using supertest .attach()
-    const uploadSpy = jest.spyOn(app.get(CloudinaryService), 'uploadFile');
-    
+    jest.spyOn(app.get(CloudinaryService), 'uploadFile');
+
     const res = await request(app.getHttpServer())
       .patch(`/users/${userId}`)
       .set('Authorization', `Bearer ${accessToken}`)

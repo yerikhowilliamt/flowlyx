@@ -1,13 +1,14 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { prisma } from '@flowlyx/database';
-// @ts-ignore
+// @ts-expect-error Midtrans does not have types
 import midtransClient from 'midtrans-client';
-import { randomUUID } from 'crypto';
+import * as crypto from 'crypto';
 import { UpdatePlanRequestDto } from './dto/organization-billing.dto';
 
 @Injectable()
 export class OrganizationBillingService {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private snap: any;
 
   constructor(private readonly configService: ConfigService) {
@@ -77,10 +78,10 @@ export class OrganizationBillingService {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async handleWebhook(payload: any) {
     // Validate signature key
     const serverKey = this.configService.get<string>('MIDTRANS_SERVER_KEY') || '';
-    const crypto = require('crypto');
     const hash = crypto
       .createHash('sha512')
       .update(payload.order_id + payload.status_code + payload.gross_amount + serverKey)
@@ -104,7 +105,11 @@ export class OrganizationBillingService {
       }
     } else if (transactionStatus === 'settlement') {
       dbStatus = 'SETTLEMENT';
-    } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
+    } else if (
+      transactionStatus === 'cancel' ||
+      transactionStatus === 'deny' ||
+      transactionStatus === 'expire'
+    ) {
       dbStatus = 'CANCEL';
     } else if (transactionStatus === 'pending') {
       dbStatus = 'PENDING';
