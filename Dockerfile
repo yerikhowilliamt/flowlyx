@@ -34,6 +34,8 @@ WORKDIR /app
 # Create a non-root user and group (Alpine node image already has a node user with uid 1000)
 # We can just use the built-in node user
 
+RUN apk add --no-cache openssl
+
 # Set environment to production
 ENV NODE_ENV production
 
