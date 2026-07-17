@@ -2,17 +2,22 @@ import { ApiTags, ApiOperation, ApiCreatedResponse, ApiOkResponse, ApiBody } fro
 import {
   Controller,
   Post,
+  Get,
   Body,
   HttpCode,
   HttpStatus,
   Res,
+  Req,
+  UseGuards,
   UnauthorizedException,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import { User } from '@flowlyx/database';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { UserResponse } from '../../models/user.model';
 
@@ -51,5 +56,29 @@ export class AuthController {
     return {
       access_token: tokens.accessToken,
     };
+  }
+
+  @ApiOperation({ summary: 'Initiate Google OAuth login' })
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // Initiates the Google OAuth flow
+  }
+
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @Get('google/redirect')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req: Request & { user: User }, @Res() res: Response) {
+    const user = req.user;
+    const tokens = await this.authService.login(user);
+
+    res.cookie('Refresh', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    const frontendUrl = process.env.AUTHORIZED_JAVASCRIPT_ORIGINS || 'http://localhost:3015';
+    return res.redirect(`${frontendUrl}?access_token=${tokens.accessToken}`);
   }
 }
