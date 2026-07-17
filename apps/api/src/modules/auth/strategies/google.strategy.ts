@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, VerifyCallback, Profile } from 'passport-google-oauth20';
+import { Strategy, Profile } from 'passport-google-oauth20';
 import { User } from '@flowlyx/database';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
@@ -19,12 +19,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  async validate(
-    accessToken: string,
-    refreshToken: string,
-    profile: Profile,
-    done: VerifyCallback,
-  ): Promise<User> {
+  async validate(accessToken: string, refreshToken: string, profile: Profile): Promise<User> {
     const { id, emails, displayName, photos } = profile;
 
     if (!emails || emails.length === 0) {
@@ -39,7 +34,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     };
 
     const validatedUser = await this.authService.validateOAuthLogin(user);
-    done(null, validatedUser);
     return validatedUser;
   }
 }
