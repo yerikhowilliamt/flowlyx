@@ -1,0 +1,57 @@
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { WORKSPACE_ROLES_KEY } from '../decorators/workspace-roles.decorator';
+import { WorkspaceRole } from '../enums/workspace-role.enum';
+import { User, prisma } from '@flowlyx/database';
+
+@Injectable()
+export class WorkspaceRolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const requiredRoles = this.reflector.getAllAndOverride<WorkspaceRole[]>(WORKSPACE_ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true;
+    }
+
+    const request = context.switchToHttp().getRequest();
+    const user: User = request.user;
+
+    // Attempt to extract workspaceId from params, query, or body. Fallback to id if it's the workspaces controller.
+    const workspaceId =
+      request.params.workspaceId ||
+      request.query.workspaceId ||
+      request.body.workspaceId ||
+      request.params.id;
+
+    if (!user || !workspaceId) {
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this workspace to perform this action.',
+      );
+    }
+
+    const member = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId: workspaceId as string,
+          userId: user.id,
+        },
+      },
+    });
+
+    if (!member) {
+      throw new ForbiddenException('User is not a member of this workspace');
+    }
+
+    if (!requiredRoles.includes(member.role as WorkspaceRole)) {
+      throw new ForbiddenException(
+        'Access denied: You do not have the required role in this workspace to perform this action.',
+      );
+    }
+    return true;
+  }
+}

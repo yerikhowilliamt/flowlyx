@@ -45,3 +45,5 @@ pnpm-debug.log*
 
 # Custom Ignore (as requested by user)
 Handbook/
+.turbo/
+pr_body

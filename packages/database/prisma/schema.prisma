@@ -1,5 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -7,19 +7,595 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Example Base Model to demonstrate structure. 
-// Will be replaced with real business tables in the future.
-model ExampleEntity {
-  id        String    @id @default(uuid()) @db.Uuid
-  
-  name      String    @map("name")
+// User model for authentication and identity management.
+model User {
+  id              String  @id @default(uuid()) @db.Uuid
+  name            String  @map("name")
+  email           String  @unique @map("email")
+  passwordHash    String  @map("password_hash")
+  isEmailVerified Boolean @default(false) @map("is_email_verified")
+  role            String  @default("USER") @map("role")
+  status          String  @default("ACTIVE") @map("status")
+  refreshToken    String? @map("refresh_token")
+  avatarUrl       String? @map("avatar_url")
+
+  organizationMembers OrganizationMember[]
+  workspaceMembers    WorkspaceMember[]
+  projectMembers      ProjectMember[]
+  taskAssignments     TaskAssignment[]
+  taskComments        TaskComment[]
+  commentMentions     TaskCommentMention[]
+  taskAttachments     TaskAttachment[]
+  timeEntries         TimeEntry[]
+  activities          Activity[]
+  notifications       Notification[]
+  uploadedFiles       File[]
+  auditLogs           AuditLog[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   deletedAt DateTime? @map("deleted_at")
-  createdBy String?   @db.Uuid @map("created_by")
-  updatedBy String?   @db.Uuid @map("updated_by")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
 
-  @@map("example_entities")
+  @@map("users")
+}
+
+model Organization {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @map("name")
+  slug        String  @unique @map("slug")
+  description String? @map("description")
+  logoUrl     String? @map("logo_url")
+  status      String  @default("ACTIVE") @map("status")
+
+  members    OrganizationMember[]
+  workspaces Workspace[]
+  auditLogs  AuditLog[]
+  subscription OrganizationSubscription?
+  paymentTransactions PaymentTransaction[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("organizations")
+}
+
+model OrganizationMember {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+  userId         String @map("user_id") @db.Uuid
+  role           String @default("MEMBER") @map("role")
+  status         String @default("ACTIVE") @map("status")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, userId])
+  @@map("organization_members")
+}
+
+model Workspace {
+  id             String  @id @default(uuid()) @db.Uuid
+  organizationId String  @map("organization_id") @db.Uuid
+  name           String  @map("name")
+  slug           String  @unique @map("slug")
+  description    String? @map("description")
+  status         String  @default("ACTIVE") @map("status")
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  members      WorkspaceMember[]
+  projects     Project[]
+  files        File[]
+  auditLogs    AuditLog[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String @id @default(uuid()) @db.Uuid
+  workspaceId String @map("workspace_id") @db.Uuid
+  userId      String @map("user_id") @db.Uuid
+  role        String @default("MEMBER") @map("role")
+  status      String @default("ACTIVE") @map("status")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+model Project {
+  id          String  @id @default(uuid()) @db.Uuid
+  workspaceId String  @map("workspace_id") @db.Uuid
+  name        String  @map("name")
+  slug        String  @unique @map("slug")
+  description String? @map("description")
+  status      String  @default("ACTIVE") @map("status")
+
+  workspace  Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members    ProjectMember[]
+  boards     Board[]
+  labels     Label[]
+  priorities Priority[]
+  files      File[]
+  auditLogs  AuditLog[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  role      String @default("MEMBER") @map("role")
+  status    String @default("ACTIVE") @map("status")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model Board {
+  id          String  @id @default(uuid()) @db.Uuid
+  projectId   String  @map("project_id") @db.Uuid
+  name        String  @map("name")
+  description String? @map("description")
+  status      String  @default("ACTIVE") @map("status")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  lists   List[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("boards")
+}
+
+model List {
+  id      String  @id @default(uuid()) @db.Uuid
+  boardId String  @map("board_id") @db.Uuid
+  name    String  @map("name")
+  order   Float   @default(0) @map("order")
+  color   String? @map("color")
+  status  String  @default("ACTIVE") @map("status")
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("lists")
+}
+
+model Task {
+  id          String  @id @default(uuid()) @db.Uuid
+  listId      String  @map("list_id") @db.Uuid
+  title       String  @map("title")
+  description String? @map("description")
+  order       Float   @default(0) @map("order")
+  priorityId  String? @map("priority_id") @db.Uuid
+  status      String  @default("ACTIVE") @map("status")
+  startDate   DateTime? @map("start_date")
+  dueDate     DateTime? @map("due_date")
+  reminderAt  DateTime? @map("reminder_at")
+
+  list            List             @relation(fields: [listId], references: [id], onDelete: Cascade)
+  priority        Priority?        @relation(fields: [priorityId], references: [id])
+  subtasks        Subtask[]
+  taskLabels      TaskLabel[]
+  taskAssignments TaskAssignment[]
+  comments        TaskComment[]
+  attachments     TaskAttachment[]
+  timeEntries     TimeEntry[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("tasks")
+}
+
+model Subtask {
+  id          String  @id @default(uuid()) @db.Uuid
+  taskId      String  @map("task_id") @db.Uuid
+  title       String  @map("title")
+  isCompleted Boolean @default(false) @map("is_completed")
+  order       Float   @default(0) @map("order")
+  status      String  @default("ACTIVE") @map("status")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("subtasks")
+}
+
+model Label {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  name      String @map("name")
+  color     String @default("#6B7280") @map("color")
+  status    String @default("ACTIVE") @map("status")
+
+  project    Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  taskLabels TaskLabel[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@unique([projectId, name])
+  @@map("labels")
+}
+
+model TaskLabel {
+  id      String @id @default(uuid()) @db.Uuid
+  taskId  String @map("task_id") @db.Uuid
+  labelId String @map("label_id") @db.Uuid
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([taskId, labelId])
+  @@map("task_labels")
+}
+
+model Priority {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  name      String @map("name")
+  color     String @default("#6B7280") @map("color")
+  order     Float  @default(0) @map("order")
+  status    String @default("ACTIVE") @map("status")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@unique([projectId, name])
+  @@map("priorities")
+}
+
+model TaskAssignment {
+  id     String @id @default(uuid()) @db.Uuid
+  taskId String @map("task_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by") @db.Uuid
+
+  @@unique([taskId, userId])
+  @@map("task_assignments")
+}
+
+model TaskComment {
+  id       String  @id @default(uuid()) @db.Uuid
+  taskId   String  @map("task_id") @db.Uuid
+  userId   String  @map("user_id") @db.Uuid
+  parentId String? @map("parent_id") @db.Uuid
+  content  String  @map("content") // Supports Markdown/Rich text
+  status   String  @default("ACTIVE") @map("status")
+
+  task     Task                 @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user     User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   TaskComment?         @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  TaskComment[]        @relation("CommentReplies")
+  mentions TaskCommentMention[]
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("task_comments")
+}
+
+model TaskCommentMention {
+  id        String @id @default(uuid()) @db.Uuid
+  commentId String @map("comment_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+
+  comment TaskComment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([commentId, userId])
+  @@map("task_comment_mentions")
+}
+
+model TaskAttachment {
+  id       String  @id @default(uuid()) @db.Uuid
+  taskId   String  @map("task_id") @db.Uuid
+  userId   String  @map("user_id") @db.Uuid
+  fileName String  @map("file_name")
+  fileUrl  String  @map("file_url")
+  fileSize Int?    @map("file_size") // In bytes
+  fileType String? @map("file_type") // MIME type
+  status   String  @default("ACTIVE") @map("status")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("task_attachments")
+}
+
+model Activity {
+  id         String @id @default(uuid()) @db.Uuid
+  entityId   String @map("entity_id") @db.Uuid
+  entityType String @map("entity_type")
+  userId     String @map("user_id") @db.Uuid
+  action     String @map("action")
+  details    Json?  @map("details")
+  status     String @default("ACTIVE") @map("status")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@index([entityId, entityType])
+  @@map("activities")
+}
+
+model Notification {
+  id            String  @id @default(uuid()) @db.Uuid
+  userId        String  @map("user_id") @db.Uuid
+  title         String  @map("title")
+  content       String  @map("content")
+  type          String  @map("type")
+  isRead        Boolean @default(false) @map("is_read")
+  referenceId   String? @map("reference_id") @db.Uuid
+  referenceType String? @map("reference_type")
+  status        String  @default("ACTIVE") @map("status")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("notifications")
+}
+
+model TimeEntry {
+  id          String    @id @default(uuid()) @db.Uuid
+  taskId      String    @map("task_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  startTime   DateTime  @map("start_time")
+  endTime     DateTime? @map("end_time")
+  duration    Int?      @map("duration") // in seconds
+  description String?   @map("description")
+  status      String    @default("ACTIVE") @map("status")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("time_entries")
+}
+
+model File {
+  id           String    @id @default(uuid()) @db.Uuid
+  workspaceId  String    @map("workspace_id") @db.Uuid
+  projectId    String?   @map("project_id") @db.Uuid
+  uploaderId   String    @map("uploader_id") @db.Uuid
+  originalName String    @map("original_name")
+  fileUrl      String    @map("file_url")
+  fileSize     Int       @map("file_size") // In bytes
+  fileType     String    @map("file_type") // MIME type
+  status       String    @default("ACTIVE") @map("status")
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project      Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  uploader     User      @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+  createdBy    String?   @map("created_by") @db.Uuid
+  updatedBy    String?   @map("updated_by") @db.Uuid
+
+  @@map("files")
+}
+
+model SystemConfiguration {
+  id          String  @id @default(uuid()) @db.Uuid
+  key         String  @unique @map("key")
+  value       Json    @map("value")
+  type        String  @default("string") @map("type") // e.g. "string", "number", "boolean", "json"
+  description String? @map("description")
+  isPublic    Boolean @default(false) @map("is_public")
+  status      String  @default("ACTIVE") @map("status")
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@map("system_configurations")
+}
+
+model AuditLog {
+  id           String    @id @default(uuid()) @db.Uuid
+  workspaceId  String?   @map("workspace_id") @db.Uuid
+  organizationId String? @map("organization_id") @db.Uuid
+  projectId    String?   @map("project_id") @db.Uuid
+  userId       String?   @map("user_id") @db.Uuid
+  action       String    @map("action")
+  resourceType String    @map("resource_type")
+  resourceId   String?   @map("resource_id")
+  details      Json?     @map("details")
+  ipAddress    String?   @map("ip_address")
+  userAgent    String?   @map("user_agent")
+  status       String    @default("ACTIVE") @map("status")
+
+  workspace    Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project      Project?   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user         User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // --- Audit Fields ---
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
+  createdBy    String?   @map("created_by") @db.Uuid
+  updatedBy    String?   @map("updated_by") @db.Uuid
+
+  @@index([workspaceId])
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+model Setting {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique @map("key")
+  value       String   @map("value") // Can be JSON string or text
+  type        String   @default("STRING") @map("type") // STRING, BOOLEAN, JSON, NUMBER
+  group       String   @default("GENERAL") @map("group") // GENERAL, SYSTEM, SECURITY
+  description String?  @map("description")
+  isPublic    Boolean  @default(false) @map("is_public") // If it's exposed to unauthenticated users
+  status      String   @default("ACTIVE") @map("status")
+
+  // --- Audit Fields ---
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  createdBy   String?   @map("created_by") @db.Uuid
+  updatedBy   String?   @map("updated_by") @db.Uuid
+
+  @@map("settings")
+}
+
+model OrganizationSubscription {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @unique @map("organization_id") @db.Uuid
+  plan           String    @map("plan") // FREE, PRO, ENTERPRISE
+  billingCycle   String    @map("billing_cycle") // MONTHLY, YEARLY
+  status         String    @default("ACTIVE") @map("status") // ACTIVE, INACTIVE, CANCELED, PAST_DUE
+  currentPeriodStart DateTime @map("current_period_start")
+  currentPeriodEnd   DateTime @map("current_period_end")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("organization_subscriptions")
+}
+
+model PaymentTransaction {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  orderId        String    @unique @map("order_id") // Midtrans order_id
+  amount         Float     @map("amount")
+  paymentUrl     String?   @map("payment_url") // Snap URL
+  status         String    @default("PENDING") @map("status") // PENDING, SETTLEMENT, EXPIRE, CANCEL, DENY
+  paymentType    String?   @map("payment_type") // e.g. credit_card, gopay
+  transactionId  String?   @map("transaction_id") // Midtrans transaction_id
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("payment_transactions")
 }

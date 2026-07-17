@@ -1,14 +1,21 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import helmet from 'helmet';
+import compression from 'compression';
 import { ResponseInterceptor } from './core/response/response.interceptor';
 import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './core/exceptions/global-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ZodValidationPipe } from 'nestjs-zod';
+import { ZodValidationPipe, patchNestJsSwagger } from 'nestjs-zod';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
-
+  app.setGlobalPrefix('api');
+  app.enableCors();
+  app.use(helmet());
+  app.use(compression());
   // 1. Logger
   const logger = app.get(Logger);
   app.useLogger(logger);
@@ -21,6 +28,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ZodValidationPipe());
 
   // 4. Swagger
+  patchNestJsSwagger();
   const config = new DocumentBuilder()
     .setTitle('Flowlyx API')
     .setDescription('Enterprise Project Management Platform API')
@@ -31,7 +39,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // 5. Start Server
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 4000;
   await app.listen(port);
   logger.log(`Application listening on port ${port}`);
 }
