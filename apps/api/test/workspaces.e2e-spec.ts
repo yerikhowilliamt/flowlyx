@@ -80,7 +80,7 @@ describe('Workspaces Module (e2e)', () => {
 
     // Create a workspace member so the next endpoints (PATCH, DELETE) pass the WorkspaceRolesGuard
     // Note: In a real app, the service or an event might do this automatically
-    const decoded = jwtService.decode(userToken) as any;
+    const decoded = jwtService.decode(userToken) as { sub: string };
     await prisma.workspaceMember.create({
       data: {
         workspaceId,

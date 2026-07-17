@@ -28,7 +28,6 @@ jest.mock('midtrans-client', () => ({
 
 describe('OrganizationBillingService', () => {
   let service: OrganizationBillingService;
-  let configService: ConfigService;
 
   beforeEach(async () => {
     const mockConfigService = {
@@ -48,7 +47,6 @@ describe('OrganizationBillingService', () => {
     }).compile();
 
     service = module.get<OrganizationBillingService>(OrganizationBillingService);
-    configService = module.get<ConfigService>(ConfigService);
     jest.clearAllMocks();
   });
 
@@ -65,7 +63,7 @@ describe('OrganizationBillingService', () => {
     it('should return subscription if found', async () => {
       const mockSub = { id: '1', organizationId: 'org1', plan: 'PRO' };
       (prisma.organizationSubscription.findUnique as jest.Mock).mockResolvedValue(mockSub);
-      
+
       const result = await service.getBillingInfo('org1');
       expect(result).toEqual(mockSub);
     });
@@ -73,35 +71,40 @@ describe('OrganizationBillingService', () => {
 
   describe('updatePlan', () => {
     it('should throw BadRequestException if plan is FREE', async () => {
-      await expect(service.updatePlan('org1', { plan: 'FREE', billingCycle: 'MONTHLY' }))
-        .rejects.toThrow(BadRequestException);
+      await expect(
+        service.updatePlan('org1', { plan: 'FREE', billingCycle: 'MONTHLY' }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should create transaction and return token and redirectUrl', async () => {
       const result = await service.updatePlan('org1', { plan: 'PRO', billingCycle: 'MONTHLY' });
-      
+
       expect(result).toEqual({
         token: 'mock_token',
         redirectUrl: 'http://mock.redirect.url',
       });
-      expect(prisma.paymentTransaction.create).toHaveBeenCalledWith(expect.objectContaining({
-        data: expect.objectContaining({
-          organizationId: 'org1',
-          amount: 150000,
-          status: 'PENDING',
+      expect(prisma.paymentTransaction.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            organizationId: 'org1',
+            amount: 150000,
+            status: 'PENDING',
+          }),
         }),
-      }));
+      );
     });
   });
 
   describe('handleWebhook', () => {
     it('should throw BadRequestException on invalid signature', async () => {
-      await expect(service.handleWebhook({
-        order_id: 'order1',
-        status_code: '200',
-        gross_amount: '150000.00',
-        signature_key: 'invalid_hash',
-      })).rejects.toThrow(BadRequestException);
+      await expect(
+        service.handleWebhook({
+          order_id: 'order1',
+          status_code: '200',
+          gross_amount: '150000.00',
+          signature_key: 'invalid_hash',
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should update transaction status and upsert subscription on settlement', async () => {
@@ -111,14 +114,15 @@ describe('OrganizationBillingService', () => {
         gross_amount: '150000.00',
         transaction_status: 'settlement',
       };
-      
+
       // Calculate valid hash for tests
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const crypto = require('crypto');
       const validHash = crypto
         .createHash('sha512')
         .update(payload.order_id + payload.status_code + payload.gross_amount + 'server_key')
         .digest('hex');
-      
+
       const validPayload = { ...payload, signature_key: validHash };
 
       (prisma.paymentTransaction.update as jest.Mock).mockResolvedValue({
@@ -132,9 +136,11 @@ describe('OrganizationBillingService', () => {
         data: { status: 'SETTLEMENT' },
       });
 
-      expect(prisma.organizationSubscription.upsert).toHaveBeenCalledWith(expect.objectContaining({
-        where: { organizationId: 'org1' },
-      }));
+      expect(prisma.organizationSubscription.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { organizationId: 'org1' },
+        }),
+      );
     });
   });
 });
