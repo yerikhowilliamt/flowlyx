@@ -4,9 +4,12 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { prisma, User, Prisma } from '@flowlyx/database';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UsersService {
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
+
   async create(createUserDto: CreateUserDto & { passwordHash: string }): Promise<User> {
     const existing = await this.findByEmail(createUserDto.email);
     if (existing) {
@@ -52,12 +55,23 @@ export class UsersService {
     return prisma.user.findUnique({ where: { id } });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto, file?: Express.Multer.File): Promise<User> {
     const user = await this.findById(id);
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    return prisma.user.update({ where: { id }, data: updateUserDto });
+
+    const dataToUpdate: Prisma.UserUpdateInput = { ...updateUserDto };
+
+    if (file) {
+      const uploadResult = await this.cloudinaryService.uploadFile(file, 'flowlyx/avatars');
+      console.log('UPLOAD RESULT:', uploadResult);
+      if ('url' in uploadResult) {
+        dataToUpdate.avatarUrl = uploadResult.url;
+      }
+    }
+
+    return prisma.user.update({ where: { id }, data: dataToUpdate });
   }
 
   async delete(id: string): Promise<boolean> {
@@ -67,5 +81,12 @@ export class UsersService {
     }
     await prisma.user.delete({ where: { id } });
     return true;
+  }
+
+  async updateRefreshToken(id: string, refreshToken: string | null): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data: { refreshToken },
+    });
   }
 }

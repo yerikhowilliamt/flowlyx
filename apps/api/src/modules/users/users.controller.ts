@@ -8,12 +8,15 @@ import {
   UseGuards,
   NotFoundException,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { UserResponse, UserSummary } from '../../models/user.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { RolesGuard } from '../rbac/guards/roles.guard';
@@ -64,10 +67,30 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Update a user' })
   @ApiOkResponse({ type: UserResponse })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        role: { type: 'string' },
+        status: { type: 'string' },
+        avatar: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @Serialize(UserResponse)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @UseInterceptors(FileInterceptor('avatar'))
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return this.usersService.update(id, updateUserDto, file);
   }
 
   @ApiOperation({ summary: 'Delete a user' })

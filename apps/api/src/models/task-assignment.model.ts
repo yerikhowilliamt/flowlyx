@@ -2,12 +2,12 @@ import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class TaskAssignmentSummary {
-  @ApiProperty({ name: 'task_id' })
-  @Expose({ name: 'task_id' })
+  @ApiProperty()
+  @Expose()
   taskId!: string;
 
-  @ApiProperty({ name: 'user_id' })
-  @Expose({ name: 'user_id' })
+  @ApiProperty()
+  @Expose()
   userId!: string;
 }
 
@@ -16,19 +16,19 @@ export class TaskAssignmentResponse {
   @Expose()
   id!: string;
 
-  @ApiProperty({ name: 'task_id' })
-  @Expose({ name: 'task_id' })
+  @ApiProperty()
+  @Expose()
   taskId!: string;
 
-  @ApiProperty({ name: 'user_id' })
-  @Expose({ name: 'user_id' })
+  @ApiProperty()
+  @Expose()
   userId!: string;
 
-  @ApiProperty({ name: 'created_at' })
-  @Expose({ name: 'created_at' })
+  @ApiProperty()
+  @Expose()
   createdAt!: Date;
 
-  @ApiProperty({ name: 'created_by', required: false })
-  @Expose({ name: 'created_by' })
+  @ApiProperty({ required: false })
+  @Expose()
   createdBy?: string | null;
 }

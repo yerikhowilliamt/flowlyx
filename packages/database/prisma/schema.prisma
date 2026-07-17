@@ -17,6 +17,7 @@ model User {
   role            String  @default("USER") @map("role")
   status          String  @default("ACTIVE") @map("status")
   refreshToken    String? @map("refresh_token")
+  avatarUrl       String? @map("avatar_url")
 
   organizationMembers OrganizationMember[]
   workspaceMembers    WorkspaceMember[]
@@ -52,6 +53,8 @@ model Organization {
   members    OrganizationMember[]
   workspaces Workspace[]
   auditLogs  AuditLog[]
+  subscription OrganizationSubscription?
+  paymentTransactions PaymentTransaction[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -558,4 +561,41 @@ model Setting {
   updatedBy   String?   @map("updated_by") @db.Uuid
 
   @@map("settings")
+}
+
+model OrganizationSubscription {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @unique @map("organization_id") @db.Uuid
+  plan           String    @map("plan") // FREE, PRO, ENTERPRISE
+  billingCycle   String    @map("billing_cycle") // MONTHLY, YEARLY
+  status         String    @default("ACTIVE") @map("status") // ACTIVE, INACTIVE, CANCELED, PAST_DUE
+  currentPeriodStart DateTime @map("current_period_start")
+  currentPeriodEnd   DateTime @map("current_period_end")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("organization_subscriptions")
+}
+
+model PaymentTransaction {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  orderId        String    @unique @map("order_id") // Midtrans order_id
+  amount         Float     @map("amount")
+  paymentUrl     String?   @map("payment_url") // Snap URL
+  status         String    @default("PENDING") @map("status") // PENDING, SETTLEMENT, EXPIRE, CANCEL, DENY
+  paymentType    String?   @map("payment_type") // e.g. credit_card, gopay
+  transactionId  String?   @map("transaction_id") // Midtrans transaction_id
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("payment_transactions")
 }

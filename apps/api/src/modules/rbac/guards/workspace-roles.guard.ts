@@ -21,12 +21,12 @@ export class WorkspaceRolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    // Attempt to extract workspaceId from params or query
+    // Attempt to extract workspaceId from params, query, or body. Fallback to id if it's the workspaces controller.
     const workspaceId =
       request.params.workspaceId ||
-      request.params.id ||
       request.query.workspaceId ||
-      request.body.workspaceId;
+      request.body.workspaceId ||
+      request.params.id;
 
     if (!user || !workspaceId) {
       throw new ForbiddenException(

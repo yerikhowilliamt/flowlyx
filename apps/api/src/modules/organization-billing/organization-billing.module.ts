@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { OrganizationBillingService } from './organization-billing.service';
-import { OrganizationBillingController } from './organization-billing.controller';
+import {
+  OrganizationBillingController,
+  OrganizationBillingWebhookController,
+} from './organization-billing.controller';
 
 @Module({
-  controllers: [OrganizationBillingController],
+  controllers: [OrganizationBillingController, OrganizationBillingWebhookController],
   providers: [OrganizationBillingService],
   exports: [OrganizationBillingService],
 })

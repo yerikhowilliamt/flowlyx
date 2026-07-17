@@ -26,7 +26,10 @@ export class JwtAuthGuard implements CanActivate {
       // so that we can access it in our route handlers
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      request.user = payload;
+      request.user = {
+        ...payload,
+        id: payload.sub,
+      };
     } catch {
       throw new UnauthorizedException();
     }
