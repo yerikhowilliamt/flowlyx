@@ -54,7 +54,7 @@ export class OrganizationBillingWebhookController {
   @Post('webhook')
   @ApiOperation({ summary: 'Midtrans Webhook Callback' })
   @ApiResponse({ status: 200, description: 'Webhook processed successfully.' })
-  handleWebhook(@Body() payload: any) {
+  handleWebhook(@Body() payload: Record<string, unknown>) {
     return this.organizationBillingService.handleWebhook(payload);
   }
 }
