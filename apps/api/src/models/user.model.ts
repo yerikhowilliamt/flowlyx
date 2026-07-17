@@ -28,17 +28,21 @@ export class UserResponse {
   @Expose()
   email!: string;
 
-  @ApiPropertyOptional({ name: 'email_verified', nullable: true })
-  @Expose({ name: 'email_verified' })
+  @ApiPropertyOptional({ nullable: true })
+  @Expose()
   emailVerified?: boolean | null;
 
-  @ApiPropertyOptional({ name: 'access_token', nullable: true })
-  @Expose({ name: 'access_token' })
+  @ApiPropertyOptional({ nullable: true })
+  @Expose()
   accessToken?: string | null;
 
-  @ApiPropertyOptional({ name: 'refresh_token', nullable: true })
-  @Expose({ name: 'refresh_token' })
+  @ApiPropertyOptional({ nullable: true })
+  @Expose()
   refreshToken?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @Expose()
+  avatarUrl?: string | null;
 
   @ApiProperty({ enum: Role })
   @Expose()
@@ -48,12 +52,12 @@ export class UserResponse {
   @Expose()
   status!: UserStatus;
 
-  @ApiProperty({ name: 'created_at' })
-  @Expose({ name: 'created_at' })
+  @ApiProperty()
+  @Expose()
   createdAt!: string;
 
-  @ApiProperty({ name: 'updated_at' })
-  @Expose({ name: 'updated_at' })
+  @ApiProperty()
+  @Expose()
   updatedAt!: string;
 
   @ApiProperty({ name: 'organization_members', type: [OrganizationMemberSummary] })
@@ -81,6 +85,10 @@ export class UserSummary {
   @ApiProperty()
   @Expose()
   email!: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  @Expose()
+  avatarUrl?: string | null;
 
   @ApiProperty({ enum: Role })
   @Expose()

@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { OrganizationBillingService } from './organization-billing.service';
 import {
@@ -32,17 +32,29 @@ export class OrganizationBillingController {
 
   @Put('plan')
   @Roles(Role.SUPER_ADMIN, Role.ADMIN)
-  @ApiOperation({ summary: 'Update billing plan for an organization (Placeholder)' })
+  @ApiOperation({ summary: 'Update billing plan for an organization (Midtrans)' })
   @ApiParam({ name: 'organizationId', description: 'The ID of the organization' })
   @ApiResponse({
     status: 200,
-    description: 'Plan successfully updated.',
-    type: OrganizationBillingResponseDto,
+    description: 'Returns midtrans Snap token and redirect URL.',
   })
   updatePlan(
     @Param('organizationId') organizationId: string,
     @Body() updatePlanRequestDto: UpdatePlanRequestDto,
   ) {
     return this.organizationBillingService.updatePlan(organizationId, updatePlanRequestDto);
+  }
+}
+
+@ApiTags('Organization Billing Webhook')
+@Controller('billing')
+export class OrganizationBillingWebhookController {
+  constructor(private readonly organizationBillingService: OrganizationBillingService) {}
+
+  @Post('webhook')
+  @ApiOperation({ summary: 'Midtrans Webhook Callback' })
+  @ApiResponse({ status: 200, description: 'Webhook processed successfully.' })
+  handleWebhook(@Body() payload: Record<string, unknown>) {
+    return this.organizationBillingService.handleWebhook(payload);
   }
 }

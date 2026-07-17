@@ -6,8 +6,8 @@ export class TaskResponse {
   @Expose()
   id!: string;
 
-  @ApiProperty({ name: 'list_id' })
-  @Expose({ name: 'list_id' })
+  @ApiProperty()
+  @Expose()
   listId!: string;
 
   @ApiProperty()
@@ -22,40 +22,40 @@ export class TaskResponse {
   @Expose()
   order!: number;
 
-  @ApiPropertyOptional({ name: 'priority_id' })
-  @Expose({ name: 'priority_id' })
+  @ApiPropertyOptional()
+  @Expose()
   priorityId?: string | null;
 
   @ApiProperty()
   @Expose()
   status!: string;
 
-  @ApiPropertyOptional({ name: 'start_date' })
-  @Expose({ name: 'start_date' })
+  @ApiPropertyOptional()
+  @Expose()
   startDate?: Date | null;
 
-  @ApiPropertyOptional({ name: 'due_date' })
-  @Expose({ name: 'due_date' })
+  @ApiPropertyOptional()
+  @Expose()
   dueDate?: Date | null;
 
-  @ApiProperty({ name: 'created_at' })
-  @Expose({ name: 'created_at' })
+  @ApiProperty()
+  @Expose()
   createdAt!: Date;
 
-  @ApiProperty({ name: 'updated_at' })
-  @Expose({ name: 'updated_at' })
+  @ApiProperty()
+  @Expose()
   updatedAt!: Date;
 
-  @ApiPropertyOptional({ name: 'deleted_at' })
-  @Expose({ name: 'deleted_at' })
+  @ApiPropertyOptional()
+  @Expose()
   deletedAt?: Date | null;
 
-  @ApiPropertyOptional({ name: 'created_by' })
-  @Expose({ name: 'created_by' })
+  @ApiPropertyOptional()
+  @Expose()
   createdBy?: string | null;
 
-  @ApiPropertyOptional({ name: 'updated_by' })
-  @Expose({ name: 'updated_by' })
+  @ApiPropertyOptional()
+  @Expose()
   updatedBy?: string | null;
 }
 
@@ -64,8 +64,8 @@ export class TaskSummary {
   @Expose()
   id!: string;
 
-  @ApiProperty({ name: 'list_id' })
-  @Expose({ name: 'list_id' })
+  @ApiProperty()
+  @Expose()
   listId!: string;
 
   @ApiProperty()
@@ -76,19 +76,19 @@ export class TaskSummary {
   @Expose()
   order!: number;
 
-  @ApiPropertyOptional({ name: 'priority_id' })
-  @Expose({ name: 'priority_id' })
+  @ApiPropertyOptional()
+  @Expose()
   priorityId?: string | null;
 
   @ApiProperty()
   @Expose()
   status!: string;
 
-  @ApiPropertyOptional({ name: 'start_date' })
-  @Expose({ name: 'start_date' })
+  @ApiPropertyOptional()
+  @Expose()
   startDate?: Date | null;
 
-  @ApiPropertyOptional({ name: 'due_date' })
-  @Expose({ name: 'due_date' })
+  @ApiPropertyOptional()
+  @Expose()
   dueDate?: Date | null;
 }
