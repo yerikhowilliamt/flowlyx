@@ -1,0 +1,21 @@
+app: flowlyx
+services:
+  - name: api
+    git:
+      repository: yerikhowilliamt/flowlyx
+      branch: main # Atau branch yang Anda gunakan
+      build_command: npm install && npm run build
+      run_command: cd apps/api && npm run start:prod
+    ports:
+      - port: 4000
+        protocol: http
+    regions:
+      - sin # Singapore
+    env:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '4000'
+      # Rahasia lainnya bisa di-mapping dari Koyeb Secret
+      # - key: DATABASE_URL
+      #   secret: flowlyx_db_url
