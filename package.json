@@ -9,6 +9,8 @@
   ],
   "scripts": {
     "build": "turbo run build",
+    "start": "npm run start:prod -w @flowlyx/api",
+    "start:prod": "npm run start:prod -w @flowlyx/api",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "test": "turbo run test",
