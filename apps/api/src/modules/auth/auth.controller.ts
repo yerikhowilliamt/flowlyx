@@ -20,11 +20,16 @@ import { Response, Request } from 'express';
 import { User } from '@flowlyx/database';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { UserResponse } from '../../models/user.model';
+import { ConfigService } from '@nestjs/config';
+import { EnvConfig } from 'src/core/config/env.validation';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private configService: ConfigService<EnvConfig>,
+  ) {}
 
   @ApiOperation({ summary: 'Register a new user' })
   @ApiCreatedResponse({ type: UserResponse })
@@ -49,7 +54,7 @@ export class AuthController {
 
     res.cookie('Refresh', tokens.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.configService.get('NODE_ENV', { infer: true }) === 'production',
       sameSite: 'strict',
     });
 
@@ -74,11 +79,13 @@ export class AuthController {
 
     res.cookie('Refresh', tokens.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: this.configService.get('NODE_ENV', { infer: true }) === 'production',
       sameSite: 'strict',
     });
 
-    const frontendUrl = process.env.AUTHORIZED_JAVASCRIPT_ORIGINS || 'http://localhost:3015';
+    const frontendUrl =
+      this.configService.get('AUTHORIZED_JAVASCRIPT_ORIGINS', { infer: true }) ||
+      'http://localhost:3015';
     return res.redirect(`${frontendUrl}?access_token=${tokens.accessToken}`);
   }
 }
