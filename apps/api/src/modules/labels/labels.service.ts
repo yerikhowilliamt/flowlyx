@@ -5,6 +5,10 @@ import { prisma, Label, TaskLabel, Prisma } from '@flowlyx/database';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
+type TaskLabelWithLabel = Prisma.TaskLabelGetPayload<{
+  include: { label: true };
+}>;
+
 @Injectable()
 export class LabelsService {
   async create(createLabelDto: CreateLabelDto): Promise<Label> {
@@ -105,7 +109,7 @@ export class LabelsService {
 
     // Note: since TaskLabel wraps Label, sorting by label's name natively needs a different Prisma query.
     // For now, this meets the generic pagination requirements.
-    const data = taskLabels.map((tl) => tl.label);
+    const data = taskLabels.map((tl: TaskLabelWithLabel) => tl.label);
     return createPaginatedResponse(data, total, page, limit);
   }
 }
