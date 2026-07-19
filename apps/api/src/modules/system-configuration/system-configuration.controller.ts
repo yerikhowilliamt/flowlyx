@@ -39,7 +39,7 @@ export class SystemConfigurationController {
   @Serialize(SystemConfigurationResponse)
   @Roles(Role.SUPER_ADMIN)
   @Post()
-  async create(@Body() createDto: CreateSystemConfigurationDto) {
+  async create(@Body() createDto: CreateSystemConfigurationDto): Promise<unknown> {
     return this.systemConfigurationService.create(createDto);
   }
 
@@ -48,7 +48,7 @@ export class SystemConfigurationController {
   @Serialize([SystemConfigurationResponse])
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get()
-  async findAll(@Query() query: PaginationDto) {
+  async findAll(@Query() query: PaginationDto): Promise<unknown> {
     return this.systemConfigurationService.findAll(query);
   }
 
@@ -57,7 +57,7 @@ export class SystemConfigurationController {
   @Serialize(SystemConfigurationResponse)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get(':key')
-  async findOne(@Param('key') key: string) {
+  async findOne(@Param('key') key: string): Promise<unknown> {
     return this.systemConfigurationService.findByKey(key);
   }
 
@@ -66,7 +66,10 @@ export class SystemConfigurationController {
   @Serialize(SystemConfigurationResponse)
   @Roles(Role.SUPER_ADMIN)
   @Patch(':key')
-  async update(@Param('key') key: string, @Body() updateDto: UpdateSystemConfigurationDto) {
+  async update(
+    @Param('key') key: string,
+    @Body() updateDto: UpdateSystemConfigurationDto,
+  ): Promise<unknown> {
     return this.systemConfigurationService.update(key, updateDto);
   }
 
