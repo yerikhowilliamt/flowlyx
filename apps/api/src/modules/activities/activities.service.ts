@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Activity, prisma, Prisma } from '@flowlyx/database';
+import { prisma, Prisma } from '@flowlyx/database';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { FindActivitiesDto } from './dto/find-activities.dto';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
 
+export type ActivityWithUser = Prisma.ActivityGetPayload<{
+  include: { user: { select: { id: true; name: true; email: true } } };
+}>;
+
 @Injectable()
 export class ActivitiesService {
-  async create(data: CreateActivityDto): Promise<Activity> {
+  async create(data: CreateActivityDto): Promise<ActivityWithUser> {
     return prisma.activity.create({
       data: {
         entityId: data.entityId,
@@ -41,7 +45,7 @@ export class ActivitiesService {
     return createPaginatedResponse(data, total, page, limit);
   }
 
-  async findById(id: string): Promise<Activity> {
+  async findById(id: string): Promise<ActivityWithUser> {
     const activity = await prisma.activity.findUnique({
       where: { id },
       include: { user: { select: { id: true, name: true, email: true } } },

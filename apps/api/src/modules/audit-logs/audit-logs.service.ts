@@ -4,6 +4,10 @@ import { FindAuditLogsDto } from './dto/find-audit-logs.dto';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
 import { CreateAuditLogDto } from './dto/create-audit-log.dto';
 
+export type AuditLogWithUser = Prisma.AuditLogGetPayload<{
+  include: { user: { select: { id: true; name: true; email: true } } };
+}>;
+
 @Injectable()
 export class AuditLogsService {
   async create(data: CreateAuditLogDto): Promise<AuditLog> {
@@ -61,7 +65,7 @@ export class AuditLogsService {
     return createPaginatedResponse(data, total, page, limit);
   }
 
-  async findById(id: string): Promise<AuditLog> {
+  async findById(id: string): Promise<AuditLogWithUser> {
     const auditLog = await prisma.auditLog.findUnique({
       where: { id },
       include: { user: { select: { id: true, name: true, email: true } } },
