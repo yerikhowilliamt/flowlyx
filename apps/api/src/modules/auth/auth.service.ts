@@ -31,9 +31,9 @@ export class AuthService {
     googleId: string;
     avatarUrl?: string;
   }): Promise<User> {
-    let user = await this.usersService.findByEmail(profile.email);
+    const user = await this.usersService.findByEmail(profile.email);
     if (!user) {
-      user = await prisma.user.create({
+      return prisma.user.create({
         data: {
           email: profile.email,
           name: profile.name,
@@ -42,12 +42,15 @@ export class AuthService {
           isEmailVerified: true,
         },
       });
-    } else if (!user.googleId) {
-      user = await prisma.user.update({
+    }
+
+    if (!user.googleId) {
+      return prisma.user.update({
         where: { id: user.id },
         data: { googleId: profile.googleId },
       });
     }
+
     return user;
   }
 

@@ -1,39 +1,17 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 import { randomUUID } from 'crypto';
+// import pretty from 'pino-pretty';
 
 @Module({
   imports: [
     PinoLoggerModule.forRoot({
       pinoHttp: {
         genReqId: (req) => req.headers['x-correlation-id'] || randomUUID(),
-        transport: {
-          targets: [
-            ...(process.env.NODE_ENV === 'development'
-              ? [
-                  {
-                    target: 'pino-pretty',
-                    options: {
-                      singleLine: true,
-                      colorize: true,
-                    },
-                  },
-                ]
-              : []),
-            ...(process.env.LOKI_URL
-              ? [
-                  {
-                    target: 'pino-loki',
-                    options: {
-                      batching: true,
-                      interval: 5,
-                      host: process.env.LOKI_URL,
-                    },
-                  },
-                ]
-              : []),
-          ],
-        },
+        // stream:
+        //   process.env.NODE_ENV === 'development'
+        //     ? pretty({ singleLine: true, colorize: true })
+        //     : undefined,
         level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
       },
     }),

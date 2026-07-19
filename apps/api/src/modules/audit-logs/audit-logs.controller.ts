@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Query, UseGuards, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { AuditLogsService } from './audit-logs.service';
+import { AuditLogsService, AuditLogWithUser } from './audit-logs.service';
 import { FindAuditLogsDto } from './dto/find-audit-logs.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -18,7 +18,7 @@ export class AuditLogsController {
   @Get()
   @ApiOperation({ summary: 'Get audit logs with filters' })
   @ApiResponse({ status: HttpStatus.OK, description: 'List of audit logs retrieved successfully' })
-  findAll(@Query() query: FindAuditLogsDto) {
+  findAll(@Query() query: FindAuditLogsDto): Promise<unknown> {
     return this.auditLogsService.findAll(query);
   }
 
@@ -27,7 +27,7 @@ export class AuditLogsController {
   @ApiOperation({ summary: 'Get audit log by ID' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Audit log retrieved successfully' })
   @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Audit log not found' })
-  findById(@Param('id') id: string) {
+  findById(@Param('id') id: string): Promise<AuditLogWithUser> {
     return this.auditLogsService.findById(id);
   }
 }
