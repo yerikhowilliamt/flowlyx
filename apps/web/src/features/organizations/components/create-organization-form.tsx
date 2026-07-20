@@ -9,18 +9,7 @@ import { Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-
-const slugify = (text: string): string => {
-  return text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-') // Replace spaces with -
-    .replace(/[^\w-]+/g, '') // Remove all non-word chars
-    .replace(/--+/g, '-') // Replace multiple - with single -
-    .replace(/^-+/, '') // Trim - from start of text
-    .replace(/-+$/, ''); // Trim - from end of text
-};
+import { slugify } from '@/lib/utils';
 
 export function CreateOrganizationForm() {
   const { mutate: createOrganization, isPending } = useCreateOrganization();
@@ -55,27 +44,39 @@ export function CreateOrganizationForm() {
   };
 
   return (
-    <div className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900 p-8">
-      <div className="flex flex-col gap-y-2 text-center">
-        <h1 className="text-2xl font-semibold">Create Organization</h1>
-        <p className="text-muted-foreground">Set up a new organization for your team</p>
+    <div className="space-y-6 rounded-2xl border border-zinc-900 bg-zinc-900/20 p-6 sm:p-8 backdrop-blur-md">
+      <div className="flex flex-col gap-y-1.5 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-white">Create Organization</h1>
+        <p className="text-sm text-zinc-400">
+          Set up a new organization tenant workspace for your team
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="name">Organization Name</Label>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="name"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Organization Name
+          </Label>
           <Input
             id="name"
             type="text"
             {...register('name')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
             placeholder="Acme Corp"
           />
-          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+          {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="slug">Slug</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="slug"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Slug
+          </Label>
           <Input
             id="slug"
             type="text"
@@ -84,42 +85,54 @@ export function CreateOrganizationForm() {
                 setIsSlugCustom(true);
               },
             })}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
             placeholder="acme-corp"
           />
-          {errors.slug && <p className="text-sm text-destructive">{errors.slug.message}</p>}
+          {errors.slug && <p className="text-xs text-red-500 mt-1">{errors.slug.message}</p>}
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="description">Description (Optional)</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="description"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Description (Optional)
+          </Label>
           <Input
             id="description"
             type="text"
             {...register('description')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
             placeholder="A great place to work"
           />
           {errors.description && (
-            <p className="text-sm text-destructive">{errors.description.message}</p>
+            <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>
           )}
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="logo_url">Logo URL (Optional)</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="logo_url"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Logo URL (Optional)
+          </Label>
           <Input
             id="logo_url"
             type="text"
             {...register('logo_url')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
             placeholder="https://example.com/logo.png"
           />
-          {errors.logo_url && <p className="text-sm text-destructive">{errors.logo_url.message}</p>}
+          {errors.logo_url && (
+            <p className="text-xs text-red-500 mt-1">{errors.logo_url.message}</p>
+          )}
         </div>
 
         <Button
           type="submit"
           disabled={isPending}
-          className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2.5 rounded-xl shadow-lg shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? (
             <>
