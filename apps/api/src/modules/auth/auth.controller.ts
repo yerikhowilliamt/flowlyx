@@ -88,4 +88,35 @@ export class AuthController {
       'http://localhost:3015';
     return res.redirect(`${frontendUrl}?access_token=${tokens.accessToken}`);
   }
+
+  @ApiOperation({ summary: 'Refresh access token' })
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh')
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const cookies = req.headers.cookie?.split(';').reduce(
+      (acc, cookie) => {
+        const [key, val] = cookie.trim().split('=');
+        acc[key] = val;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+    const refreshToken = cookies?.['Refresh'];
+
+    if (!refreshToken) {
+      throw new UnauthorizedException('No refresh token provided');
+    }
+
+    const tokens = await this.authService.refreshTokens(refreshToken);
+
+    res.cookie('Refresh', tokens.refreshToken, {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV', { infer: true }) === 'production',
+      sameSite: 'strict',
+    });
+
+    return {
+      access_token: tokens.accessToken,
+    };
+  }
 }
