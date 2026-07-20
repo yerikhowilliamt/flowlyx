@@ -13,7 +13,12 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.setGlobalPrefix('api');
-  app.enableCors();
+  app.enableCors({
+    origin: 'http://localhost:3015',
+    methods: 'GET,POST, PATCH, PUT,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true,
+  });
   app.use(helmet());
   app.use(compression());
   // 1. Logger

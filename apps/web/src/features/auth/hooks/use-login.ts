@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { login } from '../api/auth.api';
 import { LoginInput } from '../schemas/auth.schema';
 
@@ -14,8 +15,8 @@ export const useLogin = () => {
       router.push('/');
     },
     onError: (error) => {
-      // TODO: Handle error with toast notification
-      console.error('Login failed:', error);
+      const message = error instanceof Error ? error.message : 'Failed to login';
+      toast.error(message);
     },
   });
 };
