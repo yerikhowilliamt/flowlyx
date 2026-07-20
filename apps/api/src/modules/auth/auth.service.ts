@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
@@ -17,11 +17,14 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<User | null> {
     const user = await this.usersService.findByEmail(email);
 
-    if (!user) throw new NotFoundException('Invalid Email or Password');
+    if (!user) throw new UnauthorizedException('Invalid Email or Password');
 
-    if (user && user.passwordHash && (await argon2.verify(user.passwordHash, pass))) {
-      return user;
+    if (user && user.passwordHash) {
+      const isValid = await argon2.verify(user.passwordHash, pass);
+      if (!isValid) throw new UnauthorizedException('Invalid Email or Password');
+      if (isValid) return user;
     }
+
     return null;
   }
 
@@ -81,5 +84,22 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const passwordHash = await argon2.hash(registerDto.password);
     return this.usersService.create({ ...registerDto, passwordHash });
+  }
+
+  async refreshTokens(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      });
+
+      const user = await this.usersService.findById(payload.sub);
+      if (!user || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      return this.login(user);
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 }
