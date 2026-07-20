@@ -3,16 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { createOrganizationSchema, CreateOrganizationInput } from '../schemas/organization.schema';
-import { useCreateOrganization } from '../hooks/use-create-organization';
+import { createWorkspaceSchema, CreateWorkspaceInput } from '../schemas/workspace.schema';
+import { useCreateWorkspace } from '../hooks/use-workspaces';
 import { Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { slugify } from '@/lib/utils';
 
-export function CreateOrganizationForm() {
-  const { mutate: createOrganization, isPending } = useCreateOrganization();
+interface CreateWorkspaceFormProps {
+  organizationId: string;
+  onSuccess?: () => void;
+}
+
+export function CreateWorkspaceForm({ organizationId, onSuccess }: CreateWorkspaceFormProps) {
+  const { mutate: createWorkspace, isPending } = useCreateWorkspace(organizationId);
   const [isSlugCustom, setIsSlugCustom] = useState(false);
 
   const {
@@ -21,13 +26,13 @@ export function CreateOrganizationForm() {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<CreateOrganizationInput>({
-    resolver: zodResolver(createOrganizationSchema),
+  } = useForm<CreateWorkspaceInput>({
+    resolver: zodResolver(createWorkspaceSchema),
     defaultValues: {
+      organizationId,
       name: '',
       slug: '',
       description: '',
-      logo_url: '',
     },
   });
 
@@ -39,33 +44,32 @@ export function CreateOrganizationForm() {
     }
   }, [name, setValue, isSlugCustom]);
 
-  const onSubmit = (data: CreateOrganizationInput) => {
-    createOrganization(data);
+  const onSubmit = (data: CreateWorkspaceInput) => {
+    createWorkspace(data, {
+      onSuccess: () => {
+        onSuccess?.();
+      },
+    });
   };
 
   return (
-    <div className="space-y-6 rounded-2xl border border-zinc-900 bg-zinc-900/20 p-6 sm:p-8 backdrop-blur-md">
-      <div className="flex flex-col gap-y-1.5 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-white">Create Organization</h1>
-        <p className="text-sm text-zinc-400">
-          Set up a new organization tenant workspace for your team
-        </p>
-      </div>
-
+    <div className="space-y-4">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <input type="hidden" {...register('organizationId')} value={organizationId} />
+
         <div className="flex flex-col gap-y-1.5">
           <Label
             htmlFor="name"
             className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
           >
-            Organization Name
+            Workspace Name
           </Label>
           <Input
             id="name"
             type="text"
             {...register('name')}
-            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
-            placeholder="Acme Corp"
+            className="w-full border-zinc-800 bg-zinc-900/50 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+            placeholder="Development"
           />
           {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
         </div>
@@ -85,8 +89,8 @@ export function CreateOrganizationForm() {
                 setIsSlugCustom(true);
               },
             })}
-            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
-            placeholder="acme-corp"
+            className="w-full border-zinc-800 bg-zinc-900/50 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+            placeholder="development"
           />
           {errors.slug && <p className="text-xs text-red-500 mt-1">{errors.slug.message}</p>}
         </div>
@@ -102,30 +106,11 @@ export function CreateOrganizationForm() {
             id="description"
             type="text"
             {...register('description')}
-            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
-            placeholder="A great place to work"
+            className="w-full border-zinc-800 bg-zinc-900/50 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+            placeholder="Main development workspace"
           />
           {errors.description && (
             <p className="text-xs text-red-500 mt-1">{errors.description.message}</p>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-y-1.5">
-          <Label
-            htmlFor="logo_url"
-            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
-          >
-            Logo URL (Optional)
-          </Label>
-          <Input
-            id="logo_url"
-            type="text"
-            {...register('logo_url')}
-            className="w-full border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
-            placeholder="https://example.com/logo.png"
-          />
-          {errors.logo_url && (
-            <p className="text-xs text-red-500 mt-1">{errors.logo_url.message}</p>
           )}
         </div>
 
@@ -140,7 +125,7 @@ export function CreateOrganizationForm() {
               Creating...
             </>
           ) : (
-            'Create Organization'
+            'Create Workspace'
           )}
         </Button>
       </form>

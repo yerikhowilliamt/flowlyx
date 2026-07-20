@@ -47,3 +47,4 @@ pnpm-debug.log*
 Handbook/
 .turbo/
 pr_body
+.agents/
