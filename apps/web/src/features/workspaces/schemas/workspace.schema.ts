@@ -16,6 +16,7 @@ export const createWorkspaceSchema = z.object({
     .max(500, 'Description must be at most 500 characters')
     .optional()
     .or(z.literal('')),
+  status: z.string().optional(),
 });
 
 export type CreateWorkspaceInput = z.infer<typeof createWorkspaceSchema>;
