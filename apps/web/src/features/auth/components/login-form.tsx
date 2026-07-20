@@ -25,48 +25,66 @@ export function LoginForm() {
   };
 
   return (
-    <div className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900 p-8">
-      <div className="flex flex-col gap-y-2 text-center">
-        <h1 className="text-2xl font-semibold">Welcome Back</h1>
-        <p className="text-muted-foreground">Enter your credentials to access your account</p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-y-1.5 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-white">Welcome Back</h1>
+        <p className="text-sm text-zinc-400">Enter your credentials to access your account</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="email">Email</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="email"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Email Address
+          </Label>
           <Input
             id="email"
             type="email"
             {...register('email')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
             placeholder="name@example.com"
           />
-          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="password">Password</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <div className="flex items-center justify-between">
+            <Label
+              htmlFor="password"
+              className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+            >
+              Password
+            </Label>
+          </div>
           <Input
             id="password"
             type="password"
             {...register('password')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+            placeholder="••••••••"
           />
-          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
+          )}
         </div>
 
         <Button
           type="submit"
           disabled={isSubmitting || loginMutation.isPending}
-          className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-xl shadow-lg shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting || loginMutation.isPending ? 'Signing In...' : 'Sign In'}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-zinc-400">
         Don&apos;t have an account?{' '}
-        <Link href="/register" className="font-medium text-primary hover:underline">
+        <Link
+          href="/register"
+          className="font-semibold text-orange-500 hover:text-orange-400 hover:underline transition-colors"
+        >
           Sign up
         </Link>
       </p>
