@@ -26,9 +26,9 @@ export default function Home() {
             <a href="#workflow" className="hover:text-zinc-50 transition-colors">
               Workflow
             </a>
-            <a href="/organizations" className="hover:text-zinc-50 transition-colors">
+            <Link href="/organizations" className="hover:text-zinc-50 transition-colors">
               Organizations
-            </a>
+            </Link>
           </nav>
 
           <div className="flex items-center gap-x-4">
@@ -58,7 +58,7 @@ export default function Home() {
           </div>
 
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-white">
-            Supercharge your team's{' '}
+            Supercharge your team&apos;s{' '}
             <span className="bg-gradient-to-r from-orange-400 via-orange-500 to-amber-500 bg-clip-text text-transparent">
               project execution
             </span>
