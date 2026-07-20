@@ -18,7 +18,9 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { body, headers, ...rest } = options;
 
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  console.log(API_BASE_URL);
+
+  const res = await fetch(`${API_BASE_URL}/api${path}`, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
