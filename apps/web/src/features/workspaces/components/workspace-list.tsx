@@ -4,8 +4,16 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useWorkspaces } from '../hooks/use-workspaces';
 import { CreateWorkspaceForm } from './create-workspace-form';
-import { Loader2, Plus, FolderKanban, X, ArrowRight, Kanban } from 'lucide-react';
+import { Loader2, Plus, FolderKanban, ArrowRight, Kanban } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface WorkspaceListProps {
   organizationId: string;
@@ -106,28 +114,19 @@ export function WorkspaceList({ organizationId }: WorkspaceListProps) {
       )}
 
       {/* Modal Dialog */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-2xl border border-zinc-900 bg-zinc-950 p-6 sm:p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors cursor-pointer"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <div className="mb-6 space-y-1">
-              <h2 className="text-xl font-bold text-white tracking-tight">Create Workspace</h2>
-              <p className="text-sm text-zinc-400">
-                Add a new workspace to organize your projects and boards.
-              </p>
-            </div>
-            <CreateWorkspaceForm
-              organizationId={organizationId}
-              onSuccess={() => setIsOpen(false)}
-            />
-          </div>
-        </div>
-      )}
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
+          <DialogHeader className="text-left space-y-1">
+            <DialogTitle className="text-xl font-bold text-white tracking-tight">
+              Create Workspace
+            </DialogTitle>
+            <DialogDescription className="text-sm text-zinc-400">
+              Add a new workspace to organize your projects and boards.
+            </DialogDescription>
+          </DialogHeader>
+          <CreateWorkspaceForm organizationId={organizationId} onSuccess={() => setIsOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
