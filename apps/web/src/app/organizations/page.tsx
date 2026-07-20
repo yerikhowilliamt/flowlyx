@@ -6,9 +6,5 @@ export const metadata = {
 };
 
 export default function OrganizationsPage() {
-  return (
-    <div className="container mx-auto max-w-5xl py-10">
-      <OrganizationList />
-    </div>
-  );
+  return <OrganizationList />;
 }

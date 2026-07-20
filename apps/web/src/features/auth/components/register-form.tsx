@@ -25,60 +25,81 @@ export function RegisterForm() {
   };
 
   return (
-    <div className="space-y-6 rounded-xl border border-zinc-800 bg-zinc-900 p-8">
-      <div className="flex flex-col gap-y-2 text-center">
-        <h1 className="text-2xl font-semibold">Create an Account</h1>
-        <p className="text-muted-foreground">Enter your details to get started</p>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-y-1.5 text-center">
+        <h1 className="text-2xl font-bold tracking-tight text-white">Create an Account</h1>
+        <p className="text-sm text-zinc-400">Enter your details to get started</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="name">Name</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="name"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Full Name
+          </Label>
           <Input
             id="name"
             type="text"
             {...register('name')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
             placeholder="John Doe"
           />
-          {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+          {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>}
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="email">Email</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="email"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Email Address
+          </Label>
           <Input
             id="email"
             type="email"
             {...register('email')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
             placeholder="name@example.com"
           />
-          {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
         </div>
 
-        <div className="flex flex-col gap-y-2">
-          <Label htmlFor="password">Password</Label>
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="password"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Password
+          </Label>
           <Input
             id="password"
             type="password"
             {...register('password')}
-            className="w-full border-zinc-800 bg-zinc-950 p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
+            className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+            placeholder="••••••••"
           />
-          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+          {errors.password && (
+            <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
+          )}
         </div>
 
         <Button
           type="submit"
           disabled={isSubmitting || registerMutation.isPending}
-          className="w-full bg-orange-500 hover:bg-orange-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-xl shadow-lg shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting || registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-center text-sm text-zinc-400">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link
+          href="/login"
+          className="font-semibold text-orange-500 hover:text-orange-400 hover:underline transition-colors"
+        >
           Sign in
         </Link>
       </p>
