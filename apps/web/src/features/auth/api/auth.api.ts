@@ -3,6 +3,16 @@ import { User } from '@flowlyx/database';
 import { LoginInput, RegisterInput } from '../schemas/auth.schema';
 import { AuthTokens } from '../types/auth.types';
 
-export const login = (data: LoginInput) => api.post<AuthTokens>('/auth/login', data);
+interface ApiResponse<T> {
+  data: T;
+}
 
-export const register = (data: RegisterInput) => api.post<User>('/auth/register', data);
+export const login = async (data: LoginInput): Promise<AuthTokens> => {
+  const response = await api.post<ApiResponse<AuthTokens>>('/auth/login', data);
+  return response.data;
+};
+
+export const register = async (data: RegisterInput): Promise<User> => {
+  const response = await api.post<ApiResponse<User>>('/auth/register', data);
+  return response.data;
+};

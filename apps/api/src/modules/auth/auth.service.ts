@@ -85,4 +85,21 @@ export class AuthService {
     const passwordHash = await argon2.hash(registerDto.password);
     return this.usersService.create({ ...registerDto, passwordHash });
   }
+
+  async refreshTokens(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.getOrThrow<string>('JWT_REFRESH_SECRET'),
+      });
+
+      const user = await this.usersService.findById(payload.sub);
+      if (!user || user.refreshToken !== refreshToken) {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      return this.login(user);
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
 }
