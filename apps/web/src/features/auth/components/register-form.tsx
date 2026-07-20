@@ -35,7 +35,7 @@ export function RegisterForm() {
             id="name"
             type="text"
             {...register('name')}
-            className="w-full rounded-md border border-border bg-background p-2"
+            className="w-full rounded-md border border-border bg-background p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
             placeholder="John Doe"
           />
           {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
@@ -47,7 +47,7 @@ export function RegisterForm() {
             id="email"
             type="email"
             {...register('email')}
-            className="w-full rounded-md border border-border bg-background p-2"
+            className="w-full rounded-md border border-border bg-background p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
             placeholder="name@example.com"
           />
           {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
@@ -59,7 +59,7 @@ export function RegisterForm() {
             id="password"
             type="password"
             {...register('password')}
-            className="w-full rounded-md border border-border bg-background p-2"
+            className="w-full rounded-md border border-border bg-background p-2 focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:outline-none"
           />
           {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
         </div>
@@ -67,7 +67,7 @@ export function RegisterForm() {
         <button
           type="submit"
           disabled={isSubmitting || registerMutation.isPending}
-          className="w-full rounded-md bg-primary p-2 text-primary-foreground disabled:opacity-50"
+          className="w-full cursor-pointer rounded-md bg-orange-500 p-2 text-white hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isSubmitting || registerMutation.isPending ? 'Creating Account...' : 'Create Account'}
         </button>
