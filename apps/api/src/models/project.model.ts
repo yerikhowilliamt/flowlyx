@@ -67,4 +67,8 @@ export class ProjectSummary {
   @ApiProperty()
   @Expose()
   status!: string;
+
+  @ApiPropertyOptional()
+  @Expose()
+  description?: string | null;
 }
