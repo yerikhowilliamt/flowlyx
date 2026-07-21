@@ -9,6 +9,8 @@ import {
   useUpdateWorkspace,
   useDeleteWorkspace,
 } from '@/features/workspaces/hooks/use-workspaces';
+import { useProjects } from '@/features/projects/hooks/use-projects';
+import { ProjectList } from '@/features/projects/components/project-list';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -74,6 +76,9 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
     isError: isWorkspaceError,
     error: workspaceError,
   } = useWorkspace(slug);
+
+  // Fetch Projects
+  const { data: projects } = useProjects(workspace?.id || '');
 
   // Fetch Organization details once workspace is available
   const { data: organization, isLoading: isOrgLoading } = useQuery({
@@ -287,7 +292,7 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
                   <FolderKanban className="h-4 w-4 text-zinc-400" />
                 </div>
                 <div className="flex items-baseline gap-x-2">
-                  <span className="text-2xl font-bold text-white">0</span>
+                  <span className="text-2xl font-bold text-white">{projects?.length ?? 0}</span>
                   <span className="text-xs text-zinc-500">Active</span>
                 </div>
               </div>
@@ -420,24 +425,7 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
 
           {/* Projects Tab */}
           <TabsContent value="projects" className="outline-none">
-            <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/10 p-16 text-center">
-              <div className="rounded-2xl bg-zinc-900/50 p-4 border border-zinc-800">
-                <FolderKanban className="h-8 w-8 text-zinc-500" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white">No projects created</h3>
-                <p className="text-sm text-zinc-400 max-w-sm mx-auto">
-                  Get started by creating your first project zone in this workspace.
-                </p>
-              </div>
-              <Button
-                disabled
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl opacity-50 cursor-not-allowed"
-              >
-                <Plus className="mr-1.5 h-4 w-4" />
-                New Project (Phase 51)
-              </Button>
-            </div>
+            <ProjectList workspaceId={workspace.id} />
           </TabsContent>
 
           {/* Boards Tab */}
