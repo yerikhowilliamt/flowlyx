@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight, Shield, Zap, LayoutGrid } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Home() {
   return (
@@ -10,15 +11,9 @@ export default function Home() {
       {/* Header */}
       <header className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between border-b border-zinc-900">
-          <div className="flex items-center gap-x-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-500 text-white font-black text-lg shadow-[0_0_20px_rgba(249,115,22,0.3)]">
-              F
-            </div>
-            <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-zinc-50 via-zinc-100 to-zinc-300 bg-clip-text text-transparent">
-              Flow<span className="text-orange-500 font-extrabold">lyx</span>
-            </span>
+          <div className="">
+            <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
           </div>
-
           <nav className="hidden md:flex items-center gap-x-8 text-sm font-medium text-zinc-400">
             <a href="#features" className="hover:text-zinc-50 transition-colors">
               Features
@@ -189,7 +184,9 @@ export default function Home() {
       <footer className="border-t border-zinc-900">
         <div className="mx-auto max-w-7xl px-6 lg:px-8 py-12 flex flex-col md:flex-row justify-between items-center gap-y-4">
           <div className="flex items-center gap-x-2">
-            <span className="text-sm font-semibold tracking-tight text-white">Flowlyx</span>
+            <div className="">
+              <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={60} height={26} priority />
+            </div>
             <span className="text-xs text-zinc-500">© 2026 Flowlyx Inc. All rights reserved.</span>
           </div>
           <div className="flex gap-x-6 text-xs text-zinc-500">
