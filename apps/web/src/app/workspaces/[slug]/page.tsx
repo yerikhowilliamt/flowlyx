@@ -11,6 +11,7 @@ import {
 } from '@/features/workspaces/hooks/use-workspaces';
 import { useProjects } from '@/features/projects/hooks/use-projects';
 import { ProjectList } from '@/features/projects/components/project-list';
+import { BoardList } from '@/features/boards/components/board-list';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -430,24 +431,7 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
 
           {/* Boards Tab */}
           <TabsContent value="boards" className="outline-none">
-            <div className="flex flex-col items-center justify-center space-y-6 rounded-2xl border border-dashed border-zinc-800 bg-zinc-900/10 p-16 text-center">
-              <div className="rounded-2xl bg-zinc-900/50 p-4 border border-zinc-800">
-                <Kanban className="h-8 w-8 text-zinc-500" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-white">No sprint boards found</h3>
-                <p className="text-sm text-zinc-400 max-w-sm mx-auto">
-                  Create sprint boards to visually track task lanes with your team.
-                </p>
-              </div>
-              <Button
-                disabled
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl opacity-50 cursor-not-allowed"
-              >
-                <Plus className="mr-1.5 h-4 w-4" />
-                New Board (Phase 52)
-              </Button>
-            </div>
+            <BoardList projects={projects || []} workspaceSlug={slug} />
           </TabsContent>
 
           {/* Settings Tab Content */}
