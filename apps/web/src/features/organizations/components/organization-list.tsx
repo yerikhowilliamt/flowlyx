@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useOrganizations } from '../hooks/use-organizations';
 import { Loader2, Plus, Building2, ExternalLink } from 'lucide-react';
+import Image from 'next/image';
 
 export function OrganizationList() {
   const { data: organizations, isLoading, isError, error } = useOrganizations();
@@ -31,12 +32,9 @@ export function OrganizationList() {
       {/* Top Navbar for Console Dashboard */}
       <div className="flex h-16 items-center justify-between border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md px-6">
         <div className="flex items-center gap-x-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 text-white font-black text-sm">
-            F
+          <div>
+            <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
           </div>
-          <span className="text-md font-bold tracking-tight text-white">
-            Flow<span className="text-orange-500">lyx</span>
-          </span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 ml-2">
             Console
           </span>

@@ -6,7 +6,14 @@ import {
   CreateTaskInput,
   UpdateTaskInput,
 } from '../schemas/board.schema';
-import { BoardResponse, BoardSummary, ListResponse, TaskResponse } from '../types/board.types';
+import {
+  BoardResponse,
+  BoardSummary,
+  ListResponse,
+  TaskResponse,
+  PrioritySummary,
+  PaginatedResponse,
+} from '../types/board.types';
 
 export interface ApiResponse<T> {
   statusCode: number;
@@ -68,4 +75,13 @@ export const updateTask = async (id: string, data: UpdateTaskInput): Promise<Tas
 
 export const deleteTask = async (id: string): Promise<void> => {
   await api.delete<void>(`/tasks/${id}`);
+};
+
+export const getPriorities = async (
+  projectId: string,
+): Promise<PaginatedResponse<PrioritySummary>> => {
+  const response = await api.get<ApiResponse<PaginatedResponse<PrioritySummary>>>(
+    `/priorities?projectId=${projectId}&limit=100`,
+  );
+  return response.data;
 };

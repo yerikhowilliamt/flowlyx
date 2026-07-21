@@ -13,6 +13,7 @@ import {
   useCreateTask,
   useDeleteTask,
   useUpdateTask,
+  usePriorities,
 } from '@/features/boards/hooks/use-boards';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Loader2,
   ArrowLeft,
   Building2,
@@ -37,8 +45,10 @@ import {
   CheckCircle,
   Calendar,
   X,
+  Edit2,
 } from 'lucide-react';
 import Link from 'next/link';
+import { TaskResponse } from '@/features/boards/types/board.types';
 
 interface PageProps {
   params: Promise<{ slug: string; boardId: string }>;
@@ -192,6 +202,7 @@ export default function BoardDetailPage({ params }: PageProps) {
               key={list.id}
               list={list}
               boardId={boardId}
+              projectId={board.project_id}
               onMoveTask={handleMoveTask}
               onDeleteList={() => deleteListMutation.mutate(list.id)}
               onUpdateList={(newName) =>
@@ -251,28 +262,56 @@ export default function BoardDetailPage({ params }: PageProps) {
 interface BoardColumnProps {
   list: { id: string; name: string };
   boardId: string;
+  projectId: string;
   onMoveTask: (taskId: string, targetListId: string) => void;
   onDeleteList: () => void;
   onUpdateList: (newName: string) => void;
 }
 
-function BoardColumn({ list, boardId, onMoveTask, onDeleteList, onUpdateList }: BoardColumnProps) {
+function BoardColumn({
+  list,
+  boardId,
+  projectId,
+  onMoveTask,
+  onDeleteList,
+  onUpdateList,
+}: BoardColumnProps) {
   const { data: tasks, isLoading } = useTasks(list.id);
+  const { data: prioritiesResp } = usePriorities(projectId);
+  const priorities = prioritiesResp?.data || [];
+
   const createTaskMutation = useCreateTask(boardId, list.id);
   const deleteTaskMutation = useDeleteTask(list.id);
+  const updateTaskMutation = useUpdateTask();
 
   const [isOpen, setIsOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
+  const [taskPriorityId, setTaskPriorityId] = useState('');
+  const [taskStartDate, setTaskStartDate] = useState('');
+  const [taskDueDate, setTaskDueDate] = useState('');
+
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(list.name);
 
   // Task detail dialog state
-  const [activeTask, setActiveTask] = useState<{
-    id: string;
-    title: string;
-    description?: string | null;
-  } | null>(null);
+  const [activeTask, setActiveTask] = useState<TaskResponse | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editPriorityId, setEditPriorityId] = useState('');
+  const [editStartDate, setEditStartDate] = useState('');
+  const [editDueDate, setEditDueDate] = useState('');
+  const [isEditingTask, setIsEditingTask] = useState(false);
+
+  const handleOpenDetails = (task: TaskResponse) => {
+    setActiveTask(task);
+    setEditTitle(task.title);
+    setEditDesc(task.description || '');
+    setEditPriorityId(task.priorityId || 'none');
+    setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
+    setEditDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
+    setIsEditingTask(false);
+  };
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -282,11 +321,17 @@ function BoardColumn({ list, boardId, onMoveTask, onDeleteList, onUpdateList }: 
         listId: list.id,
         title: taskTitle.trim(),
         description: taskDesc.trim(),
+        priorityId: taskPriorityId && taskPriorityId !== 'none' ? taskPriorityId : undefined,
+        startDate: taskStartDate ? new Date(taskStartDate).toISOString() : undefined,
+        dueDate: taskDueDate ? new Date(taskDueDate).toISOString() : undefined,
       },
       {
         onSuccess: () => {
           setTaskTitle('');
           setTaskDesc('');
+          setTaskPriorityId('');
+          setTaskStartDate('');
+          setTaskDueDate('');
           setIsOpen(false);
         },
       },
@@ -298,6 +343,29 @@ function BoardColumn({ list, boardId, onMoveTask, onDeleteList, onUpdateList }: 
       onUpdateList(editedTitle.trim());
     }
     setIsEditingTitle(false);
+  };
+
+  const handleUpdateTaskSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeTask) return;
+    updateTaskMutation.mutate(
+      {
+        id: activeTask.id,
+        data: {
+          title: editTitle.trim(),
+          description: editDesc.trim(),
+          priorityId: editPriorityId === 'none' ? null : editPriorityId || null,
+          startDate: editStartDate ? new Date(editStartDate).toISOString() : null,
+          dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
+        },
+      },
+      {
+        onSuccess: () => {
+          setActiveTask(null);
+          setIsEditingTask(false);
+        },
+      },
+    );
   };
 
   return (
@@ -354,40 +422,58 @@ function BoardColumn({ list, boardId, onMoveTask, onDeleteList, onUpdateList }: 
             <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
           </div>
         ) : tasks && tasks.length > 0 ? (
-          tasks.map((task) => (
-            <div
-              key={task.id}
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData('text/plain', task.id);
-              }}
-              onClick={() => setActiveTask(task)}
-              className="group bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-900/80 hover:border-zinc-800 rounded-xl p-4 space-y-2 cursor-grab active:cursor-grabbing transition-all shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-x-2">
-                <span className="text-sm font-medium text-zinc-100 group-hover:text-white transition-colors line-clamp-2 leading-snug">
-                  {task.title}
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('Delete this task?')) {
-                      deleteTaskMutation.mutate(task.id);
-                    }
-                  }}
-                  className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-              {task.dueDate && (
-                <div className="flex items-center gap-x-1 text-3xs font-semibold text-orange-500/70">
-                  <Calendar className="h-2.5 w-2.5" />
-                  <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+          tasks.map((task) => {
+            const taskPriority = priorities.find((p) => p.id === task.priorityId);
+            return (
+              <div
+                key={task.id}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', task.id);
+                }}
+                onClick={() => handleOpenDetails(task)}
+                className="group bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-900/80 hover:border-zinc-800 rounded-xl p-4 space-y-2 cursor-grab active:cursor-grabbing transition-all shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-x-2">
+                  <span className="text-sm font-medium text-zinc-100 group-hover:text-white transition-colors line-clamp-2 leading-snug">
+                    {task.title}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Delete this task?')) {
+                        deleteTaskMutation.mutate(task.id);
+                      }
+                    }}
+                    className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
                 </div>
-              )}
-            </div>
-          ))
+
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  {taskPriority && (
+                    <span
+                      className="inline-flex items-center text-3xs font-semibold px-2 py-0.5 rounded border"
+                      style={{
+                        backgroundColor: `${taskPriority.color}15`,
+                        color: taskPriority.color,
+                        borderColor: `${taskPriority.color}30`,
+                      }}
+                    >
+                      {taskPriority.name}
+                    </span>
+                  )}
+                  {task.dueDate && (
+                    <div className="flex items-center gap-x-1 text-3xs font-semibold text-zinc-400">
+                      <Calendar className="h-2.5 w-2.5" />
+                      <span>{new Date(task.dueDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
         ) : (
           <div className="text-center py-8 text-xs text-zinc-600">No tasks</div>
         )}
@@ -447,6 +533,71 @@ function BoardColumn({ list, boardId, onMoveTask, onDeleteList, onUpdateList }: 
                 className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 min-h-[80px]"
               />
             </div>
+
+            <div className="flex flex-col gap-y-1.5">
+              <Label
+                htmlFor="task-priority"
+                className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+              >
+                Priority
+              </Label>
+              <Select value={taskPriorityId} onValueChange={(val) => setTaskPriorityId(val || '')}>
+                <SelectTrigger
+                  id="task-priority"
+                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100"
+                >
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-950 border-zinc-900 text-zinc-50">
+                  <SelectItem value="none">None</SelectItem>
+                  {priorities.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      <span className="flex items-center gap-x-2">
+                        <span
+                          className="h-2 w-2 rounded-full"
+                          style={{ backgroundColor: p.color }}
+                        />
+                        {p.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-y-1.5">
+                <Label
+                  htmlFor="task-start-date"
+                  className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+                >
+                  Start Date
+                </Label>
+                <Input
+                  id="task-start-date"
+                  type="date"
+                  value={taskStartDate}
+                  onChange={(e) => setTaskStartDate(e.target.value)}
+                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
+                />
+              </div>
+              <div className="flex flex-col gap-y-1.5">
+                <Label
+                  htmlFor="task-due-date"
+                  className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+                >
+                  Due Date
+                </Label>
+                <Input
+                  id="task-due-date"
+                  type="date"
+                  value={taskDueDate}
+                  onChange={(e) => setTaskDueDate(e.target.value)}
+                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
+                />
+              </div>
+            </div>
+
             <Button
               type="submit"
               disabled={createTaskMutation.isPending}
@@ -463,37 +614,221 @@ function BoardColumn({ list, boardId, onMoveTask, onDeleteList, onUpdateList }: 
         {activeTask && (
           <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
             <DialogHeader className="text-left space-y-1">
-              <DialogTitle className="text-xl font-bold text-white tracking-tight flex items-center gap-x-2">
-                <CheckCircle className="h-5 w-5 text-orange-500" />
-                Task Details
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="space-y-1">
-                <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                  Title
-                </span>
-                <p className="text-sm font-bold text-white">{activeTask.title}</p>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-xl font-bold text-white tracking-tight flex items-center gap-x-2">
+                  <CheckCircle className="h-5 w-5 text-orange-500" />
+                  Task Details
+                </DialogTitle>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsEditingTask(!isEditingTask)}
+                  className="text-zinc-400 hover:text-white"
+                >
+                  <Edit2 className="h-4 w-4 mr-1" />
+                  {isEditingTask ? 'Cancel' : 'Edit'}
+                </Button>
               </div>
-              {activeTask.description && (
+            </DialogHeader>
+
+            {isEditingTask ? (
+              <form onSubmit={handleUpdateTaskSubmit} className="space-y-4 pt-2">
+                <div className="flex flex-col gap-y-1.5">
+                  <Label
+                    htmlFor="edit-title"
+                    className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+                  >
+                    Title
+                  </Label>
+                  <Input
+                    id="edit-title"
+                    required
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 focus-visible:ring-1 focus-visible:ring-orange-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-y-1.5">
+                  <Label
+                    htmlFor="edit-desc"
+                    className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+                  >
+                    Description
+                  </Label>
+                  <Textarea
+                    id="edit-desc"
+                    value={editDesc}
+                    onChange={(e) => setEditDesc(e.target.value)}
+                    className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 min-h-[80px] focus-visible:ring-1 focus-visible:ring-orange-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-y-1.5">
+                  <Label
+                    htmlFor="edit-priority"
+                    className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+                  >
+                    Priority
+                  </Label>
+                  <Select
+                    value={editPriorityId}
+                    onValueChange={(val) => setEditPriorityId(val || '')}
+                  >
+                    <SelectTrigger
+                      id="edit-priority"
+                      className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100"
+                    >
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-950 border-zinc-900 text-zinc-50">
+                      <SelectItem value="none">None</SelectItem>
+                      {priorities.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          <span className="flex items-center gap-x-2">
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: p.color }}
+                            />
+                            {p.name}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-y-1.5">
+                    <Label
+                      htmlFor="edit-start-date"
+                      className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+                    >
+                      Start Date
+                    </Label>
+                    <Input
+                      id="edit-start-date"
+                      type="date"
+                      value={editStartDate}
+                      onChange={(e) => setEditStartDate(e.target.value)}
+                      className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-y-1.5">
+                    <Label
+                      htmlFor="edit-due-date"
+                      className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+                    >
+                      Due Date
+                    </Label>
+                    <Input
+                      id="edit-due-date"
+                      type="date"
+                      value={editDueDate}
+                      onChange={(e) => setEditDueDate(e.target.value)}
+                      className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-x-2 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={updateTaskMutation.isPending}
+                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-xl"
+                  >
+                    {updateTaskMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setIsEditingTask(false)}
+                    className="border border-zinc-850 hover:bg-zinc-900"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4 pt-2">
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                    Title
+                  </span>
+                  <p className="text-sm font-bold text-white">{activeTask.title}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                    Priority
+                  </span>
+                  <div>
+                    {(() => {
+                      const activePriority = priorities.find((p) => p.id === activeTask.priorityId);
+                      return activePriority ? (
+                        <span
+                          className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded border"
+                          style={{
+                            backgroundColor: `${activePriority.color}15`,
+                            color: activePriority.color,
+                            borderColor: `${activePriority.color}30`,
+                          }}
+                        >
+                          <span
+                            className="h-1.5 w-1.5 rounded-full mr-1.5"
+                            style={{ backgroundColor: activePriority.color }}
+                          />
+                          {activePriority.name}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-zinc-500">None</span>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-x-1">
+                      <Calendar className="h-3 w-3 text-zinc-500" />
+                      Start Date
+                    </span>
+                    <p className="text-xs text-zinc-300">
+                      {activeTask.startDate
+                        ? new Date(activeTask.startDate).toLocaleDateString()
+                        : '-'}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-x-1">
+                      <Calendar className="h-3 w-3 text-zinc-500" />
+                      Due Date
+                    </span>
+                    <p className="text-xs text-zinc-300">
+                      {activeTask.dueDate ? new Date(activeTask.dueDate).toLocaleDateString() : '-'}
+                    </p>
+                  </div>
+                </div>
+
                 <div className="space-y-1">
                   <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                     Description
                   </span>
-                  <p className="text-xs text-zinc-300 bg-zinc-900/30 border border-zinc-900 rounded-xl p-3 leading-relaxed">
-                    {activeTask.description}
+                  <p className="text-xs text-zinc-300 bg-zinc-900/30 border border-zinc-900 rounded-xl p-3 leading-relaxed whitespace-pre-wrap">
+                    {activeTask.description || 'No description provided.'}
                   </p>
                 </div>
-              )}
-              <div className="pt-2">
-                <Button
-                  onClick={() => setActiveTask(null)}
-                  className="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 font-medium py-2 rounded-xl"
-                >
-                  Close
-                </Button>
+
+                <div className="pt-2">
+                  <Button
+                    onClick={() => setActiveTask(null)}
+                    className="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 font-medium py-2 rounded-xl"
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </DialogContent>
         )}
       </Dialog>

@@ -12,6 +12,7 @@ import {
   createTask,
   updateTask,
   deleteTask,
+  getPriorities,
 } from '../api/boards.api';
 import {
   CreateBoardInput,
@@ -164,5 +165,13 @@ export const useDeleteTask = (listId: string) => {
       const message = error instanceof Error ? error.message : 'Failed to delete task';
       toast.error(message);
     },
+  });
+};
+
+export const usePriorities = (projectId: string) => {
+  return useQuery({
+    queryKey: ['priorities', { projectId }],
+    queryFn: () => getPriorities(projectId),
+    enabled: !!projectId,
   });
 };
