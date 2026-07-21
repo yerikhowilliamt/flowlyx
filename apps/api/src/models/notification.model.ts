@@ -1,19 +1,23 @@
+import { Expose } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class NotificationResponse {
-  @ApiProperty() id!: string;
-  @ApiProperty() type!: string;
-  @ApiProperty() title!: string;
-  @ApiProperty() message!: string;
-  @ApiProperty() userId!: string;
-  @ApiProperty() read!: boolean;
-  @ApiPropertyOptional() link?: string;
-  @ApiProperty() createdAt!: Date;
+  @Expose() @ApiProperty() id!: string;
+  @Expose() @ApiProperty() type!: string;
+  @Expose() @ApiProperty() title!: string;
+  @Expose({ name: 'content' }) @ApiProperty() message!: string;
+  @Expose({ name: 'userId' }) @ApiProperty() userId!: string;
+  @Expose({ name: 'isRead' }) @ApiProperty() read!: boolean;
+  @Expose() @ApiPropertyOptional() link?: string;
+  @Expose({ name: 'referenceId' }) @ApiPropertyOptional() referenceId?: string | null;
+  @Expose({ name: 'referenceType' }) @ApiPropertyOptional() referenceType?: string | null;
+  @Expose({ name: 'status' }) @ApiProperty() status!: string;
+  @Expose() @ApiProperty() createdAt!: Date;
 }
 
 export class NotificationSummary {
-  @ApiProperty() id!: string;
-  @ApiProperty() title!: string;
-  @ApiProperty() read!: boolean;
-  @ApiProperty() createdAt!: Date;
+  @Expose() @ApiProperty() id!: string;
+  @Expose() @ApiProperty() title!: string;
+  @Expose({ name: 'isRead' }) @ApiProperty() read!: boolean;
+  @Expose() @ApiProperty() createdAt!: Date;
 }
