@@ -6,6 +6,7 @@ import { getOrganizationBySlug } from '@/features/organizations/api/organization
 import { WorkspaceList } from '@/features/workspaces/components/workspace-list';
 import { Loader2, ArrowLeft, Building2 } from 'lucide-react';
 import Link from 'next/link';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -74,6 +75,7 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex items-center gap-x-4">
+            <NotificationBell />
             <Link
               href="/organizations"
               className="inline-flex items-center text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors"

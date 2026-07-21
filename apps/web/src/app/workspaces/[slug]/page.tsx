@@ -14,6 +14,7 @@ import { ProjectList } from '@/features/projects/components/project-list';
 import { BoardList } from '@/features/boards/components/board-list';
 import { WorkspaceCalendar } from '@/features/calendar/components/workspace-calendar';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -212,6 +213,7 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
             </div>
           </div>
           <div className="flex items-center gap-x-4">
+            <NotificationBell />
             {organization && (
               <Link
                 href={`/organizations/${organization.slug}`}
