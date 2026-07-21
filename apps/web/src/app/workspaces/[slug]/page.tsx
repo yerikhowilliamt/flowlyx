@@ -12,6 +12,7 @@ import {
 import { useProjects } from '@/features/projects/hooks/use-projects';
 import { ProjectList } from '@/features/projects/components/project-list';
 import { BoardList } from '@/features/boards/components/board-list';
+import { WorkspaceCalendar } from '@/features/calendar/components/workspace-calendar';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ import {
   Layers,
   Sparkles,
   Plus,
+  Calendar,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -275,6 +277,13 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
               Boards
             </TabsTrigger>
             <TabsTrigger
+              value="calendar"
+              className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-white data-[state=active]:bg-transparent transition-all cursor-pointer"
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Calendar
+            </TabsTrigger>
+            <TabsTrigger
               value="settings"
               className="pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:text-white data-[state=active]:bg-transparent transition-all cursor-pointer"
             >
@@ -432,6 +441,11 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
           {/* Boards Tab */}
           <TabsContent value="boards" className="outline-none">
             <BoardList projects={projects || []} workspaceSlug={slug} />
+          </TabsContent>
+
+          {/* Calendar Tab */}
+          <TabsContent value="calendar" className="outline-none">
+            <WorkspaceCalendar workspaceId={workspace.id} />
           </TabsContent>
 
           {/* Settings Tab Content */}
