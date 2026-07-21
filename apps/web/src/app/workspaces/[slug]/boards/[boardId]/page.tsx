@@ -16,6 +16,7 @@ import {
   usePriorities,
 } from '@/features/boards/hooks/use-boards';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -171,7 +172,8 @@ export default function BoardDetailPage({ params }: PageProps) {
               <span>{board.name}</span>
             </div>
           </div>
-          <div>
+          <div className="flex items-center gap-x-4">
+            <NotificationBell />
             <Link
               href={`/workspaces/${slug}`}
               className="inline-flex items-center text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors"
