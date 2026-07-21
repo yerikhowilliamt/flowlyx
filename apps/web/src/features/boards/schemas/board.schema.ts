@@ -39,6 +39,9 @@ export const createTaskSchema = z.object({
     .max(2000, 'Description must be at most 2000 characters')
     .optional()
     .or(z.literal('')),
+  priorityId: z.string().uuid('Invalid priority ID').optional().nullable(),
+  startDate: z.string().optional().nullable(),
+  dueDate: z.string().optional().nullable(),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
