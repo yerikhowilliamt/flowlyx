@@ -623,7 +623,7 @@ function BoardColumn({
                   size="sm"
                   variant="ghost"
                   onClick={() => setIsEditingTask(!isEditingTask)}
-                  className="text-zinc-400 hover:text-white"
+                  className="text-zinc-400 hover:text-white mr-6"
                 >
                   <Edit2 className="h-4 w-4 mr-1" />
                   {isEditingTask ? 'Cancel' : 'Edit'}
