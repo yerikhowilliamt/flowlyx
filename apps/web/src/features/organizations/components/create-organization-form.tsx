@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createOrganizationSchema, CreateOrganizationInput } from '../schemas/organization.schema';
 import { useCreateOrganization } from '../hooks/use-create-organization';
@@ -19,7 +19,7 @@ export function CreateOrganizationForm() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<CreateOrganizationInput>({
     resolver: zodResolver(createOrganizationSchema),
@@ -31,7 +31,7 @@ export function CreateOrganizationForm() {
     },
   });
 
-  const name = watch('name');
+  const name = useWatch({ control, name: 'name', defaultValue: '' });
 
   useEffect(() => {
     if (!isSlugCustom) {
