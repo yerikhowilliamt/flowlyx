@@ -40,6 +40,12 @@ export function OrganizationList() {
           </span>
         </div>
         <div className="flex items-center gap-x-4">
+          <Link
+            href="/profile"
+            className="text-xs text-zinc-400 hover:text-white transition-colors"
+          >
+            Profile
+          </Link>
           <Link href="/" className="text-xs text-zinc-400 hover:text-white transition-colors">
             Home
           </Link>
