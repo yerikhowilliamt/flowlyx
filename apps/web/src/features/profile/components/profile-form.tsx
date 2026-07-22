@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMe, useUpdateProfile } from '../hooks/use-profile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,12 +18,12 @@ export function ProfileForm() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-
-    setName((current) => (current === user.name ? current : user.name));
-    setAvatarPreview((current) => (current === user.avatarUrl ? current : user.avatarUrl));
-  }, [user]);
+  const [prevUser, setPrevUser] = useState(user);
+  if (user && user !== prevUser) {
+    setPrevUser(user);
+    setName(user.name);
+    setAvatarPreview(user.avatarUrl ?? null);
+  }
 
   if (isLoading) {
     return (
