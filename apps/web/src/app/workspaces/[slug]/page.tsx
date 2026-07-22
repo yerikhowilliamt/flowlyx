@@ -214,6 +214,12 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
           </div>
           <div className="flex items-center gap-x-4">
             <NotificationBell />
+            <Link
+              href="/profile"
+              className="inline-flex items-center text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
+              Profile
+            </Link>
             {organization && (
               <Link
                 href={`/organizations/${organization.slug}`}

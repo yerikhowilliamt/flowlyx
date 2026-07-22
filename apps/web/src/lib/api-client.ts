@@ -68,9 +68,12 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   const makeRequest = async (tokenToUse: string | null): Promise<Response> => {
     const fetchHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
       ...(headers as Record<string, string>),
     };
+
+    if (!(body instanceof FormData)) {
+      fetchHeaders['Content-Type'] = 'application/json';
+    }
 
     if (tokenToUse) {
       fetchHeaders['Authorization'] = `Bearer ${tokenToUse}`;
@@ -79,7 +82,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     return fetch(`${API_BASE_URL}/api${path}`, {
       credentials: 'include',
       headers: fetchHeaders,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
       ...rest,
     });
   };

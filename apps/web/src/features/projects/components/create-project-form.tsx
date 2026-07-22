@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createProjectSchema, CreateProjectInput } from '../schemas/project.schema';
 import { useCreateProject } from '../hooks/use-projects';
@@ -24,7 +24,7 @@ export function CreateProjectForm({ workspaceId, onSuccess }: CreateProjectFormP
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<CreateProjectInput>({
     resolver: zodResolver(createProjectSchema),
@@ -36,7 +36,7 @@ export function CreateProjectForm({ workspaceId, onSuccess }: CreateProjectFormP
     },
   });
 
-  const name = watch('name');
+  const name = useWatch({ control, name: 'name', defaultValue: '' });
 
   useEffect(() => {
     if (!isSlugCustom) {
