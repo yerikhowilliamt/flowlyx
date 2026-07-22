@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createWorkspaceSchema, CreateWorkspaceInput } from '../schemas/workspace.schema';
 import { useCreateWorkspace } from '../hooks/use-workspaces';
@@ -24,7 +24,7 @@ export function CreateWorkspaceForm({ organizationId, onSuccess }: CreateWorkspa
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<CreateWorkspaceInput>({
     resolver: zodResolver(createWorkspaceSchema),
@@ -36,7 +36,7 @@ export function CreateWorkspaceForm({ organizationId, onSuccess }: CreateWorkspa
     },
   });
 
-  const name = watch('name');
+  const name = useWatch({ control, name: 'name', defaultValue: '' });
 
   useEffect(() => {
     if (!isSlugCustom) {
