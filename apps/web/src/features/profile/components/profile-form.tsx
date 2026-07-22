@@ -19,10 +19,10 @@ export function ProfileForm() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user) {
-      setName(user.name);
-      setAvatarPreview(user.avatarUrl);
-    }
+    if (!user) return;
+
+    setName((current) => (current === user.name ? current : user.name));
+    setAvatarPreview((current) => (current === user.avatarUrl ? current : user.avatarUrl));
   }, [user]);
 
   if (isLoading) {
