@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspace } from '@/features/workspaces/hooks/use-workspaces';
@@ -139,12 +140,9 @@ export default function BoardDetailPage({ params }: PageProps) {
         <div className="flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-x-3">
             <Link href="/organizations" className="flex items-center gap-x-2 group">
-              <div className="flex h-7 w-7 items-center justify-center rounded bg-orange-500 text-white font-black text-xs shadow-[0_0_15px_rgba(249,115,22,0.25)]">
-                F
+              <div>
+                <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
               </div>
-              <span className="text-sm font-bold tracking-tight text-white">
-                Flow<span className="text-orange-500">lyx</span>
-              </span>
             </Link>
             <span className="text-zinc-800">/</span>
             {organization && (
