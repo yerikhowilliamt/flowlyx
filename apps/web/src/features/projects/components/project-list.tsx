@@ -15,9 +15,10 @@ import {
 
 interface ProjectListProps {
   workspaceId: string;
+  onSelectProject?: (projectId: string) => void;
 }
 
-export function ProjectList({ workspaceId }: ProjectListProps) {
+export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) {
   const { data: projects, isLoading, isError, error } = useProjects(workspaceId);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -81,7 +82,8 @@ export function ProjectList({ workspaceId }: ProjectListProps) {
           {projects.map((project) => (
             <div
               key={project.id}
-              className="group relative flex flex-col justify-between h-44 rounded-2xl border border-zinc-900 bg-zinc-900/20 p-6 transition-all hover:border-orange-500/50 hover:bg-zinc-900/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.04)]"
+              onClick={() => onSelectProject?.(project.id)}
+              className="group relative flex flex-col justify-between h-44 rounded-2xl border border-zinc-900 bg-zinc-900/20 p-6 transition-all hover:border-orange-500/50 hover:bg-zinc-900/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.04)] cursor-pointer"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">

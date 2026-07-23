@@ -1,8 +1,14 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, Shield, Zap, LayoutGrid } from 'lucide-react';
 import Image from 'next/image';
+import { useMe } from '@/features/profile/hooks/use-profile';
 
 export default function Home() {
+  const { data: user } = useMe();
+  const isAuthenticated = Boolean(user);
+
   return (
     <div className="relative min-h-dvh overflow-hidden bg-zinc-950 text-zinc-50 selection:bg-orange-500 selection:text-white">
       {/* Background Glows */}
@@ -27,17 +33,19 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-x-4">
+            {!isAuthenticated && (
+              <Link
+                href="/login"
+                className="text-sm font-medium text-zinc-400 hover:text-zinc-50 transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
             <Link
-              href="/login"
-              className="text-sm font-medium text-zinc-400 hover:text-zinc-50 transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/register"
+              href={isAuthenticated ? '/organizations' : '/register'}
               className="group relative inline-flex items-center justify-center rounded-xl bg-zinc-50 px-4 py-2.5 text-sm font-semibold text-zinc-950 transition-all hover:bg-zinc-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-50"
             >
-              Get Started
+              {isAuthenticated ? 'Go to Dashboard' : 'Get Started'}
               <ArrowRight className="ml-1.5 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
@@ -66,16 +74,16 @@ export default function Home() {
 
           <div className="flex items-center justify-center gap-x-4 pt-4">
             <Link
-              href="/register"
+              href={isAuthenticated ? '/organizations' : '/register'}
               className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/20 transition-all hover:bg-orange-600 hover:shadow-orange-500/30"
             >
-              Start Free Trial
+              {isAuthenticated ? 'Go to Dashboard' : 'Start Free Trial'}
             </Link>
             <Link
               href="/organizations"
               className="inline-flex items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm px-6 py-3 text-sm font-semibold text-zinc-300 hover:text-zinc-50 hover:bg-zinc-800/80 transition-colors"
             >
-              Go to Dashboard
+              Explore Organizations
             </Link>
           </div>
         </div>

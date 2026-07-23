@@ -26,10 +26,26 @@ import Link from 'next/link';
 interface BoardListProps {
   projects: ProjectSummary[];
   workspaceSlug: string;
+  selectedProjectId?: string;
+  onSelectProject?: (projectId: string) => void;
 }
 
-export function BoardList({ projects, workspaceSlug }: BoardListProps) {
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+export function BoardList({
+  projects,
+  workspaceSlug,
+  selectedProjectId: controlledProjectId,
+  onSelectProject,
+}: BoardListProps) {
+  const [internalSelectedProjectId, setInternalSelectedProjectId] = useState<string>('');
+
+  const selectedProjectId =
+    controlledProjectId !== undefined ? controlledProjectId : internalSelectedProjectId;
+  const setSelectedProjectId = (id: string) => {
+    if (onSelectProject) {
+      onSelectProject(id);
+    }
+    setInternalSelectedProjectId(id);
+  };
   const [isOpen, setIsOpen] = useState(false);
 
   const activeProjectId =
@@ -86,7 +102,9 @@ export function BoardList({ projects, workspaceSlug }: BoardListProps) {
             id="project-select"
             className="w-full border-zinc-800 bg-zinc-900/40 text-zinc-100"
           >
-            <SelectValue placeholder="Select a project" />
+            <SelectValue placeholder="Select a project">
+              {projects.find((p) => p.id === activeProjectId)?.name}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent className="bg-zinc-950 border-zinc-900 text-zinc-50">
             {projects.map((project) => (
