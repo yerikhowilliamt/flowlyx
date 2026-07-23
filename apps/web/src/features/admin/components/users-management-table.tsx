@@ -45,6 +45,20 @@ export function UsersManagementTable({ initialUsers, onRefresh }: UsersManagemen
   const [newStatus, setNewStatus] = useState<UserStatus>('ACTIVE');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const currentUserRole = (() => {
+    const token = typeof window !== 'undefined' ? getAccessToken() : null;
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.role || 'USER';
+      } catch {
+        // Ignored
+      }
+    }
+    return 'USER';
+  })();
+  const isSuperAdminActor = currentUserRole === 'SUPER_ADMIN';
+
   const filteredUsers = users.filter((u) => {
     const matchSearch =
       !search ||
@@ -235,19 +249,8 @@ export function UsersManagementTable({ initialUsers, onRefresh }: UsersManagemen
                   </TableCell>
                   <TableCell className="text-right">
                     {(() => {
-                      const token = typeof window !== 'undefined' ? getAccessToken() : null;
-                      let currentUserRole = 'USER';
-                      if (token) {
-                        try {
-                          const payload = JSON.parse(atob(token.split('.')[1]));
-                          currentUserRole = payload.role || 'USER';
-                        } catch {
-                          // Ignored
-                        }
-                      }
                       const isTargetSuperAdmin = user.role === 'SUPER_ADMIN';
-                      const isDisabled = currentUserRole !== 'SUPER_ADMIN' && isTargetSuperAdmin;
-                      const isSuperAdminActor = currentUserRole === 'SUPER_ADMIN';
+                      const isDisabled = !isSuperAdminActor && isTargetSuperAdmin;
 
                       return (
                         <div className="flex items-center justify-end gap-1">
@@ -305,32 +308,16 @@ export function UsersManagementTable({ initialUsers, onRefresh }: UsersManagemen
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <label className="text-xs font-semibold text-zinc-300">System Role</label>
-              {(() => {
-                const token = typeof window !== 'undefined' ? getAccessToken() : null;
-                let currentUserRole = 'USER';
-                if (token) {
-                  try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    currentUserRole = payload.role || 'USER';
-                  } catch {
-                    // Ignored
-                  }
-                }
-                const isRoleSelectDisabled = currentUserRole !== 'SUPER_ADMIN';
-
-                return (
-                  <NativeSelect
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value as UserRole)}
-                    disabled={isRoleSelectDisabled}
-                    className="w-full bg-zinc-950 border-zinc-800 text-zinc-200 disabled:opacity-50 disabled:pointer-events-none"
-                  >
-                    <option value="USER">USER</option>
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="SUPER_ADMIN">SUPER_ADMIN</option>
-                  </NativeSelect>
-                );
-              })()}
+              <NativeSelect
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value as UserRole)}
+                disabled={!isSuperAdminActor}
+                className="w-full bg-zinc-950 border-zinc-800 text-zinc-200 disabled:opacity-50 disabled:pointer-events-none"
+              >
+                <option value="USER">USER</option>
+                <option value="ADMIN">ADMIN</option>
+                <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+              </NativeSelect>
             </div>
 
             <div className="space-y-2">
