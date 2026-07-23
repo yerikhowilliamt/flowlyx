@@ -12,8 +12,18 @@ jest.mock('@flowlyx/database', () => ({
       findMany: jest.fn(),
       count: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+    },
+    organizationMember: {
+      findMany: jest.fn(),
+    },
+    workspaceMember: {
+      findMany: jest.fn(),
+    },
+    projectMember: {
+      findMany: jest.fn(),
     },
   },
 }));
@@ -99,7 +109,7 @@ describe('UsersService', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(user);
       (prisma.user.update as jest.Mock).mockResolvedValue({ ...user, name: 'U2' });
 
-      const result = await service.update('1', { name: 'U2' });
+      const result = await service.update('1', { name: 'U2' }, { id: '2', role: 'SUPER_ADMIN' });
       expect(result.name).toBe('U2');
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -111,10 +121,15 @@ describe('UsersService', () => {
       const user = { id: '1', name: 'U1' };
       const file = { originalname: 'avatar.png' } as Express.Multer.File;
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(user);
-      (cloudinaryService.uploadFile as jest.Mock).mockResolvedValue({ url: 'http://cloudinary/avatar.png' });
-      (prisma.user.update as jest.Mock).mockResolvedValue({ ...user, avatarUrl: 'http://cloudinary/avatar.png' });
+      (cloudinaryService.uploadFile as jest.Mock).mockResolvedValue({
+        url: 'http://cloudinary/avatar.png',
+      });
+      (prisma.user.update as jest.Mock).mockResolvedValue({
+        ...user,
+        avatarUrl: 'http://cloudinary/avatar.png',
+      });
 
-      await service.update('1', { name: 'U2' }, file);
+      await service.update('1', { name: 'U2' }, { id: '2', role: 'SUPER_ADMIN' }, file);
       expect(cloudinaryService.uploadFile).toHaveBeenCalledWith(file, 'flowlyx/avatars');
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: '1' },
@@ -124,7 +139,9 @@ describe('UsersService', () => {
 
     it('should throw NotFoundException on update if not found', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-      await expect(service.update('1', {})).rejects.toThrow(NotFoundException);
+      await expect(service.update('1', {}, { id: '2', role: 'SUPER_ADMIN' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -134,14 +151,16 @@ describe('UsersService', () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(user);
       (prisma.user.delete as jest.Mock).mockResolvedValue(user);
 
-      const result = await service.delete('1');
+      const result = await service.delete('1', { id: '2', role: 'SUPER_ADMIN' });
       expect(result).toBe(true);
       expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: '1' } });
     });
 
     it('should throw NotFoundException on delete if not found', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-      await expect(service.delete('1')).rejects.toThrow(NotFoundException);
+      await expect(service.delete('1', { id: '2', role: 'SUPER_ADMIN' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
