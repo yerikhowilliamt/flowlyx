@@ -1,6 +1,7 @@
 /* eslint-disable */
 'use client';
 
+import Image from 'next/image';
 import { use, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -72,6 +73,7 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
   const { slug } = use(params);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
 
   // Fetch Workspace details
   const {
@@ -187,12 +189,9 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
         <div className="flex h-16 items-center justify-between px-6">
           <div className="flex items-center gap-x-3">
             <Link href="/organizations" className="flex items-center gap-x-2 group">
-              <div className="flex h-7 w-7 items-center justify-center rounded bg-orange-500 text-white font-black text-xs shadow-[0_0_15px_rgba(249,115,22,0.25)]">
-                F
+              <div>
+                <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
               </div>
-              <span className="text-sm font-bold tracking-tight text-white">
-                Flow<span className="text-orange-500">lyx</span>
-              </span>
             </Link>
             <span className="text-zinc-800">/</span>
             {organization && (
@@ -443,12 +442,23 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
 
           {/* Projects Tab */}
           <TabsContent value="projects" className="outline-none">
-            <ProjectList workspaceId={workspace.id} />
+            <ProjectList
+              workspaceId={workspace.id}
+              onSelectProject={(projectId) => {
+                setSelectedProjectId(projectId);
+                setActiveTab('boards');
+              }}
+            />
           </TabsContent>
 
           {/* Boards Tab */}
           <TabsContent value="boards" className="outline-none">
-            <BoardList projects={projects || []} workspaceSlug={slug} />
+            <BoardList
+              projects={projects || []}
+              workspaceSlug={slug}
+              selectedProjectId={selectedProjectId}
+              onSelectProject={setSelectedProjectId}
+            />
           </TabsContent>
 
           {/* Calendar Tab */}

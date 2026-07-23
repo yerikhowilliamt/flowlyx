@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,12 +12,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Brand Logo Header */}
         <div className="flex flex-col items-center justify-center gap-y-2">
           <Link href="/" className="flex items-center gap-x-2 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-500 text-white font-black text-sm shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-transform group-hover:scale-105">
-              F
+            <div>
+              <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
             </div>
-            <span className="text-lg font-bold tracking-tight text-white">
-              Flow<span className="text-orange-500">lyx</span>
-            </span>
           </Link>
         </div>
 
