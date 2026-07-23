@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Post,
   Patch,
   Delete,
   Param,
@@ -16,7 +17,14 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiOkResponse, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
 import { UserResponse, UserSummary } from '../../models/user.model';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { RolesGuard } from '../rbac/guards/roles.guard';
@@ -49,8 +57,8 @@ export class UsersController {
   @Serialize([UserSummary])
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    return this.usersService.findAll(query);
+  async findAll(@Query() query: PaginationDto, @CurrentUser() actor: { id: string; role: string }) {
+    return this.usersService.findAll(query, actor);
   }
 
   @ApiOperation({ summary: 'Get a user by ID' })
@@ -88,17 +96,48 @@ export class UsersController {
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() actor: { id: string; role: string },
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return this.usersService.update(id, updateUserDto, file);
+    return this.usersService.update(id, updateUserDto, actor, file);
   }
 
   @ApiOperation({ summary: 'Delete a user' })
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Serialize(SuccessResponse)
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    await this.usersService.delete(id);
+  async remove(@Param('id') id: string, @CurrentUser() actor: { id: string; role: string }) {
+    await this.usersService.delete(id, actor);
     return { success: true };
+  }
+
+  @ApiOperation({ summary: 'Assign user to organization' })
+  @Roles(Role.SUPER_ADMIN)
+  @Post(':id/assign-organization')
+  async assignOrg(
+    @Param('id') id: string,
+    @Body() dto: import('./dto/admin-assignment.dto').AssignOrganizationDto,
+  ) {
+    return this.usersService.assignToOrganization(id, dto.organizationId, dto.role);
+  }
+
+  @ApiOperation({ summary: 'Assign user to workspace' })
+  @Roles(Role.SUPER_ADMIN)
+  @Post(':id/assign-workspace')
+  async assignWS(
+    @Param('id') id: string,
+    @Body() dto: import('./dto/admin-assignment.dto').AssignWorkspaceDto,
+  ) {
+    return this.usersService.assignToWorkspace(id, dto.workspaceId, dto.role);
+  }
+
+  @ApiOperation({ summary: 'Assign user to project' })
+  @Roles(Role.SUPER_ADMIN)
+  @Post(':id/assign-project')
+  async assignProj(
+    @Param('id') id: string,
+    @Body() dto: import('./dto/admin-assignment.dto').AssignProjectDto,
+  ) {
+    return this.usersService.assignToProject(id, dto.projectId, dto.role);
   }
 }
