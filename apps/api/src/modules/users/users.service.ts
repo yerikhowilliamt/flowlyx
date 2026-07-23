@@ -58,38 +58,14 @@ export class UsersService {
       const workspaceIds = actorWorkspaces.map((w) => w.workspaceId);
       const projectIds = actorProjects.map((p) => p.projectId);
 
-      const andFilters: Prisma.UserWhereInput[] = [];
-      if (where.AND) {
-        if (Array.isArray(where.AND)) {
-          andFilters.push(...where.AND);
-        } else {
-          andFilters.push(where.AND);
-        }
-      }
-
-      where.AND = [
-        ...andFilters,
-        {
-          OR: [
-            { id: actor.id },
-            {
-              organizationMembers: {
-                some: { organizationId: { in: orgIds } },
-              },
-            },
-            {
-              workspaceMembers: {
-                some: { workspaceId: { in: workspaceIds } },
-              },
-            },
-            {
-              projectMembers: {
-                some: { projectId: { in: projectIds } },
-              },
-            },
-          ],
-        },
-      ];
+      where.AND = {
+        OR: [
+          { id: actor.id },
+          { organizationMembers: { some: { organizationId: { in: orgIds } } } },
+          { workspaceMembers: { some: { workspaceId: { in: workspaceIds } } } },
+          { projectMembers: { some: { projectId: { in: projectIds } } } },
+        ],
+      };
     }
 
     const [data, total] = await Promise.all([
