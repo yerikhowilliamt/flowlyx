@@ -62,7 +62,7 @@ describe('TasksService', () => {
 
       expect(result).toEqual(mockTask);
       expect(prisma.list.findUnique).toHaveBeenCalledWith({ where: { id: 'list-1' } });
-      const { assigneeId: _, ...taskData } = dto;
+      const { ...taskData } = dto;
       expect(prisma.task.create).toHaveBeenCalledWith({ data: taskData });
     });
 
@@ -79,7 +79,7 @@ describe('TasksService', () => {
     it('should return tasks for a list', async () => {
       (prisma.task.findMany as jest.Mock).mockResolvedValueOnce([mockTask]);
       (prisma.task.count as jest.Mock).mockResolvedValueOnce(1);
-      
+
       const query = {
         page: 1,
         limit: 10,
@@ -88,7 +88,7 @@ describe('TasksService', () => {
       };
 
       const result = await service.findAllByListId('list-1', query);
-      
+
       expect(result.data).toEqual([mockTask]);
       expect(result.meta.total).toBe(1);
       expect(prisma.task.findMany).toHaveBeenCalledWith({
@@ -119,7 +119,7 @@ describe('TasksService', () => {
     it('should apply search filter if search is provided', async () => {
       (prisma.task.findMany as jest.Mock).mockResolvedValueOnce([mockTask]);
       (prisma.task.count as jest.Mock).mockResolvedValueOnce(1);
-      
+
       const query = {
         page: 1,
         limit: 10,
@@ -129,15 +129,15 @@ describe('TasksService', () => {
       };
 
       const result = await service.findAllByListId('list-1', query);
-      
+
       expect(result.data).toEqual([mockTask]);
       expect(prisma.task.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { 
+          where: {
             listId: 'list-1',
-            title: { contains: 'test task', mode: 'insensitive' }
+            title: { contains: 'test task', mode: 'insensitive' },
           },
-        })
+        }),
       );
     });
   });
