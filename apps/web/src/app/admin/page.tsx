@@ -1,41 +1,28 @@
-'use me';
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getUsers, getSystemConfigs, getAuditLogs } from '@/features/admin/api/admin.api';
 import { AdminOverviewStats } from '@/features/admin/components/admin-overview-stats';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Settings, Activity, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-export default function AdminOverviewPage() {
-  const [userCount, setUserCount] = useState(0);
-  const [configCount, setConfigCount] = useState(0);
-  const [auditCount, setAuditCount] = useState(0);
+function useAdminStats() {
+  return useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: async () => {
+      const [users, configs, logs] = await Promise.all([
+        getUsers().catch(() => []),
+        getSystemConfigs().catch(() => []),
+        getAuditLogs().catch(() => []),
+      ]);
+      return { userCount: users.length, configCount: configs.length, auditCount: logs.length };
+    },
+  });
+}
 
-  useEffect(() => {
-    let mounted = true;
-    async function loadStats() {
-      try {
-        const [users, configs, logs] = await Promise.all([
-          getUsers().catch(() => []),
-          getSystemConfigs().catch(() => []),
-          getAuditLogs().catch(() => []),
-        ]);
-        if (mounted) {
-          setUserCount(users.length);
-          setConfigCount(configs.length);
-          setAuditCount(logs.length);
-        }
-      } catch {
-        // Fallback
-      }
-    }
-    loadStats();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+export default function AdminOverviewPage() {
+  const { data } = useAdminStats();
 
   return (
     <div className="space-y-8">
@@ -47,10 +34,13 @@ export default function AdminOverviewPage() {
         </p>
       </div>
 
-      <AdminOverviewStats userCount={userCount} configCount={configCount} auditCount={auditCount} />
+      <AdminOverviewStats
+        userCount={data?.userCount ?? 0}
+        configCount={data?.configCount ?? 0}
+        auditCount={data?.auditCount ?? 0}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* User Management Card */}
         <Card className="bg-zinc-900/60 border-zinc-800 hover:border-orange-500/30 transition-all group">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -73,7 +63,6 @@ export default function AdminOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* System Configuration Card */}
         <Card className="bg-zinc-900/60 border-zinc-800 hover:border-orange-500/30 transition-all group">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -96,7 +85,6 @@ export default function AdminOverviewPage() {
           </CardContent>
         </Card>
 
-        {/* Audit Logs Card */}
         <Card className="bg-zinc-900/60 border-zinc-800 hover:border-orange-500/30 transition-all group">
           <CardHeader>
             <div className="flex items-center justify-between">
