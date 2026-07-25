@@ -21,8 +21,23 @@ export class ProjectRolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    // Attempt to extract projectId from params, query, or body
-    let projectId = request.params.projectId || request.query.projectId || request.body.projectId;
+    if (!user) {
+      throw new ForbiddenException('Access denied: User is unauthenticated.');
+    }
+
+    // 1. System Superadmin override
+    if (user.role === 'ADMIN') {
+      return true;
+    }
+
+    // Attempt to extract projectId from params, query, or body (supports camelCase & snake_case)
+    let projectId =
+      request.params.projectId ||
+      request.query.projectId ||
+      request.body?.projectId ||
+      request.params.project_id ||
+      request.query.project_id ||
+      request.body?.project_id;
 
     if (!projectId && request.params.id) {
       if (request.originalUrl?.includes('/priorities/')) {
@@ -43,12 +58,13 @@ export class ProjectRolesGuard implements CanActivate {
       }
     }
 
-    if (!user || !projectId) {
+    if (!projectId) {
       throw new ForbiddenException(
         'Access denied: You do not have the required role in this project to perform this action.',
       );
     }
 
+    // 2. Direct Project Member check
     const member = await prisma.projectMember.findFirst({
       where: {
         projectId: projectId as string,
@@ -57,15 +73,51 @@ export class ProjectRolesGuard implements CanActivate {
       },
     });
 
-    if (!member) {
-      throw new ForbiddenException('User is not a member of this project');
+    if (member && requiredRoles.includes(member.role as ProjectRole)) {
+      return true;
     }
 
-    if (!requiredRoles.includes(member.role as ProjectRole)) {
-      throw new ForbiddenException(
-        'Access denied: You do not have the required role in this project to perform this action.',
-      );
+    // 3. Hierarchical Fallback: Check Workspace & Organization admin permissions
+    if (prisma.project?.findUnique) {
+      const project = await prisma.project.findUnique({
+        where: { id: projectId as string },
+        select: {
+          workspace: {
+            select: {
+              organizationId: true,
+              members: {
+                where: { userId: user.id, status: 'ACTIVE' },
+                select: { role: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (project?.workspace) {
+        // Check Workspace Admin
+        const wsMember = project.workspace.members[0];
+        if (wsMember && wsMember.role === 'ADMIN') {
+          return true;
+        }
+
+        // Check Organization Owner or Admin
+        const orgMember = await prisma.organizationMember.findFirst({
+          where: {
+            organizationId: project.workspace.organizationId,
+            userId: user.id,
+            status: 'ACTIVE',
+          },
+        });
+
+        if (orgMember && (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')) {
+          return true;
+        }
+      }
     }
-    return true;
+
+    throw new ForbiddenException(
+      'Access denied: You do not have the required role in this project to perform this action.',
+    );
   }
 }

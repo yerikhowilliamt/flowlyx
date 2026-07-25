@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserSummary } from './user.model';
 
 export class TaskCommentResponse {
   @ApiProperty()
@@ -37,4 +38,8 @@ export class TaskCommentResponse {
   @ApiPropertyOptional({ name: 'deleted_at' })
   @Expose({ name: 'deleted_at' })
   deletedAt?: Date | null;
+
+  @ApiPropertyOptional({ type: () => UserSummary })
+  @Expose()
+  user?: UserSummary;
 }

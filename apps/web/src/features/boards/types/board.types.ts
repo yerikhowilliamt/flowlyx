@@ -31,6 +31,20 @@ export interface ListResponse extends ListSummary {
   updated_by?: string | null;
 }
 
+export interface TaskAssignmentUser {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+}
+
+export interface TaskAssignmentItem {
+  id: string;
+  taskId: string;
+  userId: string;
+  user?: TaskAssignmentUser;
+}
+
 export interface TaskSummary {
   id: string;
   listId: string;
@@ -40,6 +54,7 @@ export interface TaskSummary {
   status: string;
   startDate?: string | null;
   dueDate?: string | null;
+  taskAssignments?: TaskAssignmentItem[];
 }
 
 export interface TaskResponse extends TaskSummary {
@@ -58,6 +73,7 @@ export interface PrioritySummary {
   color: string;
   order: number;
   status: string;
+  createdBy?: string | null;
 }
 
 export interface PaginatedResponse<T> {

@@ -1,18 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 
 export class TaskAttachmentResponse {
-  @ApiProperty() id!: string;
-  @ApiProperty() taskId!: string;
-  @ApiProperty() fileUrl!: string;
-  @ApiProperty() fileName!: string;
-  @ApiProperty() fileSize!: number;
-  @ApiProperty() fileType!: string;
-  @ApiProperty() uploadedBy!: string;
-  @ApiProperty() createdAt!: Date;
+  @ApiProperty() @Expose() id!: string;
+  @ApiProperty() @Expose() taskId!: string;
+  @ApiProperty() @Expose() fileUrl!: string;
+  @ApiProperty() @Expose() fileName!: string;
+  @ApiProperty() @Expose() fileSize!: number;
+  @ApiProperty() @Expose() fileType!: string;
+  @ApiProperty() @Expose() uploadedBy!: string;
+  @ApiProperty() @Expose() createdAt!: Date;
 }
 
 export class TaskAttachmentSummary {
-  @ApiProperty() id!: string;
-  @ApiProperty() fileName!: string;
-  @ApiProperty() fileUrl!: string;
+  @ApiProperty() @Expose() id!: string;
+  @ApiProperty() @Expose() fileName!: string;
+  @ApiProperty() @Expose() fileUrl!: string;
 }

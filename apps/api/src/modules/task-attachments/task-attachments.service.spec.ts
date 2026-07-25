@@ -16,6 +16,12 @@ jest.mock('@flowlyx/database', () => ({
     workspaceMember: {
       findUnique: jest.fn(),
     },
+    user: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
+    organizationMember: {
+      findFirst: jest.fn().mockResolvedValue(null),
+    },
     taskAttachment: {
       create: jest.fn(),
       update: jest.fn(),

@@ -1,18 +1,62 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { prisma, Task, Prisma } from '@flowlyx/database';
+import { prisma, Task, Prisma, User } from '@flowlyx/database';
 import { PaginationDto } from '../../core/pagination';
 import { createPaginatedResponse } from '../../common/utils/pagination.util';
+import { Role } from '../rbac/enums/role.enum';
+
+const taskAssignmentInclude = {
+  taskAssignments: {
+    include: {
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatarUrl: true,
+        },
+      },
+    },
+  },
+};
 
 @Injectable()
 export class TasksService {
-  async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    const list = await prisma.list.findUnique({ where: { id: createTaskDto.listId } });
+  private isAdmin(user: User): boolean {
+    return user.role === Role.ADMIN || user.role === Role.SUPER_ADMIN;
+  }
+
+  async create(createTaskDto: CreateTaskDto, currentUser?: User): Promise<Task> {
+    if (currentUser && !this.isAdmin(currentUser)) {
+      throw new ForbiddenException('Only administrators can create tasks');
+    }
+
+    const { assigneeId, ...taskData } = createTaskDto;
+
+    const list = await prisma.list.findUnique({ where: { id: taskData.listId } });
     if (!list) {
       throw new NotFoundException('List not found');
     }
-    return prisma.task.create({ data: createTaskDto });
+
+    const task = await prisma.task.create({
+      data: taskData,
+    });
+
+    if (assigneeId) {
+      const targetUser = await prisma.user.findUnique({ where: { id: assigneeId } });
+      if (targetUser) {
+        await prisma.taskAssignment.create({
+          data: {
+            taskId: task.id,
+            userId: assigneeId,
+            createdBy: currentUser?.id,
+          },
+        });
+      }
+    }
+
+    return this.findById(task.id);
   }
 
   async findAllByListId(listId: string, query: PaginationDto) {
@@ -30,6 +74,7 @@ export class TasksService {
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder },
+        include: taskAssignmentInclude,
       }),
       prisma.task.count({ where }),
     ]);
@@ -38,18 +83,46 @@ export class TasksService {
   }
 
   async findById(id: string): Promise<Task> {
-    const task = await prisma.task.findUnique({ where: { id } });
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: taskAssignmentInclude,
+    });
     if (!task) {
       throw new NotFoundException('Task not found');
     }
     return task;
   }
 
-  async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    return prisma.task.update({ where: { id }, data: updateTaskDto });
+  async update(id: string, updateTaskDto: UpdateTaskDto, currentUser?: User): Promise<Task> {
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: { taskAssignments: true },
+    });
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    if (currentUser) {
+      const isAdmin = this.isAdmin(currentUser);
+      const isAssigned = task.taskAssignments.some((a) => a.userId === currentUser.id);
+
+      if (!isAdmin && !isAssigned) {
+        throw new ForbiddenException('Only administrators and assigned users can update or move this task');
+      }
+    }
+
+    return prisma.task.update({
+      where: { id },
+      data: updateTaskDto,
+      include: taskAssignmentInclude,
+    });
   }
 
-  async remove(id: string): Promise<boolean> {
+  async remove(id: string, currentUser?: User): Promise<boolean> {
+    if (currentUser && !this.isAdmin(currentUser)) {
+      throw new ForbiddenException('Only administrators can delete tasks');
+    }
+    await this.findById(id);
     await prisma.task.delete({ where: { id } });
     return true;
   }

@@ -84,8 +84,10 @@ export function WorkspaceCalendar({ workspaceId }: WorkspaceCalendarProps) {
   const priorities = React.useMemo(() => {
     const list: PrioritySummary[] = [];
     prioritiesQueries.forEach((q) => {
-      if (q.data?.data) {
-        list.push(...q.data.data);
+      if (Array.isArray(q.data)) {
+        list.push(...q.data);
+      } else if (q.data && typeof q.data === 'object' && 'data' in q.data && Array.isArray((q.data as { data: PrioritySummary[] }).data)) {
+        list.push(...(q.data as { data: PrioritySummary[] }).data);
       }
     });
     return list;

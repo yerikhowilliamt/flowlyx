@@ -2,13 +2,25 @@ import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ProjectMemberSummary {
-  @ApiProperty({ name: 'project_id' })
-  @Expose({ name: 'project_id' })
+  @ApiProperty()
+  @Expose()
+  id!: string;
+
+  @ApiProperty()
+  @Expose()
   projectId!: string;
 
   @ApiProperty()
   @Expose()
+  userId!: string;
+
+  @ApiProperty()
+  @Expose()
   role!: string;
+
+  @ApiProperty()
+  @Expose()
+  status!: string;
 }
 
 export class ProjectMemberResponse {
@@ -16,12 +28,12 @@ export class ProjectMemberResponse {
   @Expose()
   id!: string;
 
-  @ApiProperty({ name: 'project_id' })
-  @Expose({ name: 'project_id' })
+  @ApiProperty()
+  @Expose()
   projectId!: string;
 
-  @ApiProperty({ name: 'user_id' })
-  @Expose({ name: 'user_id' })
+  @ApiProperty()
+  @Expose()
   userId!: string;
 
   @ApiProperty()
@@ -32,11 +44,11 @@ export class ProjectMemberResponse {
   @Expose()
   status!: string;
 
-  @ApiProperty({ name: 'created_at' })
-  @Expose({ name: 'created_at' })
+  @ApiProperty()
+  @Expose()
   createdAt!: Date;
 
-  @ApiProperty({ name: 'updated_at' })
-  @Expose({ name: 'updated_at' })
+  @ApiProperty()
+  @Expose()
   updatedAt!: Date;
 }
