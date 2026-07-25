@@ -20,21 +20,15 @@ export class CloudinaryService {
       const cleanFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '_');
       const publicId = `${cleanFileName}_${Date.now()}`;
 
-      const options = {
-        folder: folder || 'flowlyx/task-attachments',
-        resource_type: 'auto' as const,
-      };
-
       const isImage = file.mimetype?.startsWith('image/');
       const isVideo = file.mimetype?.startsWith('video/');
       const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
 
-      if (!isImage && !isVideo && !isPdf) {
-        options.resource_type = 'raw';
-        options.public_id = `${publicId}.${fileExtension}`;
-      } else {
-        options.public_id = publicId;
-      }
+      const options = {
+        folder: folder || 'flowlyx/task-attachments',
+        resource_type: (!isImage && !isVideo && !isPdf ? 'raw' : 'auto') as 'raw' | 'auto',
+        public_id: !isImage && !isVideo && !isPdf ? `${publicId}.${fileExtension}` : publicId,
+      };
 
       const uploadStream = cloudinary.uploader.upload_stream(
         options,
