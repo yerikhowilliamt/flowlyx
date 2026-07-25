@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 export class ApiError extends Error {
   constructor(
@@ -46,8 +46,8 @@ async function refreshAccessToken(): Promise<string | null> {
           return token;
         }
       }
-    } catch (err) {
-      console.error('Failed to silent refresh token:', err);
+    } catch {
+      // silent — refresh failure handled by returning null below
     } finally {
       refreshPromise = null;
     }

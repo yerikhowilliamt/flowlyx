@@ -9,9 +9,6 @@ import {
   useBoard,
   useDeleteBoard,
   useLists,
-  useCreateList,
-  useUpdateList,
-  useDeleteList,
   useTasks,
   useCreateTask,
   useDeleteTask,
@@ -115,9 +112,6 @@ export default function BoardDetailPage({ params }: PageProps) {
 
   // Lists (Columns)
   const { data: lists, isLoading: isListsLoading } = useLists(boardId);
-  const _createListMutation = useCreateList(boardId);
-  const _updateListMutation = useUpdateList(boardId);
-  const _deleteListMutation = useDeleteList(boardId);
 
   // Task & Priority Mutations
   const updateTaskMutation = useUpdateTask();
@@ -127,10 +121,6 @@ export default function BoardDetailPage({ params }: PageProps) {
     : (prioritiesResp as unknown as { data?: PrioritySummary[] })?.data || [];
   const createPriorityMutation = useCreatePriority(projectId);
   const deletePriorityMutation = useDeletePriority(projectId);
-
-  // Local state for list creation
-  const [_isAddingList, _setIsAddingList] = useState(false);
-  const [_newListName, _setNewListName] = useState('');
 
   // Local state for Manage Priorities Modal
   const [isPrioritiesModalOpen, setIsPrioritiesModalOpen] = useState(false);
@@ -143,23 +133,6 @@ export default function BoardDetailPage({ params }: PageProps) {
       id: taskId,
       data: { listId: targetListId },
     });
-  };
-
-  const _handleCreateList = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!_newListName.trim()) return;
-    _createListMutation.mutate(
-      {
-        boardId,
-        name: _newListName.trim(),
-      },
-      {
-        onSuccess: () => {
-          _setNewListName('');
-          _setIsAddingList(false);
-        },
-      },
-    );
   };
 
   if (isWorkspaceLoading || isBoardLoading || isListsLoading) {
@@ -291,7 +264,9 @@ export default function BoardDetailPage({ params }: PageProps) {
         {/* Title area */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 sm:pb-6 border-b border-zinc-900 mb-4 sm:mb-6">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{board.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              {board.name}
+            </h1>
             <p className="text-xs text-zinc-400 mt-1">
               {board.description || 'Manage tasks, backlog, and sprint pipeline.'}
             </p>
@@ -353,7 +328,8 @@ export default function BoardDetailPage({ params }: PageProps) {
                   return (a.order ?? 0) - (b.order ?? 0);
                 })
               : [];
-            const todoList = sortedLists.find((l) => l.name.toLowerCase() === 'to do') || sortedLists[0];
+            const todoList =
+              sortedLists.find((l) => l.name.toLowerCase() === 'to do') || sortedLists[0];
 
             return sortedLists.map((list) => (
               <BoardColumn
@@ -426,21 +402,27 @@ export default function BoardDetailPage({ params }: PageProps) {
                 </div>
                 <div className="flex items-center gap-x-2 pt-1">
                   <span className="text-xs text-zinc-400 font-medium">Color:</span>
-                  {['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'].map(
-                    (c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setNewPriorityColor(c)}
-                        className={`h-5 w-5 rounded-full border transition-all ${
-                          newPriorityColor === c
-                            ? 'border-white scale-110 shadow-md'
-                            : 'border-transparent opacity-70 hover:opacity-100'
-                        }`}
-                        style={{ backgroundColor: c }}
-                      />
-                    ),
-                  )}
+                  {[
+                    '#ef4444',
+                    '#f97316',
+                    '#eab308',
+                    '#22c55e',
+                    '#3b82f6',
+                    '#a855f7',
+                    '#ec4899',
+                  ].map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setNewPriorityColor(c)}
+                      className={`h-5 w-5 rounded-full border transition-all ${
+                        newPriorityColor === c
+                          ? 'border-white scale-110 shadow-md'
+                          : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
                 </div>
               </form>
 
@@ -455,7 +437,8 @@ export default function BoardDetailPage({ params }: PageProps) {
                       ['urgent', 'high', 'medium', 'low'].includes(p.name.toLowerCase()) &&
                       !p.createdBy;
                     const canDelete =
-                      !isDefault && (p.createdBy === currentUser?.id || currentUser?.role === 'SUPER_ADMIN');
+                      !isDefault &&
+                      (p.createdBy === currentUser?.id || currentUser?.role === 'SUPER_ADMIN');
 
                     return (
                       <div
@@ -463,7 +446,10 @@ export default function BoardDetailPage({ params }: PageProps) {
                         className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/40 border border-zinc-900"
                       >
                         <div className="flex items-center gap-x-2.5">
-                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
+                          <span
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: p.color }}
+                          />
                           <span className="text-sm font-semibold text-zinc-200">{p.name}</span>
                           {isDefault && (
                             <span className="text-2xs font-medium px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-400 border border-zinc-700/50">
@@ -541,9 +527,13 @@ function BoardColumn({
 
   const { data: tasks, isLoading } = useTasks(list.id);
   const { data: prioritiesResp } = usePriorities(projectId);
-  const priorities = Array.isArray(prioritiesResp)
-    ? prioritiesResp
-    : (prioritiesResp as unknown as { data?: PrioritySummary[] })?.data || [];
+  const priorities = useMemo(
+    () =>
+      Array.isArray(prioritiesResp)
+        ? prioritiesResp
+        : (prioritiesResp as unknown as { data?: PrioritySummary[] })?.data || [],
+    [prioritiesResp],
+  );
 
   type SortOption = 'date-desc' | 'date-asc' | 'priority-desc' | 'priority-asc';
   const [columnSortBy, setColumnSortBy] = useState<SortOption>('date-desc');
@@ -590,7 +580,6 @@ function BoardColumn({
 
   const createTaskMutation = useCreateTask(boardId, todoListId || list.id);
   const deleteTaskMutation = useDeleteTask(list.id);
-  const updateTaskMutation = useUpdateTask();
 
   const [isOpen, setIsOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -659,18 +648,13 @@ function BoardColumn({
       {/* Column Header - Fixed Column with Sorting */}
       <div className="flex items-center justify-between pb-1 border-b border-zinc-850/60">
         <div className="flex items-center gap-x-2">
-          <h3 className="text-sm font-bold text-white tracking-tight">
-            {list.name}
-          </h3>
+          <h3 className="text-sm font-bold text-white tracking-tight">{list.name}</h3>
           <span className="text-2xs text-orange-400 font-bold bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">
             {sortedTasks.length}
           </span>
         </div>
         <div className="flex items-center">
-          <Select
-            value={columnSortBy}
-            onValueChange={(val) => setColumnSortBy(val as SortOption)}
-          >
+          <Select value={columnSortBy} onValueChange={(val) => setColumnSortBy(val as SortOption)}>
             <SelectTrigger
               className="h-6 w-6 p-0 border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-md flex items-center justify-center focus:ring-0 focus:ring-offset-0 cursor-pointer shadow-none [&>svg:last-child]:hidden"
               title="Sort tasks"
@@ -708,14 +692,18 @@ function BoardColumn({
                 onDragStart={(e) => {
                   if (!userCanMove) {
                     e.preventDefault();
-                    toast.error('Hanya Admin dan User yang di-assign pada task ini yang dapat memindahkannya');
+                    toast.error(
+                      'Hanya Admin dan User yang di-assign pada task ini yang dapat memindahkannya',
+                    );
                     return;
                   }
                   e.dataTransfer.setData('text/plain', task.id);
                 }}
                 onClick={() => handleOpenDetails(task)}
                 className={`group bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-900/80 hover:border-zinc-800 rounded-xl p-4 space-y-2 transition-all shadow-sm ${
-                  userCanMove ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed opacity-80'
+                  userCanMove
+                    ? 'cursor-grab active:cursor-grabbing'
+                    : 'cursor-not-allowed opacity-80'
                 }`}
               >
                 <div className="flex items-start justify-between gap-x-2">
@@ -849,7 +837,7 @@ function BoardColumn({
                     {(() => {
                       if (!taskAssigneeId || taskAssigneeId === 'none') return 'Unassigned';
                       const selectedUser = allUsers?.find((u) => u.id === taskAssigneeId);
-                      return selectedUser ? (selectedUser.name || selectedUser.email) : 'Select user';
+                      return selectedUser ? selectedUser.name || selectedUser.email : 'Select user';
                     })()}
                   </SelectValue>
                 </SelectTrigger>
