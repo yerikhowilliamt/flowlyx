@@ -1,7 +1,6 @@
-/* eslint-disable */
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { getOrganizationBySlug } from '@/features/organizations/api/organizations.api';
@@ -63,29 +62,22 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
   });
 
   // Sync state with loaded organization data
-  useEffect(() => {
-    if (organization) {
-      setName(organization.name);
-      setCustomSlug(organization.slug);
-      setDescription(organization.description || '');
-    }
-  }, [organization]);
+  if (organization && name === '' && !customSlug && !description) {
+    setName(organization.name);
+    setCustomSlug(organization.slug);
+    setDescription(organization.description || '');
+  }
 
   const updateOrgMutation = useUpdateOrganization();
   const deleteOrgMutation = useDeleteOrganization();
 
-  const {
-    data: billing,
-    isLoading: billingLoading,
-  } = useBillingInfo(organization?.id ?? '');
+  const { data: billing, isLoading: billingLoading } = useBillingInfo(organization?.id ?? '');
   const updateBillingMutation = useUpdateBillingPlan(organization?.id ?? '');
 
-  useEffect(() => {
-    if (billing) {
-      setBillingPlan(billing.currentPlan);
-      setBillingCycle(billing.billingCycle);
-    }
-  }, [billing]);
+  if (billing && billingPlan === 'FREE' && billingCycle === 'MONTHLY') {
+    setBillingPlan(billing.currentPlan);
+    setBillingCycle(billing.billingCycle);
+  }
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -469,7 +461,12 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
                       onClick={() =>
                         updateBillingMutation.mutate({ plan: billingPlan, billingCycle })
                       }
-                      disabled={updateBillingMutation.isPending || (billing && billing.currentPlan === billingPlan && billing.billingCycle === billingCycle)}
+                      disabled={
+                        updateBillingMutation.isPending ||
+                        (billing &&
+                          billing.currentPlan === billingPlan &&
+                          billing.billingCycle === billingCycle)
+                      }
                       className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl cursor-pointer disabled:opacity-50"
                     >
                       {updateBillingMutation.isPending ? 'Updating plan...' : 'Update Plan'}
