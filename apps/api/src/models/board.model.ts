@@ -1,4 +1,4 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class BoardResponse {
@@ -8,6 +8,7 @@ export class BoardResponse {
 
   @ApiProperty({ name: 'project_id' })
   @Expose({ name: 'project_id' })
+  @Transform(({ obj }) => obj?.projectId || obj?.project_id)
   projectId!: string;
 
   @ApiProperty()
@@ -24,22 +25,27 @@ export class BoardResponse {
 
   @ApiProperty({ name: 'created_at' })
   @Expose({ name: 'created_at' })
+  @Transform(({ obj }) => obj?.createdAt || obj?.created_at)
   createdAt!: Date;
 
   @ApiProperty({ name: 'updated_at' })
   @Expose({ name: 'updated_at' })
+  @Transform(({ obj }) => obj?.updatedAt || obj?.updated_at)
   updatedAt!: Date;
 
   @ApiPropertyOptional({ name: 'deleted_at' })
   @Expose({ name: 'deleted_at' })
+  @Transform(({ obj }) => obj?.deletedAt || obj?.deleted_at)
   deletedAt?: Date | null;
 
   @ApiPropertyOptional({ name: 'created_by' })
   @Expose({ name: 'created_by' })
+  @Transform(({ obj }) => obj?.createdBy || obj?.created_by)
   createdBy?: string | null;
 
   @ApiPropertyOptional({ name: 'updated_by' })
   @Expose({ name: 'updated_by' })
+  @Transform(({ obj }) => obj?.updatedBy || obj?.updated_by)
   updatedBy?: string | null;
 }
 
@@ -50,6 +56,7 @@ export class BoardSummary {
 
   @ApiProperty({ name: 'project_id' })
   @Expose({ name: 'project_id' })
+  @Transform(({ obj }) => obj?.projectId || obj?.project_id)
   projectId!: string;
 
   @ApiProperty()

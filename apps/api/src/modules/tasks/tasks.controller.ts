@@ -28,6 +28,9 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '@flowlyx/database';
+
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @ApiTags('Tasks')
@@ -41,9 +44,9 @@ export class TasksController {
   @Serialize(TaskResponse)
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createTaskDto: CreateTaskDto) {
-    this.logger.log(`Creating task in list: ${createTaskDto.listId}`);
-    return this.tasksService.create(createTaskDto);
+  async create(@Body() createTaskDto: CreateTaskDto, @CurrentUser() user: User) {
+    this.logger.log(`Creating task in list: ${createTaskDto.listId} by user ${user.id}`);
+    return this.tasksService.create(createTaskDto, user);
   }
   @ApiOperation({ summary: 'List all tasks' })
   @ApiOkResponse({ type: [TaskSummary] })
@@ -69,16 +72,20 @@ export class TasksController {
   @ApiOkResponse({ type: TaskResponse })
   @Serialize(TaskResponse)
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    this.logger.log(`Updating task with id: ${id}`);
-    return this.tasksService.update(id, updateTaskDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateTaskDto: UpdateTaskDto,
+    @CurrentUser() user: User,
+  ) {
+    this.logger.log(`Updating task with id: ${id} by user ${user.id}`);
+    return this.tasksService.update(id, updateTaskDto, user);
   }
 
   @Serialize(SuccessResponse)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string) {
-    this.logger.log(`Deleting task with id: ${id}`);
-    await this.tasksService.remove(id);
+  async remove(@Param('id') id: string, @CurrentUser() user: User) {
+    this.logger.log(`Deleting task with id: ${id} by user ${user.id}`);
+    await this.tasksService.remove(id, user);
   }
 }

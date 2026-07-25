@@ -3,6 +3,8 @@ import { toast } from 'sonner';
 import {
   getBoards,
   createBoard,
+  updateBoard,
+  deleteBoard,
   getBoard,
   getLists,
   createList,
@@ -13,6 +15,8 @@ import {
   updateTask,
   deleteTask,
   getPriorities,
+  createPriority,
+  deletePriority,
 } from '../api/boards.api';
 import {
   CreateBoardInput,
@@ -50,6 +54,48 @@ export const useCreateBoard = (projectId: string) => {
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : 'Failed to create board';
+      toast.error(message);
+    },
+  });
+};
+
+export const useUpdateBoard = (projectId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateBoardInput> }) =>
+      updateBoard(id, data),
+    onSuccess: (_, variables) => {
+      toast.success('Board updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['board', variables.id] });
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['boards', { projectId }] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['boards'] });
+      }
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to update board';
+      toast.error(message);
+    },
+  });
+};
+
+export const useDeleteBoard = (projectId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteBoard(id),
+    onSuccess: () => {
+      toast.success('Board deleted successfully');
+      if (projectId) {
+        queryClient.invalidateQueries({ queryKey: ['boards', { projectId }] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['boards'] });
+      }
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to delete board';
       toast.error(message);
     },
   });
@@ -173,5 +219,51 @@ export const usePriorities = (projectId: string) => {
     queryKey: ['priorities', { projectId }],
     queryFn: () => getPriorities(projectId),
     enabled: !!projectId,
+  });
+};
+
+export const useCreatePriority = (projectId?: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { projectId?: string; name: string; color: string; order?: number }) => {
+      const targetProjectId = data.projectId || projectId;
+      if (!targetProjectId) {
+        throw new Error('Project ID is required to create a priority');
+      }
+      return createPriority({
+        projectId: targetProjectId,
+        name: data.name,
+        color: data.color,
+        order: data.order,
+      });
+    },
+    onSuccess: (_, variables) => {
+      toast.success('Priority created successfully');
+      const targetProjectId = variables.projectId || projectId;
+      if (targetProjectId) {
+        queryClient.invalidateQueries({ queryKey: ['priorities', { projectId: targetProjectId }] });
+      }
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to create priority';
+      toast.error(message);
+    },
+  });
+};
+
+export const useDeletePriority = (projectId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deletePriority(id),
+    onSuccess: () => {
+      toast.success('Priority deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['priorities', { projectId }] });
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to delete priority';
+      toast.error(message);
+    },
   });
 };

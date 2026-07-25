@@ -119,4 +119,16 @@ export class AuthController {
       access_token: tokens.accessToken,
     };
   }
+
+  @ApiOperation({ summary: 'Logout user and clear session cookies' })
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('Refresh', {
+      httpOnly: true,
+      secure: this.configService.get('NODE_ENV', { infer: true }) === 'production',
+      sameSite: 'strict',
+    });
+    return { message: 'Logged out successfully' };
+  }
 }

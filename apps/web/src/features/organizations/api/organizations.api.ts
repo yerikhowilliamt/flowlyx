@@ -1,6 +1,12 @@
 import { api } from '@/lib/api-client';
 import { CreateOrganizationInput, UpdateOrganizationInput } from '../schemas/organization.schema';
-import { OrganizationResponse, OrganizationSummary } from '../types/organization.types';
+import {
+  OrganizationResponse,
+  OrganizationSummary,
+  BillingInfo,
+  UpdatePlanPayload,
+  UpdatePlanResponse,
+} from '../types/organization.types';
 export interface ApiResponse<T> {
   statusCode: number;
   message: string;
@@ -39,4 +45,22 @@ export const updateOrganization = async (
 
 export const deleteOrganization = async (id: string): Promise<void> => {
   await api.delete<void>(`/organizations/${id}`);
+};
+
+export const getBillingInfo = async (organizationId: string): Promise<BillingInfo> => {
+  const response = await api.get<ApiResponse<BillingInfo>>(
+    `/organizations/${organizationId}/billing`,
+  );
+  return response.data;
+};
+
+export const updateBillingPlan = async (
+  organizationId: string,
+  data: UpdatePlanPayload,
+): Promise<UpdatePlanResponse> => {
+  const response = await api.put<ApiResponse<UpdatePlanResponse>>(
+    `/organizations/${organizationId}/billing/plan`,
+    data,
+  );
+  return response.data;
 };

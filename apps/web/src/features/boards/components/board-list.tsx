@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useBoards } from '../hooks/use-boards';
+import { useBoards, useDeleteBoard } from '../hooks/use-boards';
 import { CreateBoardForm } from './create-board-form';
+import { EditBoardForm } from './edit-board-form';
+import { BoardSummary } from '../types/board.types';
 import { ProjectSummary } from '@/features/projects/types/project.types';
-import { Loader2, Plus, Kanban, Layout, ChevronRight, AlertCircle } from 'lucide-react';
+import { Loader2, Plus, Kanban, Layout, ChevronRight, AlertCircle, Edit2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -46,12 +48,14 @@ export function BoardList({
     }
     setInternalSelectedProjectId(id);
   };
-  const [isOpen, setIsOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingBoard, setEditingBoard] = useState<BoardSummary | null>(null);
 
   const activeProjectId =
     selectedProjectId || (projects && projects.length > 0 ? projects[0].id : '');
 
   const { data: boards, isLoading, isError, error } = useBoards(activeProjectId);
+  const deleteBoardMutation = useDeleteBoard(activeProjectId);
 
   if (!projects || projects.length === 0) {
     return (
@@ -80,7 +84,7 @@ export function BoardList({
         </div>
         {activeProjectId && (
           <Button
-            onClick={() => setIsOpen(true)}
+            onClick={() => setIsCreateOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer self-start sm:self-auto"
           >
             <Plus className="mr-1.5 h-4 w-4" />
@@ -139,7 +143,7 @@ export function BoardList({
             </p>
           </div>
           <Button
-            onClick={() => setIsOpen(true)}
+            onClick={() => setIsCreateOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer"
           >
             Create Board
@@ -148,10 +152,9 @@ export function BoardList({
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {boards.map((board) => (
-            <Link
+            <div
               key={board.id}
-              href={`/workspaces/${workspaceSlug}/boards/${board.id}`}
-              className="group relative flex flex-col justify-between h-36 rounded-2xl border border-zinc-900 bg-zinc-900/20 p-6 transition-all hover:border-orange-500/50 hover:bg-zinc-900/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.04)] cursor-pointer"
+              className="group relative flex flex-col justify-between h-36 rounded-2xl border border-zinc-900 bg-zinc-900/20 p-6 transition-all hover:border-orange-500/50 hover:bg-zinc-900/40 hover:shadow-[0_0_30px_rgba(249,115,22,0.04)]"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -163,23 +166,50 @@ export function BoardList({
                       {board.name}
                     </h3>
                   </div>
+                  <div className="flex items-center gap-x-1.5 z-10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingBoard(board);
+                      }}
+                      className="p-1 text-zinc-500 hover:text-orange-400 transition-colors rounded"
+                      title="Edit board"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Are you sure you want to delete board "${board.name}"?`)) {
+                          deleteBoardMutation.mutate(board.id);
+                        }
+                      }}
+                      className="p-1 text-zinc-500 hover:text-red-400 transition-colors rounded"
+                      title="Delete board"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center justify-between text-2xs font-semibold text-zinc-500 mt-4 border-t border-zinc-900/60 pt-3">
                 <span className="inline-flex items-center gap-x-1 text-zinc-400">
                   Status: {board.status}
                 </span>
-                <span className="flex items-center text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <Link
+                  href={`/workspaces/${workspaceSlug}/boards/${board.id}`}
+                  className="flex items-center text-orange-500 hover:underline transition-opacity duration-300"
+                >
                   Open Board <ChevronRight className="ml-0.5 h-3 w-3" />
-                </span>
+                </Link>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
 
-      {/* Modal Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {/* Create Board Modal */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
           <DialogHeader className="text-left space-y-1">
             <DialogTitle className="text-xl font-bold text-white tracking-tight">
@@ -190,7 +220,28 @@ export function BoardList({
             </DialogDescription>
           </DialogHeader>
           {activeProjectId && (
-            <CreateBoardForm projectId={activeProjectId} onSuccess={() => setIsOpen(false)} />
+            <CreateBoardForm projectId={activeProjectId} onSuccess={() => setIsCreateOpen(false)} />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Board Modal */}
+      <Dialog open={!!editingBoard} onOpenChange={(open) => !open && setEditingBoard(null)}>
+        <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
+          <DialogHeader className="text-left space-y-1">
+            <DialogTitle className="text-xl font-bold text-white tracking-tight">
+              Edit Board
+            </DialogTitle>
+            <DialogDescription className="text-sm text-zinc-400">
+              Update board name and description.
+            </DialogDescription>
+          </DialogHeader>
+          {editingBoard && (
+            <EditBoardForm
+              board={editingBoard}
+              projectId={activeProjectId}
+              onSuccess={() => setEditingBoard(null)}
+            />
           )}
         </DialogContent>
       </Dialog>

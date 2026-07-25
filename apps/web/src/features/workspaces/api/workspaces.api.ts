@@ -38,6 +38,47 @@ export const updateWorkspace = async (
   return response.data;
 };
 
+export interface TaskActivityItem {
+  day: string;
+  tasks: number;
+}
+
+export interface WorkspaceStats {
+  totalProjects: number;
+  totalTasks: number;
+  tasksDone: number;
+  teamMembers: number;
+  activitySpeed: string;
+}
+
+export const getWorkspaceActivity = async (
+  id: string,
+  range: string = '7d',
+): Promise<TaskActivityItem[]> => {
+  const response = await api.get<ApiResponse<TaskActivityItem[]>>(
+    `/workspaces/${id}/activity?range=${range}`,
+  );
+  return response.data;
+};
+
+export interface WorkspaceMemberUser {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatarUrl?: string | null;
+}
+
+export const getWorkspaceMembers = async (id: string): Promise<WorkspaceMemberUser[]> => {
+  const response = await api.get<ApiResponse<WorkspaceMemberUser[]>>(`/workspaces/${id}/members`);
+  return response.data;
+};
+
+export const getWorkspaceStats = async (id: string): Promise<WorkspaceStats> => {
+  const response = await api.get<ApiResponse<WorkspaceStats>>(`/workspaces/${id}/stats`);
+  return response.data;
+};
+
 export const deleteWorkspace = async (id: string): Promise<void> => {
   await api.delete<void>(`/workspaces/${id}`);
 };

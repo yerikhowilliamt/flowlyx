@@ -12,7 +12,22 @@ export class BoardsService {
     if (!project) {
       throw new NotFoundException('Project not found');
     }
-    return prisma.board.create({ data: createBoardDto });
+    const board = await prisma.board.create({ data: createBoardDto });
+    await this.seedDefaultLists(board.id);
+    return board;
+  }
+
+  private async seedDefaultLists(boardId: string) {
+    const defaultNames = ['To Do', 'In Progress', 'Completed'];
+    for (let i = 0; i < defaultNames.length; i++) {
+      await prisma.list.create({
+        data: {
+          boardId,
+          name: defaultNames[i],
+          order: i,
+        },
+      });
+    }
   }
 
   async findAllByProjectId(projectId: string, query: PaginationDto) {
@@ -41,6 +56,10 @@ export class BoardsService {
     const board = await prisma.board.findUnique({ where: { id } });
     if (!board) {
       throw new NotFoundException('Board not found');
+    }
+    const listCount = await prisma.list.count({ where: { boardId: id } });
+    if (listCount === 0) {
+      await this.seedDefaultLists(id);
     }
     return board;
   }

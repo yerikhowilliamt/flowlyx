@@ -21,19 +21,32 @@ export class WorkspaceRolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    // Attempt to extract workspaceId from params, query, or body. Fallback to id if it's the workspaces controller.
+    if (!user) {
+      throw new ForbiddenException('Access denied: User is unauthenticated.');
+    }
+
+    // 1. System Superadmin override
+    if (user.role === 'ADMIN') {
+      return true;
+    }
+
+    // Attempt to extract workspaceId from params, query, or body (supports camelCase & snake_case)
     const workspaceId =
       request.params.workspaceId ||
       request.query.workspaceId ||
-      request.body.workspaceId ||
+      request.body?.workspaceId ||
+      request.params.workspace_id ||
+      request.query.workspace_id ||
+      request.body?.workspace_id ||
       request.params.id;
 
-    if (!user || !workspaceId) {
+    if (!workspaceId) {
       throw new ForbiddenException(
         'Access denied: You do not have the required role in this workspace to perform this action.',
       );
     }
 
+    // 2. Direct Workspace Member check
     const member = await prisma.workspaceMember.findUnique({
       where: {
         workspaceId_userId: {
@@ -43,15 +56,34 @@ export class WorkspaceRolesGuard implements CanActivate {
       },
     });
 
-    if (!member) {
-      throw new ForbiddenException('User is not a member of this workspace');
+    if (member && requiredRoles.includes(member.role as WorkspaceRole)) {
+      return true;
     }
 
-    if (!requiredRoles.includes(member.role as WorkspaceRole)) {
-      throw new ForbiddenException(
-        'Access denied: You do not have the required role in this workspace to perform this action.',
-      );
+    // 3. Hierarchical Fallback: Check parent Organization Owner or Admin
+    if (prisma.workspace?.findUnique) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId as string },
+        select: { organizationId: true },
+      });
+
+      if (workspace) {
+        const orgMember = await prisma.organizationMember.findFirst({
+          where: {
+            organizationId: workspace.organizationId,
+            userId: user.id,
+            status: 'ACTIVE',
+          },
+        });
+
+        if (orgMember && (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')) {
+          return true;
+        }
+      }
     }
-    return true;
+
+    throw new ForbiddenException(
+      'Access denied: You do not have the required role in this workspace to perform this action.',
+    );
   }
 }

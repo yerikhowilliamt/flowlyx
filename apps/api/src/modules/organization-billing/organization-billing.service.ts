@@ -31,7 +31,7 @@ export class OrganizationBillingService {
   }
 
   async updatePlan(organizationId: string, updatePlanRequestDto: UpdatePlanRequestDto) {
-    const orderId = `ORDER-${organizationId}-${Date.now()}`;
+    const orderId = `TX-${organizationId.substring(0, 8)}-${Date.now()}`;
     // Determine amount based on plan
     let amount = 0;
     if (updatePlanRequestDto.plan === 'PRO') {

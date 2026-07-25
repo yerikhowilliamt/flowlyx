@@ -5,6 +5,35 @@
 - **Sebelum mulai mengerjakan**, buat dulu `Implementation Plan` atau planning-nya terlebih dahulu. Tunggu review dari user. Baru mulai kerjakan setelah di-_approve_.
 - **Jangan lakukan PR** jika belum diperintahkan secara eksplisit oleh user.
 - Setelah selesai mengerjakan implementasi atau planning-nya, **selalu panggil skill `ponytail-review`** untuk memastikan tidak ada over-engineering.
+- Untuk task sederhana yang eksplisit dan sudah jelas scope-nya (contoh: "ganti button native jadi shadcn button di file X"), Implementation Plan boleh dilewati — langsung eksekusi. Implementation Plan wajib untuk task yang butuh keputusan desain, menyentuh >1 modul, atau mengubah kontrak API/skema database.
+- **Setiap kali membuat (create) atau mengedit (edit) sebuah file, langsung buka (view/read) file tersebut setelahnya** untuk memverifikasi hasil perubahan sebelum melanjutkan ke langkah berikutnya atau melaporkan selesai ke user.
+
+## Execution Rules (baca sebelum explore file)
+
+- **Cek dulu section "Known Locations" di bawah** sebelum melakukan glob/grep/read massal. Kalau lokasi file/komponen yang dibutuhkan sudah tercantum di situ, langsung pakai — jangan verifikasi ulang dengan explore folder.
+- Untuk task straightforward (ganti elemen native ke komponen library, rename, fix typo, ubah styling satu komponen), baca **hanya file yang direferensikan user atau file yang jelas-jelas relevan**. Jangan baca seluruh modul/folder untuk task yang scope-nya sudah sempit.
+- Kalau butuh mencari sesuatu, gunakan grep/glob dengan query **spesifik** (nama komponen, nama fungsi, nama route) — bukan `list directory` lalu baca satu-satu.
+- Jangan re-verify hal yang sudah confirmed di step sebelumnya dalam task yang sama (misal: sudah cek `package.json` sekali, jangan cek ulang untuk alasan yang sama).
+- Selesaikan task dengan perubahan seminimal mungkin yang menyelesaikan requirement — selaras dengan skill `ponytail` (YAGNI-first).
+
+## Debugging Protocol (coba cheap fixes dulu sebelum deep-dive)
+
+Sebelum melakukan investigasi berat (baca banyak file, query database, grep massal, trace call chain lintas modul), cek dulu apakah error yang muncul match salah satu pola umum berikut. Kalau match, **langsung eksekusi fix-nya**, jangan investigasi lebih jauh:
+
+- **Route/page baru tidak terdeteksi, dapat 404 padahal file sudah ada dan sudah benar** → curigai stale Next.js dev cache. Fix: hapus `apps/web/.next`, minta user restart dev server. Jangan query database atau curigai backend/RBAC dulu.
+- **Prisma client error (module not found / `EPERM` saat generate)** → curigai ada proses lain (dev server) yang mengunci file. Fix: minta user stop dev server dulu, baru generate ulang.
+- **Type error yang muncul di path `.next/dev/types/**` atau file generated lainnya** → itu gejala, bukan akar masalah. Jangan dianalisis atau diedit manual. Fix: hapus folder `.next`, biarkan Next.js regenerate.
+- **Error setelah pull/merge branch baru (module not found, type mismatch aneh)** → curigai `node_modules` atau Prisma client belum sinkron. Fix: `npm ci` lalu `npx prisma generate --workspace=packages/database`.
+
+Aturan umum: **kalau error message menunjuk ke path di dalam `.next/`, `node_modules/`, atau file yang jelas-jelas generated — itu gejala cache/build state, bukan bug di source code.** Curigai cache dulu sebelum audit logika kode.
+
+Kalau tidak ada pola yang cocok, baru lakukan investigasi normal — tapi mulai dari hipotesis **paling murah untuk divalidasi** (restart process, cek env var, cek versi dependency) sebelum masuk ke hipotesis mahal (query database langsung, baca banyak file, trace lintas modul).
+
+## Output Style
+
+- Jangan narasikan proses berpikir secara verbatim ("wait, let's check X...", "ah I see...", "hmm, what if..."). Langsung: hipotesis → satu langkah verifikasi → kesimpulan → aksi.
+- Kalau solusinya ternyata simpel, katakan itu di **awal** respons — jangan setelah eksplorasi panjang.
+- Default: jawaban singkat, tanpa preamble/kesimpulan panjang, kecuali user minta detail atau task-nya memang butuh penjelasan (misal keputusan arsitektur).
 
 ## Quick Commands
 
@@ -36,6 +65,9 @@ npm run test:e2e --workspace=apps/api
 npx prisma generate --workspace=packages/database
 npx prisma migrate dev --workspace=packages/database
 npx prisma db seed --workspace=packages/database
+
+# Reset stale Next.js dev cache (route 404 padahal file sudah benar)
+rm -rf apps/web/.next   # lalu restart dev server
 ```
 
 ## Architecture
@@ -47,12 +79,26 @@ npx prisma db seed --workspace=packages/database
 - **`packages/config`**: Shared ESLint, Prettier, TSConfig presets.
 - **`packages/types`** and **`packages/ui`**: Scaffolding only (empty).
 
+## Known Locations (jangan explore, langsung pakai)
+
+- **shadcn/ui components** sudah ter-install di `apps/web/src/components/ui/` — import langsung dari situ, JANGAN scan folder lain untuk cari komponen.
+  Contoh: `import { Button } from "@/components/ui/button"`
+- Kalau butuh komponen shadcn yang belum ada di folder itu, install via CLI (`npx shadcn@latest add <component>`) — jangan bikin manual.
+- **Halaman/route web**: `apps/web/src/app/` (App Router, folder = route).
+- **Komponen custom per-fitur**: `apps/web/src/features/<feature>/components/`.
+- **Hooks per-fitur** (React Query, dsb): `apps/web/src/features/<feature>/hooks/`.
+- **API client layer (frontend)**: `apps/web/src/features/<feature>/api/` dan base client di `apps/web/src/lib/api-client.ts`.
+- **NestJS modules (backend)**: `apps/api/src/modules/<module>/` — masing-masing modul punya `*.controller.ts`, `*.service.ts`, `*.module.ts`.
+- **RBAC guards**: `apps/api/src/modules/rbac/guards/`.
+- **Prisma schema**: `packages/database/prisma/schema.prisma`.
+- **Konfigurasi env validation (API)**: `apps/api/src/core/config/env.validation.ts`.
+
 ## Local Infrastructure
 
 `docker-compose.yml` starts Postgres, Redis, Prometheus, Grafana, Loki.
 
 | Service    | Port                    |
-| ---------- | ----------------------- |
+| ---------- | ------------------------|
 | Postgres   | 5433 (mapped from 5432) |
 | Redis      | 6379                    |
 | Grafana    | 3000                    |
@@ -98,6 +144,7 @@ API expects `DATABASE_URL=postgresql://postgres:password@localhost:5433/flowlyx`
 - Postgres is on port **5433** externally (not 5432).
 - E2E `.env.test` contains a remote Neon DB URL — don't commit changes to it.
 - lint-staged runs on `*.{js,ts,tsx,jsx,json,md,yml,yaml}` — not just JS/TS files.
+- Next.js dev cache (`apps/web/.next`) bisa jadi stale setelah menambah dynamic route baru — lihat "Debugging Protocol" di atas sebelum panik.
 
 ## Available Skills (`.agents/skills/`)
 
