@@ -16,6 +16,10 @@ jest.mock('@flowlyx/database', () => ({
     project: {
       findUnique: jest.fn(),
     },
+    list: {
+      count: jest.fn(),
+      create: jest.fn(),
+    },
   },
 }));
 
@@ -108,6 +112,7 @@ describe('BoardsService', () => {
   describe('remove', () => {
     it('should remove a board', async () => {
       (prisma.board.findUnique as jest.Mock).mockResolvedValueOnce(mockBoard);
+      (prisma.list.count as jest.Mock).mockResolvedValueOnce(1);
       (prisma.board.delete as jest.Mock).mockResolvedValueOnce(mockBoard);
 
       const result = await service.remove('board-1');

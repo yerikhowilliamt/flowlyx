@@ -16,6 +16,12 @@ jest.mock('@flowlyx/database', () => ({
     list: {
       findUnique: jest.fn(),
     },
+    user: {
+      findUnique: jest.fn(),
+    },
+    taskAssignment: {
+      create: jest.fn(),
+    },
   },
 }));
 
@@ -49,13 +55,15 @@ describe('TasksService', () => {
     it('should create a task if list exists', async () => {
       (prisma.list.findUnique as jest.Mock).mockResolvedValueOnce({ id: 'list-1' });
       (prisma.task.create as jest.Mock).mockResolvedValueOnce(mockTask);
+      (prisma.task.findUnique as jest.Mock).mockResolvedValueOnce(mockTask);
 
       const dto = { listId: 'list-1', title: 'Task 1' };
       const result = await service.create(dto);
 
       expect(result).toEqual(mockTask);
       expect(prisma.list.findUnique).toHaveBeenCalledWith({ where: { id: 'list-1' } });
-      expect(prisma.task.create).toHaveBeenCalledWith({ data: dto });
+      const { assigneeId: _, ...taskData } = dto;
+      expect(prisma.task.create).toHaveBeenCalledWith({ data: taskData });
     });
 
     it('should throw NotFoundException if list does not exist', async () => {
@@ -88,6 +96,20 @@ describe('TasksService', () => {
         skip: 0,
         take: 10,
         orderBy: { order: 'asc' },
+        include: {
+          taskAssignments: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
       });
       expect(prisma.task.count).toHaveBeenCalledWith({
         where: { listId: 'list-1' },
@@ -125,7 +147,23 @@ describe('TasksService', () => {
       (prisma.task.findUnique as jest.Mock).mockResolvedValueOnce(mockTask);
       const result = await service.findById('task-1');
       expect(result).toEqual(mockTask);
-      expect(prisma.task.findUnique).toHaveBeenCalledWith({ where: { id: 'task-1' } });
+      expect(prisma.task.findUnique).toHaveBeenCalledWith({
+        where: { id: 'task-1' },
+        include: {
+          taskAssignments: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+      });
     });
 
     it('should throw NotFoundException if task not found', async () => {
@@ -142,7 +180,24 @@ describe('TasksService', () => {
       const dto = { title: 'Updated' };
       const result = await service.update('task-1', dto);
       expect(result.title).toEqual('Updated');
-      expect(prisma.task.update).toHaveBeenCalledWith({ where: { id: 'task-1' }, data: dto });
+      expect(prisma.task.update).toHaveBeenCalledWith({
+        where: { id: 'task-1' },
+        data: dto,
+        include: {
+          taskAssignments: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+      });
     });
   });
 
