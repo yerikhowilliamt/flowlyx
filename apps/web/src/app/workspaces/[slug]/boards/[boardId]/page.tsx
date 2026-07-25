@@ -589,8 +589,8 @@ function BoardColumn({
   }, [tasks, columnSortBy, priorities]);
 
   const createTaskMutation = useCreateTask(boardId, todoListId || list.id);
-  const _deleteTaskMutation = useDeleteTask(list.id);
-  const _updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask(list.id);
+  const updateTaskMutation = useUpdateTask();
 
   const [isOpen, setIsOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
