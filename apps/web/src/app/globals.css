@@ -45,6 +45,9 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --text-2xs: 0.7rem;
+  --text-3xs: 0.625rem;
+  --text-4xs: 0.55rem;
 }
 
 /* Dark-mode only theme — no light mode per design system */
@@ -130,5 +133,15 @@ body {
   }
   html {
     @apply font-sans;
+    font-size: 14px;
   }
+}
+
+/* Hide scrollbar utility while maintaining scroll functionality */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }

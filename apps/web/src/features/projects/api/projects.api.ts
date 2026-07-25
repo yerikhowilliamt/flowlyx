@@ -1,5 +1,5 @@
 import { api } from '@/lib/api-client';
-import { CreateProjectInput } from '../schemas/project.schema';
+import { CreateProjectInput, UpdateProjectInput } from '../schemas/project.schema';
 import { ProjectResponse, ProjectSummary } from '../types/project.types';
 
 export interface ApiResponse<T> {
@@ -18,4 +18,16 @@ export const getProjects = async (workspaceId: string): Promise<ProjectSummary[]
 export const createProject = async (data: CreateProjectInput): Promise<ProjectResponse> => {
   const response = await api.post<ApiResponse<ProjectResponse>>('/projects', data);
   return response.data;
+};
+
+export const updateProject = async (
+  id: string,
+  data: UpdateProjectInput,
+): Promise<ProjectResponse> => {
+  const response = await api.patch<ApiResponse<ProjectResponse>>(`/projects/${id}`, data);
+  return response.data;
+};
+
+export const deleteProject = async (id: string): Promise<void> => {
+  await api.delete<void>(`/projects/${id}`);
 };

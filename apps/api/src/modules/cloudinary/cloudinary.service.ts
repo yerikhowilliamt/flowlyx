@@ -13,11 +13,25 @@ export class CloudinaryService {
   ): Promise<UploadApiResponse | UploadApiErrorResponse> {
     this.logger.log(`Uploading file to Cloudinary: ${file.originalname}`);
     return new Promise((resolve, reject) => {
+      const fileExtension = file.originalname.split('.').pop() || '';
+      const fileNameWithoutExt = file.originalname.includes('.')
+        ? file.originalname.substring(0, file.originalname.lastIndexOf('.'))
+        : file.originalname;
+      const cleanFileName = fileNameWithoutExt.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const publicId = `${cleanFileName}_${Date.now()}`;
+
+      const isImage = file.mimetype?.startsWith('image/');
+      const isVideo = file.mimetype?.startsWith('video/');
+      const isPdf = file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf');
+
+      const options = {
+        folder: folder || 'flowlyx/task-attachments',
+        resource_type: (!isImage && !isVideo && !isPdf ? 'raw' : 'auto') as 'raw' | 'auto',
+        public_id: !isImage && !isVideo && !isPdf ? `${publicId}.${fileExtension}` : publicId,
+      };
+
       const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: folder || 'flowlyx/task-attachments',
-          resource_type: 'auto',
-        },
+        options,
         (error, result) => {
           if (error) {
             this.logger.error(`Failed to upload file to Cloudinary`, error.stack);

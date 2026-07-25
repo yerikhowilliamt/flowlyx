@@ -71,4 +71,8 @@ export class PrioritySummary {
   @ApiProperty()
   @Expose()
   status!: string;
+
+  @ApiPropertyOptional({ name: 'created_by' })
+  @Expose({ name: 'created_by' })
+  createdBy?: string | null;
 }

@@ -1,22 +1,29 @@
 'use client';
 
 import Image from 'next/image';
-import { use, useState } from 'react';
+import { use, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useWorkspace } from '@/features/workspaces/hooks/use-workspaces';
+import { useRouter } from 'next/navigation';
 import {
   useBoard,
+  useDeleteBoard,
   useLists,
   useCreateList,
-  useDeleteList,
   useUpdateList,
+  useDeleteList,
   useTasks,
   useCreateTask,
   useDeleteTask,
   useUpdateTask,
   usePriorities,
+  useCreatePriority,
+  useDeletePriority,
 } from '@/features/boards/hooks/use-boards';
+import { EditBoardForm } from '@/features/boards/components/edit-board-form';
+import { TaskDetailModal } from '@/features/boards/components/task-detail-modal';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
+import { PrioritySummary } from '@/features/boards/types/board.types';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,20 +51,51 @@ import {
   Kanban,
   Plus,
   Trash2,
-  CheckCircle,
   Calendar,
-  X,
   Edit2,
+  LogOut,
+  Sliders,
+  ArrowUpDown,
+  Menu,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 import { TaskResponse } from '@/features/boards/types/board.types';
+import { useLogout } from '@/features/auth/hooks/use-logout';
+import { useMe } from '@/features/profile/hooks/use-profile';
+import { getUsers } from '@/features/admin/api/admin.api';
+import { AdminUser } from '@/features/admin/types/admin.types';
+import { toast } from 'sonner';
 
 interface PageProps {
   params: Promise<{ slug: string; boardId: string }>;
 }
 
+function extractProjectId(b: unknown): string {
+  if (!b || typeof b !== 'object') return '';
+  const obj = b as Record<string, unknown>;
+  if (typeof obj.project_id === 'string' && obj.project_id) return obj.project_id;
+  if (typeof obj.projectId === 'string' && obj.projectId) return obj.projectId;
+  if (obj.data && typeof obj.data === 'object') {
+    const dataObj = obj.data as Record<string, unknown>;
+    if (typeof dataObj.project_id === 'string' && dataObj.project_id) return dataObj.project_id;
+    if (typeof dataObj.projectId === 'string' && dataObj.projectId) return dataObj.projectId;
+  }
+  return '';
+}
+
 export default function BoardDetailPage({ params }: PageProps) {
   const { slug, boardId } = use(params);
+  const router = useRouter();
+  const logoutMutation = useLogout();
+
+  // Current logged in user profile & users list
+  const { data: currentUser } = useMe();
+  const { data: allUsers } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => getUsers(),
+  });
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
 
   // Workspace & Org
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(slug);
@@ -69,19 +107,35 @@ export default function BoardDetailPage({ params }: PageProps) {
 
   // Board details
   const { data: board, isLoading: isBoardLoading, isError } = useBoard(boardId);
+  const projectId = extractProjectId(board);
+
+  const deleteBoardMutation = useDeleteBoard(projectId);
+  const [isEditBoardModalOpen, setIsEditBoardModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Lists (Columns)
   const { data: lists, isLoading: isListsLoading } = useLists(boardId);
-  const createListMutation = useCreateList(boardId);
-  const updateListMutation = useUpdateList(boardId);
-  const deleteListMutation = useDeleteList(boardId);
+  const _createListMutation = useCreateList(boardId);
+  const _updateListMutation = useUpdateList(boardId);
+  const _deleteListMutation = useDeleteList(boardId);
 
-  // Task Mutations
+  // Task & Priority Mutations
   const updateTaskMutation = useUpdateTask();
+  const { data: prioritiesResp } = usePriorities(projectId);
+  const boardPriorities = Array.isArray(prioritiesResp)
+    ? prioritiesResp
+    : (prioritiesResp as unknown as { data?: PrioritySummary[] })?.data || [];
+  const createPriorityMutation = useCreatePriority(projectId);
+  const deletePriorityMutation = useDeletePriority(projectId);
 
   // Local state for list creation
-  const [isAddingList, setIsAddingList] = useState(false);
-  const [newListName, setNewListName] = useState('');
+  const [_isAddingList, _setIsAddingList] = useState(false);
+  const [_newListName, _setNewListName] = useState('');
+
+  // Local state for Manage Priorities Modal
+  const [isPrioritiesModalOpen, setIsPrioritiesModalOpen] = useState(false);
+  const [newPriorityName, setNewPriorityName] = useState('');
+  const [newPriorityColor, setNewPriorityColor] = useState('#f97316');
 
   // Handle Drag & Drop move
   const handleMoveTask = (taskId: string, targetListId: string) => {
@@ -91,18 +145,18 @@ export default function BoardDetailPage({ params }: PageProps) {
     });
   };
 
-  const handleCreateList = (e: React.FormEvent) => {
+  const _handleCreateList = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newListName.trim()) return;
-    createListMutation.mutate(
+    if (!_newListName.trim()) return;
+    _createListMutation.mutate(
       {
         boardId,
-        name: newListName.trim(),
+        name: _newListName.trim(),
       },
       {
         onSuccess: () => {
-          setNewListName('');
-          setIsAddingList(false);
+          _setNewListName('');
+          _setIsAddingList(false);
         },
       },
     );
@@ -137,122 +191,327 @@ export default function BoardDetailPage({ params }: PageProps) {
     <div className="min-h-dvh bg-zinc-950 text-zinc-50 flex flex-col selection:bg-orange-500 selection:text-white">
       {/* Top Header Navbar */}
       <header className="sticky top-0 z-40 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md">
-        <div className="flex h-16 items-center justify-between px-6">
-          <div className="flex items-center gap-x-3">
-            <Link href="/organizations" className="flex items-center gap-x-2 group">
+        <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+          {/* Breadcrumb Links */}
+          <div className="flex items-center gap-x-2 sm:gap-x-3 min-w-0">
+            <Link href="/organizations" className="flex items-center gap-x-2 group shrink-0">
               <div>
-                <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
+                <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={70} height={20} priority />
               </div>
             </Link>
-            <span className="text-zinc-800">/</span>
+            <span className="text-zinc-800 shrink-0">/</span>
             {organization && (
               <>
                 <Link
                   href={`/organizations/${organization.slug}`}
-                  className="flex items-center gap-x-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+                  className="hidden md:flex items-center gap-x-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 max-w-[100px] lg:max-w-none truncate"
                 >
-                  <Building2 className="h-3.5 w-3.5 text-zinc-500" />
-                  <span>{organization.name}</span>
+                  <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                  <span className="truncate">{organization.name}</span>
                 </Link>
-                <span className="text-zinc-800">/</span>
+                <span className="hidden md:inline text-zinc-800 shrink-0">/</span>
               </>
             )}
             <Link
               href={`/workspaces/${slug}`}
-              className="flex items-center gap-x-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors"
+              className="hidden sm:flex items-center gap-x-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors shrink-0 max-w-[120px] lg:max-w-none truncate"
             >
-              <Layers className="h-3.5 w-3.5 text-zinc-500" />
-              <span>{workspace.name}</span>
+              <Layers className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+              <span className="truncate">{workspace.name}</span>
             </Link>
-            <span className="text-zinc-800">/</span>
-            <div className="flex items-center gap-x-1.5 text-sm text-zinc-200 font-semibold">
-              <Kanban className="h-3.5 w-3.5 text-orange-500" />
-              <span>{board.name}</span>
+            <span className="hidden sm:inline text-zinc-800 shrink-0">/</span>
+            <div className="flex items-center gap-x-1.5 text-sm text-zinc-200 font-semibold truncate">
+              <Kanban className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+              <span className="truncate">{board.name}</span>
             </div>
           </div>
-          <div className="flex items-center gap-x-4">
+
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-x-2 sm:gap-x-4">
             <NotificationBell />
-            <Link
-              href={`/workspaces/${slug}`}
-              className="inline-flex items-center text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors"
+
+            {/* Desktop Actions */}
+            <div className="hidden sm:flex items-center gap-x-4">
+              <Link
+                href={`/workspaces/${slug}`}
+                className="inline-flex items-center text-xs font-semibold text-zinc-400 hover:text-zinc-200 transition-colors"
+              >
+                <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+                Back to Dashboard
+              </Link>
+              <button
+                onClick={() => logoutMutation.mutate()}
+                disabled={logoutMutation.isPending}
+                className="inline-flex items-center text-xs font-semibold text-zinc-400 hover:text-red-400 transition-colors cursor-pointer"
+              >
+                <LogOut className="mr-1 h-3.5 w-3.5" />
+                Logout
+              </button>
+            </div>
+
+            {/* Mobile Menu Toggle Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="sm:hidden p-1.5 text-zinc-400 hover:text-white rounded-lg bg-zinc-900 border border-zinc-850 cursor-pointer"
+              aria-label="Toggle menu"
             >
-              <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-              Back to Dashboard
-            </Link>
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Dropdown Navigation */}
+        {isMobileMenuOpen && (
+          <div className="sm:hidden border-t border-zinc-900 bg-zinc-950 p-4 space-y-3 animate-in slide-in-from-top-2 duration-200">
+            <Link
+              href={`/workspaces/${slug}`}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center px-3 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-900 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4 text-zinc-400" />
+              Back to Dashboard ({workspace.name})
+            </Link>
+            <button
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                logoutMutation.mutate();
+              }}
+              disabled={logoutMutation.isPending}
+              className="w-full flex items-center px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left cursor-pointer"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </button>
+          </div>
+        )}
       </header>
 
       {/* Main Board View Container */}
-      <main className="flex-1 flex flex-col p-6 overflow-hidden min-h-[calc(100vh-4rem)]">
+      <main className="flex-1 flex flex-col p-4 sm:p-6 overflow-hidden min-h-[calc(100vh-4rem)]">
         {/* Title area */}
-        <div className="flex items-center justify-between pb-6 border-b border-zinc-900 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 sm:pb-6 border-b border-zinc-900 mb-4 sm:mb-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">{board.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">{board.name}</h1>
             <p className="text-xs text-zinc-400 mt-1">
               {board.description || 'Manage tasks, backlog, and sprint pipeline.'}
             </p>
           </div>
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            {isAdmin && (
+              <>
+                <Button
+                  onClick={() => setIsEditBoardModalOpen(true)}
+                  variant="ghost"
+                  size="sm"
+                  className="border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-xl text-xs flex-1 sm:flex-initial"
+                >
+                  <Edit2 className="h-3.5 w-3.5 mr-1.5 text-orange-500" />
+                  Edit Board
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (confirm(`Are you sure you want to delete board "${board.name}"?`)) {
+                      deleteBoardMutation.mutate(boardId, {
+                        onSuccess: () => {
+                          router.push(`/workspaces/${slug}`);
+                        },
+                      });
+                    }
+                  }}
+                  variant="ghost"
+                  size="sm"
+                  className="border border-zinc-800 bg-zinc-900/60 hover:bg-red-500/10 text-zinc-300 hover:text-red-400 rounded-xl text-xs flex-1 sm:flex-initial"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5 text-red-500" />
+                  Delete Board
+                </Button>
+              </>
+            )}
+            <Button
+              onClick={() => setIsPrioritiesModalOpen(true)}
+              variant="ghost"
+              size="sm"
+              className="border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-xl text-xs flex-1 sm:flex-initial"
+            >
+              <Sliders className="h-3.5 w-3.5 mr-1.5 text-orange-500" />
+              Manage Priorities
+            </Button>
+          </div>
         </div>
 
         {/* Kanban Board columns wrapper */}
-        <div className="flex-1 flex gap-6 overflow-x-auto pb-4 items-start select-none">
-          {lists?.map((list) => (
-            <BoardColumn
-              key={list.id}
-              list={list}
-              boardId={boardId}
-              projectId={board.project_id}
-              onMoveTask={handleMoveTask}
-              onDeleteList={() => deleteListMutation.mutate(list.id)}
-              onUpdateList={(newName) =>
-                updateListMutation.mutate({ id: list.id, data: { name: newName } })
-              }
-            />
-          ))}
+        <div className="flex-1 flex gap-4 sm:gap-6 overflow-x-auto scrollbar-none pb-4 items-start select-none touch-pan-x min-w-full">
+          {(() => {
+            const FIXED_ORDER = ['to do', 'in progress', 'completed'];
+            const sortedLists = lists
+              ? [...lists].sort((a, b) => {
+                  const indexA = FIXED_ORDER.indexOf(a.name.toLowerCase());
+                  const indexB = FIXED_ORDER.indexOf(b.name.toLowerCase());
+                  if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                  if (indexA !== -1) return -1;
+                  if (indexB !== -1) return 1;
+                  return (a.order ?? 0) - (b.order ?? 0);
+                })
+              : [];
+            const todoList = sortedLists.find((l) => l.name.toLowerCase() === 'to do') || sortedLists[0];
 
-          {/* Add Column Button / Form */}
-          <div className="w-72 shrink-0 bg-zinc-900/10 border border-dashed border-zinc-800 rounded-2xl p-4 transition-all hover:bg-zinc-900/20">
-            {isAddingList ? (
-              <form onSubmit={handleCreateList} className="space-y-3">
-                <Input
-                  autoFocus
-                  type="text"
-                  placeholder="Column title..."
-                  value={newListName}
-                  onChange={(e) => setNewListName(e.target.value)}
-                  className="border-zinc-800 bg-zinc-950 text-sm focus-visible:ring-1 focus-visible:ring-orange-500"
-                />
-                <div className="flex items-center gap-x-2">
+            return sortedLists.map((list) => (
+              <BoardColumn
+                key={list.id}
+                list={list}
+                boardId={boardId}
+                projectId={projectId}
+                todoListId={todoList?.id}
+                currentUser={currentUser}
+                allUsers={allUsers}
+                onMoveTask={handleMoveTask}
+              />
+            ));
+          })()}
+        </div>
+
+        {/* Manage Priorities Dialog */}
+        <Dialog open={isPrioritiesModalOpen} onOpenChange={setIsPrioritiesModalOpen}>
+          <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
+            <DialogHeader className="text-left space-y-1">
+              <DialogTitle className="text-xl font-bold text-white tracking-tight flex items-center gap-x-2">
+                <Sliders className="h-5 w-5 text-orange-500" />
+                Manage Project Priorities
+              </DialogTitle>
+              <DialogDescription className="text-xs text-zinc-400">
+                Configure custom priority levels for tasks in this project.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 pt-2">
+              {/* Create New Priority Form */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!newPriorityName.trim()) return;
+                  const targetProjectId = extractProjectId(board) || projectId;
+                  createPriorityMutation.mutate(
+                    {
+                      projectId: targetProjectId,
+                      name: newPriorityName.trim(),
+                      color: newPriorityColor,
+                    },
+                    {
+                      onSuccess: () => {
+                        setNewPriorityName('');
+                      },
+                    },
+                  );
+                }}
+                className="space-y-3 bg-zinc-900/30 border border-zinc-900 rounded-xl p-4"
+              >
+                <span className="text-xs font-bold text-zinc-300 uppercase tracking-wider block">
+                  Add Custom Priority
+                </span>
+                <div className="flex gap-x-2">
+                  <Input
+                    placeholder="Priority name (e.g. Blocker)..."
+                    value={newPriorityName}
+                    onChange={(e) => setNewPriorityName(e.target.value)}
+                    className="flex-1 border-zinc-800 bg-zinc-900/60 text-zinc-100 text-xs"
+                    required
+                  />
                   <Button
                     type="submit"
-                    size="sm"
-                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold"
+                    disabled={createPriorityMutation.isPending}
+                    className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 rounded-xl"
                   >
-                    Add Column
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsAddingList(false)}
-                    className="text-zinc-400 hover:text-white"
-                  >
-                    <X className="h-4 w-4" />
+                    {createPriorityMutation.isPending ? 'Adding...' : 'Add'}
                   </Button>
                 </div>
+                <div className="flex items-center gap-x-2 pt-1">
+                  <span className="text-xs text-zinc-400 font-medium">Color:</span>
+                  {['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'].map(
+                    (c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setNewPriorityColor(c)}
+                        className={`h-5 w-5 rounded-full border transition-all ${
+                          newPriorityColor === c
+                            ? 'border-white scale-110 shadow-md'
+                            : 'border-transparent opacity-70 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: c }}
+                      />
+                    ),
+                  )}
+                </div>
               </form>
-            ) : (
-              <button
-                onClick={() => setIsAddingList(true)}
-                className="w-full flex items-center justify-center gap-x-2 py-2 text-sm text-zinc-400 hover:text-orange-500 transition-colors font-semibold"
-              >
-                <Plus className="h-4 w-4" />
-                Add Column
-              </button>
+
+              {/* Priority List */}
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">
+                  Active Priorities ({boardPriorities.length})
+                </span>
+                <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                  {boardPriorities.map((p) => {
+                    const isDefault =
+                      ['urgent', 'high', 'medium', 'low'].includes(p.name.toLowerCase()) &&
+                      !p.createdBy;
+                    const canDelete =
+                      !isDefault && (p.createdBy === currentUser?.id || currentUser?.role === 'SUPER_ADMIN');
+
+                    return (
+                      <div
+                        key={p.id}
+                        className="flex items-center justify-between p-3 rounded-xl bg-zinc-900/40 border border-zinc-900"
+                      >
+                        <div className="flex items-center gap-x-2.5">
+                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: p.color }} />
+                          <span className="text-sm font-semibold text-zinc-200">{p.name}</span>
+                          {isDefault && (
+                            <span className="text-2xs font-medium px-2 py-0.5 rounded-md bg-zinc-800 text-zinc-400 border border-zinc-700/50">
+                              System Default
+                            </span>
+                          )}
+                        </div>
+                        {canDelete ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deletePriorityMutation.mutate(p.id)}
+                            disabled={deletePriorityMutation.isPending}
+                            className="h-7 w-7 p-0 text-zinc-500 hover:text-red-400 hover:bg-zinc-800"
+                            title="Delete custom priority"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Board Dialog */}
+        <Dialog open={isEditBoardModalOpen} onOpenChange={setIsEditBoardModalOpen}>
+          <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
+            <DialogHeader className="text-left space-y-1">
+              <DialogTitle className="text-xl font-bold text-white tracking-tight">
+                Edit Board
+              </DialogTitle>
+              <DialogDescription className="text-sm text-zinc-400">
+                Update board name and description.
+              </DialogDescription>
+            </DialogHeader>
+            {board && (
+              <EditBoardForm
+                board={board}
+                projectId={projectId}
+                onSuccess={() => setIsEditBoardModalOpen(false)}
+              />
             )}
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
@@ -263,24 +522,73 @@ interface BoardColumnProps {
   list: { id: string; name: string };
   boardId: string;
   projectId: string;
+  todoListId?: string;
+  currentUser?: { id: string; role?: string } | null;
+  allUsers?: AdminUser[];
   onMoveTask: (taskId: string, targetListId: string) => void;
-  onDeleteList: () => void;
-  onUpdateList: (newName: string) => void;
 }
 
 function BoardColumn({
   list,
   boardId,
   projectId,
+  todoListId,
+  currentUser,
+  allUsers,
   onMoveTask,
-  onDeleteList,
-  onUpdateList,
 }: BoardColumnProps) {
+  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+
   const { data: tasks, isLoading } = useTasks(list.id);
   const { data: prioritiesResp } = usePriorities(projectId);
-  const priorities = prioritiesResp?.data || [];
+  const priorities = Array.isArray(prioritiesResp)
+    ? prioritiesResp
+    : (prioritiesResp as unknown as { data?: PrioritySummary[] })?.data || [];
 
-  const createTaskMutation = useCreateTask(boardId, list.id);
+  type SortOption = 'date-desc' | 'date-asc' | 'priority-desc' | 'priority-asc';
+  const [columnSortBy, setColumnSortBy] = useState<SortOption>('date-desc');
+
+  const getPriorityRank = (pName?: string) => {
+    if (!pName) return 0;
+    const name = pName.toLowerCase();
+    if (name === 'urgent') return 4;
+    if (name === 'high') return 3;
+    if (name === 'medium') return 2;
+    if (name === 'low') return 1;
+    return 0.5;
+  };
+
+  const sortedTasks = useMemo(() => {
+    if (!tasks) return [];
+    return [...tasks].sort((a, b) => {
+      if (columnSortBy === 'date-desc') {
+        const timeA = new Date(a.createdAt || 0).getTime();
+        const timeB = new Date(b.createdAt || 0).getTime();
+        return timeB - timeA;
+      }
+      if (columnSortBy === 'date-asc') {
+        const timeA = new Date(a.createdAt || 0).getTime();
+        const timeB = new Date(b.createdAt || 0).getTime();
+        return timeA - timeB;
+      }
+      const pIdA = a.priorityId || (a as unknown as { priority_id?: string })?.priority_id;
+      const pIdB = b.priorityId || (b as unknown as { priority_id?: string })?.priority_id;
+      const pA = priorities.find((p) => p.id === pIdA);
+      const pB = priorities.find((p) => p.id === pIdB);
+      const rankA = getPriorityRank(pA?.name);
+      const rankB = getPriorityRank(pB?.name);
+
+      if (columnSortBy === 'priority-desc') {
+        return rankB - rankA;
+      }
+      if (columnSortBy === 'priority-asc') {
+        return rankA - rankB;
+      }
+      return 0;
+    });
+  }, [tasks, columnSortBy, priorities]);
+
+  const createTaskMutation = useCreateTask(boardId, todoListId || list.id);
   const deleteTaskMutation = useDeleteTask(list.id);
   const updateTaskMutation = useUpdateTask();
 
@@ -288,81 +596,50 @@ function BoardColumn({
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDesc, setTaskDesc] = useState('');
   const [taskPriorityId, setTaskPriorityId] = useState('');
+  const [taskAssigneeId, setTaskAssigneeId] = useState('');
   const [taskStartDate, setTaskStartDate] = useState('');
   const [taskDueDate, setTaskDueDate] = useState('');
 
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editedTitle, setEditedTitle] = useState(list.name);
-
   // Task detail dialog state
   const [activeTask, setActiveTask] = useState<TaskResponse | null>(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDesc, setEditDesc] = useState('');
-  const [editPriorityId, setEditPriorityId] = useState('');
-  const [editStartDate, setEditStartDate] = useState('');
-  const [editDueDate, setEditDueDate] = useState('');
-  const [isEditingTask, setIsEditingTask] = useState(false);
+
+  const canUserMoveTask = (t: TaskResponse) => {
+    if (isAdmin) return true;
+    return t.taskAssignments?.some((a) => a.userId === currentUser?.id);
+  };
 
   const handleOpenDetails = (task: TaskResponse) => {
     setActiveTask(task);
-    setEditTitle(task.title);
-    setEditDesc(task.description || '');
-    setEditPriorityId(task.priorityId || 'none');
-    setEditStartDate(task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : '');
-    setEditDueDate(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
-    setIsEditingTask(false);
   };
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskTitle.trim()) return;
+    if (!isAdmin) {
+      toast.error('Hanya Admin yang dapat membuat task baru');
+      return;
+    }
+
     createTaskMutation.mutate(
       {
-        listId: list.id,
+        listId: todoListId || list.id,
         title: taskTitle.trim(),
         description: taskDesc.trim(),
         priorityId: taskPriorityId && taskPriorityId !== 'none' ? taskPriorityId : undefined,
         startDate: taskStartDate ? new Date(taskStartDate).toISOString() : undefined,
         dueDate: taskDueDate ? new Date(taskDueDate).toISOString() : undefined,
+        assigneeId: taskAssigneeId && taskAssigneeId !== 'none' ? taskAssigneeId : undefined,
       },
       {
         onSuccess: () => {
           setTaskTitle('');
           setTaskDesc('');
           setTaskPriorityId('');
+          setTaskAssigneeId('');
           setTaskStartDate('');
           setTaskDueDate('');
           setIsOpen(false);
-        },
-      },
-    );
-  };
-
-  const handleSaveTitle = () => {
-    if (editedTitle.trim() && editedTitle.trim() !== list.name) {
-      onUpdateList(editedTitle.trim());
-    }
-    setIsEditingTitle(false);
-  };
-
-  const handleUpdateTaskSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeTask) return;
-    updateTaskMutation.mutate(
-      {
-        id: activeTask.id,
-        data: {
-          title: editTitle.trim(),
-          description: editDesc.trim(),
-          priorityId: editPriorityId === 'none' ? null : editPriorityId || null,
-          startDate: editStartDate ? new Date(editStartDate).toISOString() : null,
-          dueDate: editDueDate ? new Date(editDueDate).toISOString() : null,
-        },
-      },
-      {
-        onSuccess: () => {
-          setActiveTask(null);
-          setIsEditingTask(false);
+          toast.success('Task berhasil dibuat dan dimasukkan ke kolom To Do');
         },
       },
     );
@@ -377,78 +654,87 @@ function BoardColumn({
           onMoveTask(taskId, list.id);
         }
       }}
-      className="w-72 shrink-0 flex flex-col max-h-[calc(100vh-12rem)] bg-zinc-900/30 border border-zinc-900 rounded-2xl p-4 space-y-4"
+      className="w-[280px] sm:w-72 shrink-0 flex flex-col max-h-[calc(100vh-12rem)] bg-gradient-to-b from-zinc-900/40 to-zinc-950/80 border border-zinc-800/80 rounded-2xl p-4 space-y-4 backdrop-blur-sm shadow-xl"
     >
-      {/* Column Header */}
-      <div className="flex items-center justify-between">
-        {isEditingTitle ? (
-          <Input
-            autoFocus
-            value={editedTitle}
-            onChange={(e) => setEditedTitle(e.target.value)}
-            onBlur={handleSaveTitle}
-            onKeyDown={(e) => e.key === 'Enter' && handleSaveTitle()}
-            className="h-7 border-zinc-800 bg-zinc-950 px-2 py-0 text-sm focus-visible:ring-1 focus-visible:ring-orange-500 font-bold"
-          />
-        ) : (
-          <div className="flex items-center gap-x-2 group">
-            <h3
-              onClick={() => setIsEditingTitle(true)}
-              className="text-sm font-bold text-white tracking-tight cursor-pointer hover:text-orange-500 transition-colors"
+      {/* Column Header - Fixed Column with Sorting */}
+      <div className="flex items-center justify-between pb-1 border-b border-zinc-850/60">
+        <div className="flex items-center gap-x-2">
+          <h3 className="text-sm font-bold text-white tracking-tight">
+            {list.name}
+          </h3>
+          <span className="text-2xs text-orange-400 font-bold bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded-full">
+            {sortedTasks.length}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <Select
+            value={columnSortBy}
+            onValueChange={(val) => setColumnSortBy(val as SortOption)}
+          >
+            <SelectTrigger
+              className="h-6 w-6 p-0 border border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-md flex items-center justify-center focus:ring-0 focus:ring-offset-0 cursor-pointer shadow-none [&>svg:last-child]:hidden"
+              title="Sort tasks"
             >
-              {list.name}
-            </h3>
-            <span className="text-2xs text-zinc-500 font-semibold bg-zinc-900 px-1.5 py-0.5 rounded">
-              {tasks?.length ?? 0}
-            </span>
-          </div>
-        )}
-        <button
-          onClick={() => {
-            if (confirm('Delete this column and all its tasks permanently?')) {
-              onDeleteList();
-            }
-          }}
-          className="text-zinc-500 hover:text-red-500 transition-colors"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
+              <ArrowUpDown className="h-3 w-3 text-orange-500" />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-950 border-zinc-900 text-zinc-50 text-xs">
+              <SelectItem value="date-desc">Newest First</SelectItem>
+              <SelectItem value="date-asc">Oldest First</SelectItem>
+              <SelectItem value="priority-desc">Priority: High to Low</SelectItem>
+              <SelectItem value="priority-asc">Priority: Low to High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Task list */}
-      <div className="flex-1 overflow-y-auto space-y-3 min-h-[50px] pr-1">
+      <div className="flex-1 overflow-y-auto space-y-3 min-h-[50px] pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {isLoading ? (
           <div className="flex justify-center py-4">
             <Loader2 className="h-5 w-5 animate-spin text-orange-500" />
           </div>
-        ) : tasks && tasks.length > 0 ? (
-          tasks.map((task) => {
-            const taskPriority = priorities.find((p) => p.id === task.priorityId);
+        ) : sortedTasks && sortedTasks.length > 0 ? (
+          sortedTasks.map((task) => {
+            const targetPId =
+              task.priorityId || (task as unknown as { priority_id?: string })?.priority_id;
+            const taskPriority = priorities.find((p) => p.id === targetPId);
+            const userCanMove = canUserMoveTask(task);
+            const assignedUser = task.taskAssignments?.[0]?.user;
+
             return (
               <div
                 key={task.id}
-                draggable
+                draggable={userCanMove}
                 onDragStart={(e) => {
+                  if (!userCanMove) {
+                    e.preventDefault();
+                    toast.error('Hanya Admin dan User yang di-assign pada task ini yang dapat memindahkannya');
+                    return;
+                  }
                   e.dataTransfer.setData('text/plain', task.id);
                 }}
                 onClick={() => handleOpenDetails(task)}
-                className="group bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-900/80 hover:border-zinc-800 rounded-xl p-4 space-y-2 cursor-grab active:cursor-grabbing transition-all shadow-sm"
+                className={`group bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-900/80 hover:border-zinc-800 rounded-xl p-4 space-y-2 transition-all shadow-sm ${
+                  userCanMove ? 'cursor-grab active:cursor-grabbing' : 'cursor-not-allowed opacity-80'
+                }`}
               >
                 <div className="flex items-start justify-between gap-x-2">
                   <span className="text-sm font-medium text-zinc-100 group-hover:text-white transition-colors line-clamp-2 leading-snug">
                     {task.title}
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm('Delete this task?')) {
-                        deleteTaskMutation.mutate(task.id);
-                      }
-                    }}
-                    className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm('Delete this task?')) {
+                          deleteTaskMutation.mutate(task.id);
+                        }
+                      }}
+                      className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 mt-1">
@@ -471,6 +757,17 @@ function BoardColumn({
                     </div>
                   )}
                 </div>
+
+                {assignedUser && (
+                  <div className="flex items-center gap-x-1.5 mt-2 pt-2 border-t border-zinc-800/50">
+                    <div className="h-5 w-5 rounded-full bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center text-3xs font-bold uppercase shrink-0">
+                      {(assignedUser.name || assignedUser.email || 'U')[0]}
+                    </div>
+                    <span className="text-3xs font-medium text-zinc-300 truncate">
+                      {assignedUser.name || assignedUser.email}
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })
@@ -479,16 +776,18 @@ function BoardColumn({
         )}
       </div>
 
-      {/* Add Task Trigger Button */}
-      <Button
-        onClick={() => setIsOpen(true)}
-        variant="ghost"
-        size="sm"
-        className="w-full text-zinc-400 hover:text-white justify-start gap-x-1.5 px-2 hover:bg-zinc-900/50 rounded-xl"
-      >
-        <Plus className="h-4 w-4 text-orange-500" />
-        <span className="text-xs font-semibold">New Task</span>
-      </Button>
+      {/* Add Task Trigger Button - ADMIN ONLY */}
+      {isAdmin && (
+        <Button
+          onClick={() => setIsOpen(true)}
+          variant="ghost"
+          size="sm"
+          className="w-full text-zinc-400 hover:text-white justify-start gap-x-1.5 px-2 hover:bg-zinc-900/50 rounded-xl"
+        >
+          <Plus className="h-4 w-4 text-orange-500" />
+          <span className="text-xs font-semibold">New Task</span>
+        </Button>
+      )}
 
       {/* Create Task Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -498,7 +797,7 @@ function BoardColumn({
               New Task
             </DialogTitle>
             <DialogDescription className="text-xs text-zinc-400">
-              Create a task inside &quot;{list.name}&quot; column.
+              Create a new task (will automatically be placed in &quot;To Do&quot;).
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateTask} className="space-y-4">
@@ -536,6 +835,42 @@ function BoardColumn({
 
             <div className="flex flex-col gap-y-1.5">
               <Label
+                htmlFor="task-assignee"
+                className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+              >
+                Assignee User
+              </Label>
+              <Select value={taskAssigneeId} onValueChange={(val) => setTaskAssigneeId(val || '')}>
+                <SelectTrigger
+                  id="task-assignee"
+                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100"
+                >
+                  <SelectValue placeholder="Select user to assign">
+                    {(() => {
+                      if (!taskAssigneeId || taskAssigneeId === 'none') return 'Unassigned';
+                      const selectedUser = allUsers?.find((u) => u.id === taskAssigneeId);
+                      return selectedUser ? (selectedUser.name || selectedUser.email) : 'Select user';
+                    })()}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-950 border-zinc-900 text-zinc-50">
+                  <SelectItem value="none" label="Unassigned">
+                    Unassigned
+                  </SelectItem>
+                  {allUsers?.map((u) => (
+                    <SelectItem key={u.id} value={u.id} label={u.name || u.email}>
+                      <span className="flex items-center justify-between w-full gap-x-2">
+                        <span>{u.name || u.email}</span>
+                        <span className="text-3xs text-orange-400 font-mono">({u.role})</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-y-1.5">
+              <Label
                 htmlFor="task-priority"
                 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
               >
@@ -546,18 +881,35 @@ function BoardColumn({
                   id="task-priority"
                   className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100"
                 >
-                  <SelectValue placeholder="Select priority" />
+                  <SelectValue placeholder="Select priority">
+                    {(() => {
+                      if (!taskPriorityId || taskPriorityId === 'none') return 'None';
+                      const selected = priorities.find((p) => p.id === taskPriorityId);
+                      if (!selected) return 'Select priority';
+                      return (
+                        <span className="flex items-center gap-x-2">
+                          <span
+                            className="h-2 w-2 rounded-full shrink-0"
+                            style={{ backgroundColor: selected.color }}
+                          />
+                          <span>{selected.name}</span>
+                        </span>
+                      );
+                    })()}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-950 border-zinc-900 text-zinc-50">
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none" label="None">
+                    None
+                  </SelectItem>
                   {priorities.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
+                    <SelectItem key={p.id} value={p.id} label={p.name}>
                       <span className="flex items-center gap-x-2">
                         <span
-                          className="h-2 w-2 rounded-full"
+                          className="h-2 w-2 rounded-full shrink-0"
                           style={{ backgroundColor: p.color }}
                         />
-                        {p.name}
+                        <span>{p.name}</span>
                       </span>
                     </SelectItem>
                   ))}
@@ -578,7 +930,7 @@ function BoardColumn({
                   type="date"
                   value={taskStartDate}
                   onChange={(e) => setTaskStartDate(e.target.value)}
-                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
+                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
               </div>
               <div className="flex flex-col gap-y-1.5">
@@ -593,7 +945,7 @@ function BoardColumn({
                   type="date"
                   value={taskDueDate}
                   onChange={(e) => setTaskDueDate(e.target.value)}
-                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
+                  className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs [&::-webkit-calendar-picker-indicator]:brightness-0 [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                 />
               </div>
             </div>
@@ -609,229 +961,15 @@ function BoardColumn({
         </DialogContent>
       </Dialog>
 
-      {/* Task Details / Edit Dialog */}
-      <Dialog open={!!activeTask} onOpenChange={(open) => !open && setActiveTask(null)}>
-        {activeTask && (
-          <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
-            <DialogHeader className="text-left space-y-1">
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-xl font-bold text-white tracking-tight flex items-center gap-x-2">
-                  <CheckCircle className="h-5 w-5 text-orange-500" />
-                  Task Details
-                </DialogTitle>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEditingTask(!isEditingTask)}
-                  className="text-zinc-400 hover:text-white mr-6"
-                >
-                  <Edit2 className="h-4 w-4 mr-1" />
-                  {isEditingTask ? 'Cancel' : 'Edit'}
-                </Button>
-              </div>
-            </DialogHeader>
-
-            {isEditingTask ? (
-              <form onSubmit={handleUpdateTaskSubmit} className="space-y-4 pt-2">
-                <div className="flex flex-col gap-y-1.5">
-                  <Label
-                    htmlFor="edit-title"
-                    className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
-                  >
-                    Title
-                  </Label>
-                  <Input
-                    id="edit-title"
-                    required
-                    value={editTitle}
-                    onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 focus-visible:ring-1 focus-visible:ring-orange-500"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-y-1.5">
-                  <Label
-                    htmlFor="edit-desc"
-                    className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
-                  >
-                    Description
-                  </Label>
-                  <Textarea
-                    id="edit-desc"
-                    value={editDesc}
-                    onChange={(e) => setEditDesc(e.target.value)}
-                    className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 min-h-[80px] focus-visible:ring-1 focus-visible:ring-orange-500"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-y-1.5">
-                  <Label
-                    htmlFor="edit-priority"
-                    className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
-                  >
-                    Priority
-                  </Label>
-                  <Select
-                    value={editPriorityId}
-                    onValueChange={(val) => setEditPriorityId(val || '')}
-                  >
-                    <SelectTrigger
-                      id="edit-priority"
-                      className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100"
-                    >
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-950 border-zinc-900 text-zinc-50">
-                      <SelectItem value="none">None</SelectItem>
-                      {priorities.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          <span className="flex items-center gap-x-2">
-                            <span
-                              className="h-2 w-2 rounded-full"
-                              style={{ backgroundColor: p.color }}
-                            />
-                            {p.name}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-y-1.5">
-                    <Label
-                      htmlFor="edit-start-date"
-                      className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
-                    >
-                      Start Date
-                    </Label>
-                    <Input
-                      id="edit-start-date"
-                      type="date"
-                      value={editStartDate}
-                      onChange={(e) => setEditStartDate(e.target.value)}
-                      className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-y-1.5">
-                    <Label
-                      htmlFor="edit-due-date"
-                      className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
-                    >
-                      Due Date
-                    </Label>
-                    <Input
-                      id="edit-due-date"
-                      type="date"
-                      value={editDueDate}
-                      onChange={(e) => setEditDueDate(e.target.value)}
-                      className="w-full border-zinc-800 bg-zinc-900/50 text-zinc-100 text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-x-2 pt-2">
-                  <Button
-                    type="submit"
-                    disabled={updateTaskMutation.isPending}
-                    className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 rounded-xl"
-                  >
-                    {updateTaskMutation.isPending ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setIsEditingTask(false)}
-                    className="border border-zinc-850 hover:bg-zinc-900"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-4 pt-2">
-                <div className="space-y-1">
-                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                    Title
-                  </span>
-                  <p className="text-sm font-bold text-white">{activeTask.title}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                    Priority
-                  </span>
-                  <div>
-                    {(() => {
-                      const activePriority = priorities.find((p) => p.id === activeTask.priorityId);
-                      return activePriority ? (
-                        <span
-                          className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded border"
-                          style={{
-                            backgroundColor: `${activePriority.color}15`,
-                            color: activePriority.color,
-                            borderColor: `${activePriority.color}30`,
-                          }}
-                        >
-                          <span
-                            className="h-1.5 w-1.5 rounded-full mr-1.5"
-                            style={{ backgroundColor: activePriority.color }}
-                          />
-                          {activePriority.name}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-zinc-500">None</span>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-x-1">
-                      <Calendar className="h-3 w-3 text-zinc-500" />
-                      Start Date
-                    </span>
-                    <p className="text-xs text-zinc-300">
-                      {activeTask.startDate
-                        ? new Date(activeTask.startDate).toLocaleDateString()
-                        : '-'}
-                    </p>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider flex items-center gap-x-1">
-                      <Calendar className="h-3 w-3 text-zinc-500" />
-                      Due Date
-                    </span>
-                    <p className="text-xs text-zinc-300">
-                      {activeTask.dueDate ? new Date(activeTask.dueDate).toLocaleDateString() : '-'}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                    Description
-                  </span>
-                  <p className="text-xs text-zinc-300 bg-zinc-900/30 border border-zinc-900 rounded-xl p-3 leading-relaxed whitespace-pre-wrap">
-                    {activeTask.description || 'No description provided.'}
-                  </p>
-                </div>
-
-                <div className="pt-2">
-                  <Button
-                    onClick={() => setActiveTask(null)}
-                    className="w-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-200 font-medium py-2 rounded-xl"
-                  >
-                    Close
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        )}
-      </Dialog>
+      {/* Task Details Modal (Subtasks, Comments, Attachments, Assignments, Labels) */}
+      <TaskDetailModal
+        task={activeTask}
+        projectId={projectId}
+        priorities={priorities}
+        allUsers={allUsers}
+        currentUser={currentUser}
+        onClose={() => setActiveTask(null)}
+      />
     </div>
   );
 }

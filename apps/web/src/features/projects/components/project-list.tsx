@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useProjects } from '../hooks/use-projects';
+import { useProjects, useDeleteProject } from '../hooks/use-projects';
 import { CreateProjectForm } from './create-project-form';
-import { Loader2, Plus, FolderKanban, Briefcase, Calendar } from 'lucide-react';
+import { EditProjectForm } from './edit-project-form';
+import { ProjectMembersDialog } from './project-members-dialog';
+import { ProjectSummary } from '../types/project.types';
+import { Loader2, Plus, FolderKanban, Briefcase, Calendar, Edit2, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,7 +23,11 @@ interface ProjectListProps {
 
 export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) {
   const { data: projects, isLoading, isError, error } = useProjects(workspaceId);
-  const [isOpen, setIsOpen] = useState(false);
+  const deleteProjectMutation = useDeleteProject(workspaceId);
+
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectSummary | null>(null);
+  const [membersProject, setMembersProject] = useState<ProjectSummary | null>(null);
 
   if (isLoading) {
     return (
@@ -51,7 +58,7 @@ export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) 
           </p>
         </div>
         <Button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsCreateOpen(true)}
           className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer"
         >
           <Plus className="mr-1.5 h-4 w-4" />
@@ -71,7 +78,7 @@ export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) 
             </p>
           </div>
           <Button
-            onClick={() => setIsOpen(true)}
+            onClick={() => setIsCreateOpen(true)}
             className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl shadow-lg shadow-orange-500/10 active:scale-[0.98] transition-all cursor-pointer"
           >
             Create Project
@@ -95,9 +102,40 @@ export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) 
                       {project.name}
                     </h3>
                   </div>
-                  <span className="inline-flex items-center rounded-full bg-orange-500/10 px-2 py-0.5 text-2xs font-semibold text-orange-500 ring-1 ring-orange-500/20">
-                    {project.status}
-                  </span>
+                  <div className="flex items-center gap-x-1.5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMembersProject(project);
+                      }}
+                      className="p-1 text-zinc-500 hover:text-orange-400 transition-colors rounded"
+                      title="Manage members"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingProject(project);
+                      }}
+                      className="p-1 text-zinc-500 hover:text-orange-400 transition-colors rounded"
+                      title="Edit project"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Are you sure you want to delete project "${project.name}"?`)) {
+                          deleteProjectMutation.mutate(project.id);
+                        }
+                      }}
+                      className="p-1 text-zinc-500 hover:text-red-400 transition-colors rounded"
+                      title="Delete project"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
                 {project.description && (
                   <p className="text-xs text-zinc-400 line-clamp-2 mt-2 leading-relaxed">
@@ -117,8 +155,8 @@ export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) 
         </div>
       )}
 
-      {/* Modal Dialog */}
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      {/* Create Project Modal */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
           <DialogHeader className="text-left space-y-1">
             <DialogTitle className="text-xl font-bold text-white tracking-tight">
@@ -128,9 +166,41 @@ export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) 
               Add a new project zone to organize your boards, epics, and tasks.
             </DialogDescription>
           </DialogHeader>
-          <CreateProjectForm workspaceId={workspaceId} onSuccess={() => setIsOpen(false)} />
+          <CreateProjectForm workspaceId={workspaceId} onSuccess={() => setIsCreateOpen(false)} />
         </DialogContent>
       </Dialog>
+
+      {/* Edit Project Modal */}
+      <Dialog open={!!editingProject} onOpenChange={(open) => !open && setEditingProject(null)}>
+        <DialogContent className="max-w-md bg-zinc-950 border-zinc-900 text-zinc-50 rounded-2xl">
+          <DialogHeader className="text-left space-y-1">
+            <DialogTitle className="text-xl font-bold text-white tracking-tight">
+              Edit Project
+            </DialogTitle>
+            <DialogDescription className="text-sm text-zinc-400">
+              Update project details and configuration.
+            </DialogDescription>
+          </DialogHeader>
+          {editingProject && (
+            <EditProjectForm
+              project={editingProject}
+              workspaceId={workspaceId}
+              onSuccess={() => setEditingProject(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Project Members Modal */}
+      {membersProject && (
+        <ProjectMembersDialog
+          projectId={membersProject.id}
+          workspaceId={workspaceId}
+          projectName={membersProject.name}
+          open={!!membersProject}
+          onOpenChange={(open) => !open && setMembersProject(null)}
+        />
+      )}
     </div>
   );
 }

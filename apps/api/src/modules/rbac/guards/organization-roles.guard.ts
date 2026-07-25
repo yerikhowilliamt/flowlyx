@@ -21,14 +21,26 @@ export class OrganizationRolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    // Attempt to extract organizationId from params or query
+    if (!user) {
+      throw new ForbiddenException('Access denied: User is unauthenticated.');
+    }
+
+    // System Superadmin override
+    if (user.role === 'ADMIN') {
+      return true;
+    }
+
+    // Attempt to extract organizationId from params, query, or body (supports camelCase & snake_case)
     const organizationId =
       request.params.organizationId ||
       request.params.id ||
       request.query.organizationId ||
-      request.body.organizationId;
+      request.body?.organizationId ||
+      request.params.organization_id ||
+      request.query.organization_id ||
+      request.body?.organization_id;
 
-    if (!user || !organizationId) {
+    if (!organizationId) {
       throw new ForbiddenException(
         'Access denied: You do not have the required role in this organization to perform this action.',
       );

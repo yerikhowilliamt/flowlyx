@@ -90,7 +90,7 @@ export class PrioritiesController {
     @CurrentUser() user: User,
   ) {
     this.logger.log(`Updating priority with ID: ${id}`);
-    return this.prioritiesService.update(id, updatePriorityDto, user.id);
+    return this.prioritiesService.update(id, updatePriorityDto, user.id, user.role);
   }
 
   @ApiOperation({ summary: 'Delete a priority' })
@@ -100,6 +100,6 @@ export class PrioritiesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string, @CurrentUser() user: User) {
     this.logger.log(`Deleting priority with ID: ${id}`);
-    await this.prioritiesService.remove(id, user.id);
+    await this.prioritiesService.remove(id, user.id, user.role);
   }
 }

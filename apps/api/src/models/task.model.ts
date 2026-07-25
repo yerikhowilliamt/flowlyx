@@ -1,5 +1,6 @@
-import { Expose } from 'class-transformer';
+import { Expose, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { TaskAssignmentResponse } from './task-assignment.model';
 
 export class TaskResponse {
   @ApiProperty()
@@ -24,6 +25,7 @@ export class TaskResponse {
 
   @ApiPropertyOptional()
   @Expose()
+  @Transform(({ obj }) => obj?.priorityId || obj?.priority_id || null)
   priorityId?: string | null;
 
   @ApiProperty()
@@ -57,6 +59,10 @@ export class TaskResponse {
   @ApiPropertyOptional()
   @Expose()
   updatedBy?: string | null;
+
+  @ApiPropertyOptional({ type: () => [TaskAssignmentResponse] })
+  @Expose()
+  taskAssignments?: TaskAssignmentResponse[];
 }
 
 export class TaskSummary {
@@ -78,6 +84,7 @@ export class TaskSummary {
 
   @ApiPropertyOptional()
   @Expose()
+  @Transform(({ obj }) => obj?.priorityId || obj?.priority_id || null)
   priorityId?: string | null;
 
   @ApiProperty()
@@ -91,4 +98,8 @@ export class TaskSummary {
   @ApiPropertyOptional()
   @Expose()
   dueDate?: Date | null;
+
+  @ApiPropertyOptional({ type: () => [TaskAssignmentResponse] })
+  @Expose()
+  taskAssignments?: TaskAssignmentResponse[];
 }

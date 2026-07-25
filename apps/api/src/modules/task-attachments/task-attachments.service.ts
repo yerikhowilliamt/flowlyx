@@ -21,7 +21,11 @@ export class TaskAttachmentsService {
         list: {
           include: {
             board: {
-              include: { project: true },
+              include: {
+                project: {
+                  include: { workspace: true },
+                },
+              },
             },
           },
         },
@@ -30,6 +34,15 @@ export class TaskAttachmentsService {
 
     if (!task) {
       throw new NotFoundException('Task not found');
+    }
+
+    // Check system admin/superadmin roles
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+    if (user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) {
+      return task;
     }
 
     const projectId = task.list.board.projectId;
@@ -46,6 +59,21 @@ export class TaskAttachmentsService {
       where: { workspaceId_userId: { workspaceId, userId } },
     });
     if (workspaceMember) return task;
+
+    // Check parent organization owner or admin
+    const orgId = task.list?.board?.project?.workspace?.organizationId;
+    if (orgId) {
+      const orgMember = await prisma.organizationMember.findFirst({
+        where: {
+          organizationId: orgId,
+          userId,
+          status: 'ACTIVE',
+        },
+      });
+      if (orgMember && (orgMember.role === 'OWNER' || orgMember.role === 'ADMIN')) {
+        return task;
+      }
+    }
 
     throw new ForbiddenException('User is not a member of the project or workspace');
   }

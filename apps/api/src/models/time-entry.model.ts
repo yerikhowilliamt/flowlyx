@@ -1,17 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 
 export class TimeEntryResponse {
-  @ApiProperty() id!: string;
-  @ApiProperty() taskId!: string;
-  @ApiProperty() userId!: string;
-  @ApiProperty() duration!: number;
-  @ApiPropertyOptional() description?: string;
-  @ApiProperty() date!: Date;
-  @ApiProperty() createdAt!: Date;
+  @Expose() @ApiProperty() id!: string;
+  @Expose() @ApiProperty() taskId!: string;
+  @Expose() @ApiProperty() userId!: string;
+  @Expose() @ApiProperty() duration!: number;
+  @Expose() @ApiPropertyOptional() description?: string;
+  @Expose() @ApiProperty() startTime!: Date;
+  @Expose() @ApiPropertyOptional() endTime?: Date;
+  @Expose() @ApiProperty() createdAt!: Date;
 }
 
 export class TimeEntrySummary {
-  @ApiProperty() id!: string;
-  @ApiProperty() duration!: number;
-  @ApiProperty() date!: Date;
+  @Expose() @ApiProperty() id!: string;
+  @Expose() @ApiProperty() duration!: number;
+  @Expose() @ApiProperty() startTime!: Date;
 }

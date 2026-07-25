@@ -24,12 +24,15 @@ export class ListsService {
       where.name = { contains: search, mode: 'insensitive' };
     }
 
+    const orderField = sortBy === 'createdAt' || !sortBy ? 'order' : sortBy;
+    const orderDir = sortBy === 'createdAt' || !sortBy ? 'asc' : sortOrder;
+
     const [data, total] = await Promise.all([
       prisma.list.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortOrder }, // order field should still be supported, but default is createdAt usually. User can pass sortBy='order'
+        orderBy: { [orderField]: orderDir },
       }),
       prisma.list.count({ where }),
     ]);
