@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 import { useWorkspaceMembers } from '@/features/workspaces/hooks/use-workspaces';
 import {
@@ -16,7 +17,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loader2, UserPlus, Trash2, Shield, User } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -35,8 +42,13 @@ export function ProjectMembersDialog({
   open,
   onOpenChange,
 }: ProjectMembersDialogProps) {
-  const { data: workspaceMembers = [], isLoading: isWorkspaceMembersLoading } = useWorkspaceMembers(workspaceId);
-  const { data: projectMembers = [], isLoading: isProjectMembersLoading, refetch } = useProjectMembers(projectId);
+  const { data: workspaceMembers = [], isLoading: isWorkspaceMembersLoading } =
+    useWorkspaceMembers(workspaceId);
+  const {
+    data: projectMembers = [],
+    isLoading: isProjectMembersLoading,
+    refetch,
+  } = useProjectMembers(projectId);
 
   const createMemberMutation = useCreateProjectMember(projectId);
   const updateMemberMutation = useUpdateProjectMember(projectId);
@@ -66,10 +78,7 @@ export function ProjectMembersDialog({
       refetch();
     } catch (error: unknown) {
       const errObj = error as { data?: { message?: string }; message?: string };
-      const message =
-        errObj?.data?.message ||
-        errObj?.message ||
-        'Failed to add project member';
+      const message = errObj?.data?.message || errObj?.message || 'Failed to add project member';
       toast.error(message);
     }
   };
@@ -185,7 +194,9 @@ export function ProjectMembersDialog({
 
           {/* Members list */}
           <div className="space-y-2">
-            <h4 className="text-xs font-semibold text-zinc-400">Current Members ({projectMembers.length})</h4>
+            <h4 className="text-xs font-semibold text-zinc-400">
+              Current Members ({projectMembers.length})
+            </h4>
             {isProjectMembersLoading || isWorkspaceMembersLoading ? (
               <div className="flex justify-center py-6">
                 <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
@@ -207,7 +218,13 @@ export function ProjectMembersDialog({
                       <div className="flex items-center gap-2">
                         <div className="h-7 w-7 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-500 text-xs font-bold">
                           {uInfo?.avatarUrl ? (
-                            <img src={uInfo.avatarUrl} alt={uInfo.name} className="h-full w-full rounded-full object-cover" />
+                            <Image
+                              src={uInfo.avatarUrl}
+                              alt={uInfo.name}
+                              width={28}
+                              height={28}
+                              className="h-full w-full rounded-full object-cover"
+                            />
                           ) : (
                             <User className="h-3.5 w-3.5" />
                           )}
