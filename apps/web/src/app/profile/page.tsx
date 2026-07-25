@@ -2,6 +2,7 @@
 
 import { ProfileForm } from '@/features/profile/components/profile-form';
 import { ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function ProfilePage() {
@@ -18,9 +19,9 @@ export default function ProfilePage() {
               Back to Organizations
             </Link>
           </div>
-          <h1 className="text-lg font-bold bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">
-            Flowlyx
-          </h1>
+          <div>
+                          <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
+                        </div>
         </div>
       </header>
 

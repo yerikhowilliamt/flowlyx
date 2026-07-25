@@ -25,6 +25,7 @@ export class TimeEntryController {
     return this.timeEntryService.create(req.user.id, createDto);
   }
 
+  @Serialize(TimeEntryResponse)
   @Put(':id/stop')
   @ApiOperation({ summary: 'Stop an active timer' })
   @ApiResponse({ status: 200, description: 'Timer stopped successfully' })
@@ -32,6 +33,7 @@ export class TimeEntryController {
     return this.timeEntryService.stopTimer(id, req.user.id);
   }
 
+  @Serialize(TimeEntryResponse)
   @Put(':id')
   @ApiOperation({ summary: 'Update a time entry' })
   @ApiResponse({ status: 200, description: 'Time entry updated successfully' })

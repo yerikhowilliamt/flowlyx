@@ -89,6 +89,30 @@ export class WorkspacesController {
     return this.workspacesService.update(id, updateWorkspaceDto);
   }
 
+  @ApiOperation({ summary: 'Get workspace task activity' })
+  @Get(':id/activity')
+  async getTaskActivity(
+    @Param('id') id: string,
+    @Query('range') range?: '7d' | '30d' | '1y',
+  ) {
+    this.logger.log(`Fetching task activity for workspace: ${id}, range: ${range || '7d'}`);
+    return this.workspacesService.getTaskActivity(id, range || '7d');
+  }
+
+  @ApiOperation({ summary: 'Get workspace statistics' })
+  @Get(':id/stats')
+  async getWorkspaceStats(@Param('id') id: string) {
+    this.logger.log(`Fetching stats for workspace: ${id}`);
+    return this.workspacesService.getWorkspaceStats(id);
+  }
+
+  @ApiOperation({ summary: 'Get workspace members' })
+  @Get(':id/members')
+  async getWorkspaceMembers(@Param('id') id: string) {
+    this.logger.log(`Fetching members for workspace: ${id}`);
+    return this.workspacesService.getWorkspaceMembers(id);
+  }
+
   @Serialize(SuccessResponse)
   @Delete(':id')
   @UseGuards(WorkspaceRolesGuard)

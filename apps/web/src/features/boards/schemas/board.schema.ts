@@ -42,6 +42,7 @@ export const createTaskSchema = z.object({
   priorityId: z.string().uuid('Invalid priority ID').optional().nullable(),
   startDate: z.string().optional().nullable(),
   dueDate: z.string().optional().nullable(),
+  assigneeId: z.string().uuid('Invalid user ID').optional().nullable(),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;

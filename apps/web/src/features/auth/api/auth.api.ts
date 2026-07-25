@@ -1,4 +1,4 @@
-import { api } from '@/lib/api-client';
+import { api, setAccessToken } from '@/lib/api-client';
 import { User } from '@flowlyx/database';
 import { LoginInput, RegisterInput } from '../schemas/auth.schema';
 import { AuthTokens } from '../types/auth.types';
@@ -15,4 +15,14 @@ export const login = async (data: LoginInput): Promise<AuthTokens> => {
 export const register = async (data: RegisterInput): Promise<User> => {
   const response = await api.post<ApiResponse<User>>('/auth/register', data);
   return response.data;
+};
+
+export const logout = async (): Promise<void> => {
+  try {
+    await api.post('/auth/logout');
+  } catch {
+    // Ignore error if already unauthenticated
+  } finally {
+    setAccessToken(null);
+  }
 };

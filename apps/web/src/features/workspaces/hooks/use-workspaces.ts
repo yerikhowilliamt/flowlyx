@@ -3,6 +3,9 @@ import { toast } from 'sonner';
 import {
   getWorkspaces,
   getWorkspaceBySlug,
+  getWorkspaceActivity,
+  getWorkspaceStats,
+  getWorkspaceMembers,
   createWorkspace,
   updateWorkspace,
   deleteWorkspace,
@@ -22,6 +25,30 @@ export const useWorkspace = (slug: string) => {
     queryKey: ['workspace', { slug }],
     queryFn: () => getWorkspaceBySlug(slug),
     enabled: !!slug,
+  });
+};
+
+export const useWorkspaceActivity = (workspaceId: string, range: string = '7d') => {
+  return useQuery({
+    queryKey: ['workspace-activity', { workspaceId, range }],
+    queryFn: () => getWorkspaceActivity(workspaceId, range),
+    enabled: !!workspaceId,
+  });
+};
+
+export const useWorkspaceStats = (workspaceId: string) => {
+  return useQuery({
+    queryKey: ['workspace-stats', { workspaceId }],
+    queryFn: () => getWorkspaceStats(workspaceId),
+    enabled: !!workspaceId,
+  });
+};
+
+export const useWorkspaceMembers = (workspaceId: string) => {
+  return useQuery({
+    queryKey: ['workspace-members', { workspaceId }],
+    queryFn: () => getWorkspaceMembers(workspaceId),
+    enabled: !!workspaceId,
   });
 };
 
