@@ -2,8 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { AiSprintPlanningService } from './ai-sprint-planning.service';
 
-const mockTask = (id: string, title: string, order: number) => ({ id, title, order });
-
 const mockProject = {
   id: 'project-uuid-1',
   name: 'Test Project',
@@ -12,9 +10,9 @@ const mockProject = {
       lists: [
         {
           tasks: [
-            mockTask('t1', 'Task One', 0),
-            mockTask('t2', 'Task Two', 1),
-            mockTask('t3', 'Task Three', 2),
+            { id: 't1', title: 'Task One', order: 0 },
+            { id: 't2', title: 'Task Two', order: 1 },
+            { id: 't3', title: 'Task Three', order: 2 },
           ],
         },
       ],

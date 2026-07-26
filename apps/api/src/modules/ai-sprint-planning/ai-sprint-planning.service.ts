@@ -55,19 +55,14 @@ export class AiSprintPlanningService {
 
     const allTasks = project.boards.flatMap((b) => b.lists.flatMap((l) => l.tasks));
 
-    const maxTasks = dto.maxTasksPerSprint ?? 10;
-    const recommendedTasks: SprintTask[] = allTasks.slice(0, maxTasks).map((t) => ({
+    const recommendedTasks: SprintTask[] = allTasks.slice(0, dto.maxTasksPerSprint).map((t) => ({
       id: t.id,
       title: t.title,
       order: t.order,
     }));
 
-    const riskFlags = this.buildRiskFlags(allTasks.length, maxTasks, dto.focusArea ?? 'all');
-    const sprintGoal = this.buildSprintGoal(
-      project.name,
-      recommendedTasks.length,
-      dto.focusArea ?? 'all',
-    );
+    const riskFlags = this.buildRiskFlags(allTasks.length, dto.maxTasksPerSprint, dto.focusArea);
+    const sprintGoal = this.buildSprintGoal(project.name, recommendedTasks.length, dto.focusArea);
 
     await prisma.activity.create({
       data: {
@@ -96,8 +91,8 @@ export class AiSprintPlanningService {
       recommendedTasks,
       estimatedEffort: recommendedTasks.length,
       riskFlags,
-      focusArea: dto.focusArea ?? 'all',
-      sprintDurationDays: dto.sprintDurationDays ?? 14,
+      focusArea: dto.focusArea,
+      sprintDurationDays: dto.sprintDurationDays,
       generatedAt: new Date().toISOString(),
     };
   }
