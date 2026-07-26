@@ -99,6 +99,7 @@ model Workspace {
   projects     Project[]
   files        File[]
   auditLogs    AuditLog[]
+  integrations Integration[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -600,4 +601,27 @@ model PaymentTransaction {
   updatedAt DateTime  @updatedAt @map("updated_at")
 
   @@map("payment_transactions")
+}
+
+model Integration {
+  id          String  @id @default(uuid()) @db.Uuid
+  workspaceId String  @map("workspace_id") @db.Uuid
+  provider    String  @map("provider")
+  name        String  @map("name")
+  webhookUrl  String? @map("webhook_url")
+  accessToken String? @map("access_token")
+  config      Json?   @map("config")
+  status      String  @default("ACTIVE") @map("status")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@index([workspaceId])
+  @@map("integrations")
 }
