@@ -100,7 +100,12 @@ export class IntegrationsService {
       throw new BadRequestException('Integration has no webhook URL configured');
     }
 
-    const payload = this.buildTestPayload(integration.provider);
+    const payload = (
+      {
+        SLACK: { text: '✅ Flowlyx integration test ping' },
+        DISCORD: { content: '✅ Flowlyx integration test ping' },
+      } as Record<string, Record<string, unknown>>
+    )[integration.provider] ?? { event: 'ping', source: 'flowlyx' };
 
     try {
       const res = await fetch(integration.webhookUrl, {
@@ -122,13 +127,5 @@ export class IntegrationsService {
       this.logger.warn({ message: 'Integration ping failed', id, error: message });
       return { success: false, error: message };
     }
-  }
-
-  private buildTestPayload(provider: string): Record<string, unknown> {
-    const payloads: Record<string, Record<string, unknown>> = {
-      SLACK: { text: '✅ Flowlyx integration test ping' },
-      DISCORD: { content: '✅ Flowlyx integration test ping' },
-    };
-    return payloads[provider] ?? { event: 'ping', source: 'flowlyx' };
   }
 }
