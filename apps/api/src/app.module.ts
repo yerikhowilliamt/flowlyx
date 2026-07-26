@@ -46,6 +46,7 @@ import { ReleaseCandidateModule } from './modules/release-candidate/release-cand
 import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
 import { AiTaskGeneratorModule } from './modules/ai-task-generator/ai-task-generator.module';
 import { AiProjectSummaryModule } from './modules/ai-project-summary/ai-project-summary.module';
+import { AiSprintPlanningModule } from './modules/ai-sprint-planning/ai-sprint-planning.module';
 
 @Module({
   imports: [
@@ -99,6 +100,7 @@ import { AiProjectSummaryModule } from './modules/ai-project-summary/ai-project-
     AiAssistantModule,
     AiTaskGeneratorModule,
     AiProjectSummaryModule,
+    AiSprintPlanningModule,
   ],
   controllers: [],
   providers: [
