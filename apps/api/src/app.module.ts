@@ -51,6 +51,7 @@ import { AiSprintPlanningModule } from './modules/ai-sprint-planning/ai-sprint-p
 import { ReportingModule } from './modules/reporting/reporting.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { MobileModule } from './modules/mobile/mobile.module';
 
 @Module({
   imports: [
@@ -109,6 +110,7 @@ import { IntegrationsModule } from './modules/integrations/integrations.module';
     ReportingModule,
     AnalyticsModule,
     IntegrationsModule,
+    MobileModule,
   ],
   controllers: [],
   providers: [
