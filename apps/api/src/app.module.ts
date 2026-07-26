@@ -44,6 +44,8 @@ import { PerformanceModule } from './core/performance/performance.module';
 import { MetricsModule } from './core/metrics/metrics.module';
 import { ReleaseCandidateModule } from './modules/release-candidate/release-candidate.module';
 import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
+import { AiTaskGeneratorModule } from './modules/ai-task-generator/ai-task-generator.module';
+import { AiProjectSummaryModule } from './modules/ai-project-summary/ai-project-summary.module';
 
 @Module({
   imports: [
@@ -95,6 +97,8 @@ import { AiAssistantModule } from './modules/ai-assistant/ai-assistant.module';
     MetricsModule,
     ReleaseCandidateModule,
     AiAssistantModule,
+    AiTaskGeneratorModule,
+    AiProjectSummaryModule,
   ],
   controllers: [],
   providers: [
