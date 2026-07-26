@@ -16,6 +16,7 @@ import { ProjectsModule } from './modules/projects/projects.module';
 import { RbacModule } from './modules/rbac/rbac.module';
 import { ProjectMembersModule } from './modules/project-members/project-members.module';
 import { BoardsModule } from './modules/boards/boards.module';
+import { ExportImportModule } from './modules/export-import/export-import.module';
 import { ListsModule } from './modules/lists/lists.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { SubtasksModule } from './modules/subtasks/subtasks.module';
@@ -72,6 +73,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     RbacModule,
     ProjectMembersModule,
     BoardsModule,
+    ExportImportModule,
     ListsModule,
     TasksModule,
     SubtasksModule,
