@@ -48,6 +48,7 @@ import { AiTaskGeneratorModule } from './modules/ai-task-generator/ai-task-gener
 import { AiProjectSummaryModule } from './modules/ai-project-summary/ai-project-summary.module';
 import { AiSprintPlanningModule } from './modules/ai-sprint-planning/ai-sprint-planning.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -103,6 +104,7 @@ import { ReportingModule } from './modules/reporting/reporting.module';
     AiProjectSummaryModule,
     AiSprintPlanningModule,
     ReportingModule,
+    AnalyticsModule,
   ],
   controllers: [],
   providers: [
