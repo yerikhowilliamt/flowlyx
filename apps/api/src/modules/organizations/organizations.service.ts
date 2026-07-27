@@ -19,6 +19,38 @@ export class OrganizationsService {
     return prisma.organization.create({ data: createOrganizationDto });
   }
 
+  async findAllForUser(userId: string, query: PaginationDto) {
+    const { page, limit, sortBy, sortOrder, search } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.OrganizationWhereInput = {
+      members: {
+        some: {
+          userId,
+        },
+      },
+    };
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.organization.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { [sortBy]: sortOrder },
+      }),
+      prisma.organization.count({ where }),
+    ]);
+
+    return createPaginatedResponse(data, total, page, limit);
+  }
+
   async findAll(query: PaginationDto) {
     const { page, limit, sortBy, sortOrder, search } = query;
     const skip = (page - 1) * limit;
