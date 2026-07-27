@@ -14,6 +14,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/organizations', request.url));
   }
 
+  // Prevent logged in users from visiting root page
+  if (pathname === '/' && hasRefreshToken) {
+    return NextResponse.redirect(new URL('/organizations', request.url));
+  }
+
   if (!isPublic && !isAuth && !hasRefreshToken) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('from', pathname);

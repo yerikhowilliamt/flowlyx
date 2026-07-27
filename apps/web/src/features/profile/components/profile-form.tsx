@@ -71,6 +71,7 @@ export function ProfileForm() {
   };
 
   const getInitials = (n: string) => {
+    if (!n) return '';
     return n
       .split(' ')
       .map((p) => p[0])
