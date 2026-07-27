@@ -56,7 +56,16 @@ export class OrganizationsController {
   @ApiOkResponse({ type: [OrganizationSummary] })
   @Serialize([OrganizationSummary])
   @Get()
-  async findAll(@Query() query: PaginationDto, @CurrentUser('id') userId: string) {
+  async findAll(
+    @Query() query: PaginationDto,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    if (role === 'SUPERADMIN') {
+      this.logger.log('Fetching all organizations for SUPERADMIN');
+      return this.organizationsService.findAll(query);
+    }
+
     this.logger.log(`Fetching all organizations for user: ${userId}`);
     return this.organizationsService.findAllForUser(userId, query);
   }
