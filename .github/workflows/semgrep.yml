@@ -1,0 +1,58 @@
+# Semgrep SAST — static analysis untuk TypeScript (apps/api + apps/web)
+# Trigger: setiap PR ke main/dev. Fail jika ada finding severity ERROR.
+# Dua jobs terpisah agar hasil check terbaca per-target di PR status.
+# Semgrep OSS berjalan tanpa token; set SEMGREP_APP_TOKEN jika pakai dashboard cloud.
+# ponytail: p/nestjs tidak tersedia di Semgrep Registry publik, p/typescript + p/owasp-top-ten cukup.
+
+name: Semgrep SAST
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep-api:
+    name: Semgrep — apps/api
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep (apps/api)
+        run: |
+          pip install semgrep --quiet
+          semgrep \
+            --config p/typescript \
+            --config p/owasp-top-ten \
+            --include "apps/api/**" \
+            --severity ERROR \
+            --error \
+            --quiet \
+            .
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+  semgrep-web:
+    name: Semgrep — apps/web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Semgrep (apps/web)
+        run: |
+          pip install semgrep --quiet
+          semgrep \
+            --config p/typescript \
+            --config p/owasp-top-ten \
+            --config p/react \
+            --include "apps/web/**" \
+            --severity ERROR \
+            --error \
+            --quiet \
+            .
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}

@@ -1,0 +1,59 @@
+# Trivy Vulnerability Scanning — scan dependensi monorepo dan Docker images (jika ada).
+# Trigger: setiap PR ke main/dev. Fail hanya untuk severity CRITICAL,HIGH.
+# Scan filesystem dari root package.json otomatis mencakup seluruh npm workspaces.
+# Step image scanning opsional/conditional: aktif otomatis jika Dockerfile ditemukan di apps/api atau apps/web.
+
+name: Trivy Vulnerability Scan
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  trivy-scan:
+    name: Trivy Dependency & Image Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan Monorepo Dependencies (npm workspaces)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+
+      - name: Check Dockerfile existence
+        id: check_dockerfiles
+        run: |
+          if [ -f "apps/api/Dockerfile" ]; then echo "api_docker=true" >> $GITHUB_OUTPUT; fi
+          if [ -f "apps/web/Dockerfile" ]; then echo "web_docker=true" >> $GITHUB_OUTPUT; fi
+        shell: bash
+
+      - name: Build & Scan apps/api Docker Image
+        if: steps.check_dockerfiles.outputs.api_docker == 'true'
+        run: |
+          docker build -t flowlyx-api:test -f apps/api/Dockerfile .
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image \
+            --severity CRITICAL,HIGH \
+            --exit-code 1 \
+            flowlyx-api:test
+
+      - name: Build & Scan apps/web Docker Image
+        if: steps.check_dockerfiles.outputs.web_docker == 'true'
+        run: |
+          docker build -t flowlyx-web:test -f apps/web/Dockerfile .
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image \
+            --severity CRITICAL,HIGH \
+            --exit-code 1 \
+            flowlyx-web:test

@@ -1,0 +1,48 @@
+# Gitleaks Secrets Scanning — deteksi credential/API key/token yang ke-commit di monorepo.
+# Trigger: push ke branch utama (scan diff commit baru) & pull request (scan incremental PR).
+# Untuk full scan history pertama kali, gunakan manual workflow_dispatch atau jalankan di push event pertama.
+# Fail workflow jika rahasia/secrets ditemukan. Tidak butuh secret tambahan (pakai GITHUB_TOKEN).
+
+name: Gitleaks Secrets Scanning
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+    inputs:
+      full_scan:
+        description: 'Run full git history scan'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: Scan Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Butuh history lengkap untuk scan diff maupun full history
+
+      - name: Gitleaks Full History Scan (on dispatch)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_scan == 'true'
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: detect --source . -v
+
+      - name: Gitleaks Incremental Scan (PR & Push)
+        if: !(github.event_name == 'workflow_dispatch' && github.event.inputs.full_scan == 'true')
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,57 @@
+# OWASP ZAP DAST — scan keamanan aplikasi running di staging environment.
+# Trigger: jadwal mingguan (setiap Senin 02:00 UTC) & manual (workflow_dispatch).
+# Scan API menggunakan ZAP API Scan terhadap Swagger OpenAPI endpoint (/api/docs-json atau spesifikasi yang diekspos).
+# Scan Web menggunakan ZAP Baseline Scan untuk halaman-halaman utama (login, dashboard, board view).
+# Hasil scan disimpan sebagai artifact HTML dan otomatis membuat GitHub issue jika ada finding baru.
+# Butuh secret di GitHub Settings: ZAP_TARGET_API_URL dan ZAP_TARGET_WEB_URL.
+
+name: OWASP ZAP DAST
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # Setiap Senin pukul 02:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  zap-api:
+    name: ZAP API Scan (apps/api)
+    runs-on: ubuntu-latest
+    steps:
+      - name: ZAP API Scan against Swagger/OpenAPI
+        uses: zaproxy/action-api-scan@v0.8.0
+        with:
+          target: '${{ secrets.ZAP_TARGET_API_URL }}/api/docs-json'
+          format: openapi
+          fail_action: false
+          issue_title: 'ZAP DAST Report — REST API Vulnerabilities'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload API Scan Report Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-api-report
+          path: report_html.html
+
+  zap-web:
+    name: ZAP Baseline Scan (apps/web)
+    runs-on: ubuntu-latest
+    steps:
+      - name: ZAP Baseline Scan against Web App
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: '${{ secrets.ZAP_TARGET_WEB_URL }}'
+          fail_action: false
+          issue_title: 'ZAP DAST Report — Web App Vulnerabilities'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Web Scan Report Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-web-report
+          path: report_html.html
