@@ -61,8 +61,8 @@ export class OrganizationsController {
     @CurrentUser('id') userId: string,
     @CurrentUser('role') role: string,
   ) {
-    if (role === 'SUPERADMIN') {
-      this.logger.log('Fetching all organizations for SUPERADMIN');
+    if (role === 'SUPER_ADMIN' || role === 'SUPERADMIN') {
+      this.logger.log('Fetching all organizations for SUPER_ADMIN');
       return this.organizationsService.findAll(query);
     }
 

@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { User } from '@flowlyx/database';
 import { UnauthorizedException } from '@nestjs/common';
 import * as argon2 from 'argon2';
+import { EmailService } from '../email/email.service';
 
 jest.mock('argon2', () => ({
   verify: jest.fn().mockResolvedValue(true),
@@ -26,6 +27,10 @@ describe('AuthService', () => {
 
     const mockJwtService = {
       sign: jest.fn(() => 'test-token'),
+    };
+    
+    const mockEmailService = {
+      sendEmail: jest.fn().mockResolvedValue(undefined),
     };
 
     const mockConfigService = {
@@ -51,6 +56,7 @@ describe('AuthService', () => {
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: EmailService, useValue: mockEmailService },
       ],
     }).compile();
 

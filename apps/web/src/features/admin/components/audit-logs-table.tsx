@@ -13,7 +13,13 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { NativeSelect } from '@/components/ui/native-select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -33,31 +39,37 @@ export function AuditLogsTable({ initialLogs, onRefresh }: AuditLogsTableProps) 
   const [actionFilter, setActionFilter] = useState('ALL');
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
 
+  const getEntityType = (log: AuditLog) => log.entityType || log.resourceType || 'System';
+  const getEntityId = (log: AuditLog) => log.entityId || log.resourceId;
+  const getUserDisplay = (log: AuditLog) => log.user?.email || log.user?.name || log.userEmail || log.userId || 'System';
+
   const filteredLogs = initialLogs.filter((log) => {
+    const entityType = getEntityType(log);
+    const userDisplay = getUserDisplay(log);
     const matchSearch =
       !search ||
       log.action?.toLowerCase().includes(search.toLowerCase()) ||
-      log.entityType?.toLowerCase().includes(search.toLowerCase()) ||
-      log.userEmail?.toLowerCase().includes(search.toLowerCase()) ||
+      entityType.toLowerCase().includes(search.toLowerCase()) ||
+      userDisplay.toLowerCase().includes(search.toLowerCase()) ||
       log.userId?.toLowerCase().includes(search.toLowerCase());
-    const matchAction = actionFilter === 'ALL' || log.action?.toUpperCase().includes(actionFilter);
+    const matchAction = actionFilter === 'ALL' || (log.action || '').toUpperCase().includes(actionFilter);
     return matchSearch && matchAction;
   });
 
-  const getActionBadge = (action: string) => {
-    const act = action.toUpperCase();
+  const getActionBadge = (action?: string) => {
+    const act = (action || 'UNKNOWN').toUpperCase();
     if (act.includes('CREATE') || act.includes('POST')) {
       return (
-        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">{action}</Badge>
+        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30">{action || 'UNKNOWN'}</Badge>
       );
     }
     if (act.includes('UPDATE') || act.includes('PATCH') || act.includes('PUT')) {
-      return <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">{action}</Badge>;
+      return <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30">{action || 'UNKNOWN'}</Badge>;
     }
     if (act.includes('DELETE') || act.includes('REMOVE')) {
-      return <Badge className="bg-red-500/20 text-red-300 border-red-500/30">{action}</Badge>;
+      return <Badge className="bg-red-500/20 text-red-300 border-red-500/30">{action || 'UNKNOWN'}</Badge>;
     }
-    return <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">{action}</Badge>;
+    return <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30">{action || 'UNKNOWN'}</Badge>;
   };
 
   return (
@@ -75,16 +87,17 @@ export function AuditLogsTable({ initialLogs, onRefresh }: AuditLogsTableProps) 
         </div>
 
         <div className="flex items-center gap-2">
-          <NativeSelect
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            className="bg-zinc-950/80 border-zinc-800 text-sm text-zinc-200"
-          >
-            <option value="ALL">All Actions</option>
-            <option value="CREATE">CREATE / ADD</option>
-            <option value="UPDATE">UPDATE / EDIT</option>
-            <option value="DELETE">DELETE / REMOVE</option>
-          </NativeSelect>
+          <Select value={actionFilter} onValueChange={(v) => setActionFilter(v ?? 'ALL')}>
+            <SelectTrigger className="w-44 bg-zinc-950/80 border-zinc-800 text-zinc-200 text-sm focus:ring-orange-500">
+              <SelectValue placeholder="All Actions" />
+            </SelectTrigger>
+            <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-100">
+              <SelectItem value="ALL" className="text-zinc-200 focus:bg-zinc-800 focus:text-white">All Actions</SelectItem>
+              <SelectItem value="CREATE" className="text-emerald-400 focus:bg-zinc-800 focus:text-emerald-300">CREATE / ADD</SelectItem>
+              <SelectItem value="UPDATE" className="text-amber-400 focus:bg-zinc-800 focus:text-amber-300">UPDATE / EDIT</SelectItem>
+              <SelectItem value="DELETE" className="text-red-400 focus:bg-zinc-800 focus:text-red-300">DELETE / REMOVE</SelectItem>
+            </SelectContent>
+          </Select>
 
           <Button
             variant="outline"
@@ -125,14 +138,14 @@ export function AuditLogsTable({ initialLogs, onRefresh }: AuditLogsTableProps) 
                   <TableCell>{getActionBadge(log.action)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1.5 text-xs text-zinc-200 font-medium">
-                      <span>{log.entityType}</span>
-                      {log.entityId && (
-                        <span className="text-zinc-500 font-mono">({log.entityId})</span>
+                      <span>{getEntityType(log)}</span>
+                      {getEntityId(log) && (
+                        <span className="text-zinc-500 font-mono">({getEntityId(log)})</span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-zinc-300">
-                    {log.userEmail || log.userId || 'System'}
+                    {getUserDisplay(log)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button

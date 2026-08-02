@@ -8,6 +8,8 @@ import { Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { AiMagicButton } from '@/features/ai/components/ai-magic-button';
 
 interface CreateBoardFormProps {
   projectId: string;
@@ -20,6 +22,8 @@ export function CreateBoardForm({ projectId, onSuccess }: CreateBoardFormProps) 
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<CreateBoardInput>({
     resolver: zodResolver(createBoardSchema),
@@ -61,17 +65,32 @@ export function CreateBoardForm({ projectId, onSuccess }: CreateBoardFormProps) 
         </div>
 
         <div className="flex flex-col gap-y-1.5">
-          <Label
-            htmlFor="description"
-            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
-          >
-            Description (Optional)
-          </Label>
-          <Input
+          <div className="flex items-center justify-between">
+            <Label
+              htmlFor="description"
+              className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+            >
+              Description (Optional)
+            </Label>
+            <AiMagicButton 
+              type="suggest-task"
+              inputValue={watch('name')}
+              onResult={(res) => {
+                const descMatch = res.match(/Description\n([\s\S]*?)\n\nPriority/i);
+                if (descMatch && descMatch[1]) {
+                  setValue('description', descMatch[1].trim());
+                } else {
+                  // Fallback
+                  setValue('description', res.split('\n')[2] || '');
+                }
+              }}
+            />
+          </div>
+          <Textarea
             id="description"
-            type="text"
+            rows={3}
             {...register('description')}
-            className="w-full border-zinc-800 bg-zinc-900/50 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+            className="w-full border-zinc-800 bg-zinc-900/50 px-3 py-2 text-zinc-100 placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all resize-none"
             placeholder="E.g., Tasks for first sprint..."
           />
           {errors.description && (

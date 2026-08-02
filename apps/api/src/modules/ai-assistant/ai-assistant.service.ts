@@ -51,7 +51,7 @@ export class AiAssistantService {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 1024,
+        max_completion_tokens: 1024,
       });
       this.logger.log({
         msg: 'OpenAI request completed',
@@ -89,7 +89,7 @@ export class AiAssistantService {
     this.logger.log({ msg: 'AI suggest-task request', userId });
 
     const system =
-      'You are Flowlyx AI, a project management assistant. Respond ONLY with valid JSON matching this schema: { "title": string, "description": string, "suggestedPriority": "LOW"|"MEDIUM"|"HIGH"|"URGENT", "subtasks": string[] }. No markdown, no extra text.';
+      'You are Flowlyx AI, a project management assistant. Based on the provided task description (and existing subtasks, if any), suggest relevant missing subtasks to complete the task. Do NOT duplicate existing subtasks. IMPORTANT: Always respond in the exact same language used in the task description. Respond ONLY with valid JSON matching this schema: { "title": string, "description": string, "suggestedPriority": "LOW"|"MEDIUM"|"HIGH"|"URGENT", "subtasks": string[] }. No markdown, no extra text.';
 
     const userPrompt = dto.projectContext
       ? `Project context: ${dto.projectContext}\n\nTask description: ${dto.description}`
@@ -116,7 +116,7 @@ export class AiAssistantService {
     this.logger.log({ msg: 'AI summarize request', userId, contentLength: dto.content.length });
 
     const system =
-      'You are Flowlyx AI. Summarize the provided text concisely. Respond ONLY with valid JSON: { "summary": string, "keyPoints": string[] }. No markdown, no extra text.';
+      'You are Flowlyx AI. Summarize the provided text concisely. IMPORTANT: Always respond in the exact same language used in the provided text. Respond ONLY with valid JSON: { "summary": string, "keyPoints": string[] }. No markdown, no extra text.';
 
     const completion = await this.callOpenAI(system, dto.content);
     const raw = completion.choices[0]?.message?.content ?? '{}';

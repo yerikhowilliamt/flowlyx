@@ -63,6 +63,10 @@ export class BoardSummary {
   @Expose()
   name!: string;
 
+  @ApiPropertyOptional()
+  @Expose()
+  description?: string | null;
+
   @ApiProperty()
   @Expose()
   status!: string;

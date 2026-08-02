@@ -25,6 +25,10 @@ export const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string(),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4o-mini'),
+  MIDTRANS_IS_PRODUCTION: z.string().default('false'),
+  MIDTRANS_SERVER_KEY: z.string().optional(),
+  MIDTRANS_CLIENT_KEY: z.string().optional(),
+  EXCHANGE_RATE_USD_IDR: z.string().transform(Number).default('17990'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

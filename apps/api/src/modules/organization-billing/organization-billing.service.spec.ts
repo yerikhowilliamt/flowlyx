@@ -35,6 +35,7 @@ describe('OrganizationBillingService', () => {
         if (key === 'MIDTRANS_SERVER_KEY') return 'server_key';
         if (key === 'MIDTRANS_CLIENT_KEY') return 'client_key';
         if (key === 'MIDTRANS_IS_PRODUCTION') return 'false';
+        if (key === 'EXCHANGE_RATE_USD_IDR') return 17990;
         return null;
       }),
     };
@@ -87,8 +88,10 @@ describe('OrganizationBillingService', () => {
         expect.objectContaining({
           data: expect.objectContaining({
             organizationId: 'org1',
-            amount: 150000,
+            amount: 521710, // 29 USD × 17990
             status: 'PENDING',
+            plan: 'PRO',
+            billingCycle: 'MONTHLY',
           }),
         }),
       );

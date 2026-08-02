@@ -5,9 +5,10 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { GoogleStrategy } from './strategies/google.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { EmailModule } from '../email/email.module';
 
 @Module({
-  imports: [UsersModule, PassportModule, JwtModule.register({ global: true })],
+  imports: [UsersModule, PassportModule, JwtModule.register({ global: true }), EmailModule],
   controllers: [AuthController],
   providers: [AuthService, GoogleStrategy],
   exports: [AuthService],

@@ -103,7 +103,6 @@ export class UsersController {
   }
 
   @ApiOperation({ summary: 'Delete a user' })
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Serialize(SuccessResponse)
   @Delete(':id')
   async remove(@Param('id') id: string, @CurrentUser() actor: { id: string; role: string }) {

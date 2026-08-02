@@ -5,6 +5,7 @@ import compression from 'compression';
 import { ResponseInterceptor } from './core/response/response.interceptor';
 import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './core/exceptions/global-exception.filter';
+import { AuditLogInterceptor } from './core/interceptors/audit-log.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ZodValidationPipe, patchNestJsSwagger } from 'nestjs-zod';
 import * as dotenv from 'dotenv';
@@ -27,7 +28,7 @@ async function bootstrap() {
 
   // 2. Exception Filter & Response Interceptor
   app.useGlobalFilters(new GlobalExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(new ResponseInterceptor(), new AuditLogInterceptor());
 
   // 3. Validation
   app.useGlobalPipes(new ZodValidationPipe());

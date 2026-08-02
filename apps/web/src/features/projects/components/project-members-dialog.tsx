@@ -16,6 +16,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -45,10 +55,13 @@ export function ProjectMembersDialog({
   const { data: workspaceMembers = [], isLoading: isWorkspaceMembersLoading } =
     useWorkspaceMembers(workspaceId);
   const {
-    data: projectMembers = [],
+    data: projectMembersResp,
     isLoading: isProjectMembersLoading,
     refetch,
   } = useProjectMembers(projectId);
+  const projectMembers = Array.isArray(projectMembersResp)
+    ? projectMembersResp
+    : (projectMembersResp as unknown as { data?: unknown[] })?.data || [];
 
   const createMemberMutation = useCreateProjectMember(projectId);
   const updateMemberMutation = useUpdateProjectMember(projectId);
@@ -56,11 +69,19 @@ export function ProjectMembersDialog({
 
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [selectedRole, setSelectedRole] = useState<string>('MEMBER');
+  const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
 
   // Filter workspace members who are NOT in the project yet
-  const nonProjectMembers = workspaceMembers.filter(
-    (wm) => !projectMembers.some((pm) => (pm.userId || pm.user_id) === wm.id),
-  );
+  const nonProjectMembers = Array.isArray(workspaceMembers)
+    ? workspaceMembers.filter(
+        (wm) =>
+          !projectMembers.some(
+            (pm) =>
+              ((pm as { userId?: string; user_id?: string }).userId ||
+                (pm as { userId?: string; user_id?: string }).user_id) === wm.id,
+          ),
+      )
+    : [];
 
   const handleAddMember = async () => {
     if (!selectedUserId) {
@@ -99,7 +120,6 @@ export function ProjectMembersDialog({
   };
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm('Are you sure you want to remove this member from the project?')) return;
     try {
       await deleteMemberMutation.mutateAsync(memberId);
       toast.success('Member removed from project');
@@ -259,7 +279,7 @@ export function ProjectMembersDialog({
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => handleRemoveMember(member.id)}
+                          onClick={() => setMemberToRemove(member.id)}
                           className="h-8 w-8 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 active:scale-[0.97] transition-all duration-150 cursor-pointer"
                           aria-label={`Remove ${uInfo?.name || 'user'} from project`}
                         >
@@ -274,6 +294,37 @@ export function ProjectMembersDialog({
           </div>
         </div>
       </DialogContent>
+
+      {/* Remove Member Confirmation Alert Dialog */}
+      <AlertDialog open={!!memberToRemove} onOpenChange={() => setMemberToRemove(null)}>
+        <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-400 font-bold">Remove Member</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs">
+              Are you sure you want to remove this member from the project? They will lose access to all boards and tasks inside this project.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setMemberToRemove(null)}
+              className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white rounded-xl text-xs"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (memberToRemove) {
+                  handleRemoveMember(memberToRemove);
+                  setMemberToRemove(null);
+                }
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs"
+            >
+              Remove Member
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

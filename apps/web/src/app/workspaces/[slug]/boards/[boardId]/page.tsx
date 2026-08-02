@@ -19,6 +19,8 @@ import {
 } from '@/features/boards/hooks/use-boards';
 import { EditBoardForm } from '@/features/boards/components/edit-board-form';
 import { TaskDetailModal } from '@/features/boards/components/task-detail-modal';
+import { ProjectMembersDialog } from '@/features/projects/components/project-members-dialog';
+import { useProjectMembers } from '@/features/projects/hooks/use-project-members';
 import { getOrganizationById } from '@/features/organizations/api/organizations.api';
 import { PrioritySummary } from '@/features/boards/types/board.types';
 import { NotificationBell } from '@/features/notifications/components/notification-bell';
@@ -33,6 +35,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -55,6 +67,7 @@ import {
   ArrowUpDown,
   Menu,
   X,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { TaskResponse } from '@/features/boards/types/board.types';
@@ -88,26 +101,34 @@ export default function BoardDetailPage({ params }: PageProps) {
 
   // Current logged in user profile & users list
   const { data: currentUser } = useMe();
-  const { data: allUsers } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: () => getUsers(),
-  });
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => getUsers().catch(() => []),
+    enabled: !!isAdmin,
+  });
 
   // Workspace & Org
   const { data: workspace, isLoading: isWorkspaceLoading } = useWorkspace(slug);
   const { data: organization } = useQuery({
     queryKey: ['organization', workspace?.organization_id],
-    queryFn: () => getOrganizationById(workspace!.organization_id),
+    queryFn: () => getOrganizationById(workspace!.organization_id).catch(() => null),
     enabled: !!workspace?.organization_id,
   });
 
   // Board details
   const { data: board, isLoading: isBoardLoading, isError } = useBoard(boardId);
   const projectId = extractProjectId(board);
+  const { data: projectMembersResp } = useProjectMembers(projectId);
+  const projectMembers = Array.isArray(projectMembersResp)
+    ? projectMembersResp
+    : (projectMembersResp as unknown as { data?: unknown[] })?.data || [];
+  const memberCount = Array.isArray(projectMembers) ? projectMembers.length : 0;
 
   const deleteBoardMutation = useDeleteBoard(projectId);
+  const [isDeleteBoardAlertOpen, setIsDeleteBoardAlertOpen] = useState(false);
   const [isEditBoardModalOpen, setIsEditBoardModalOpen] = useState(false);
+  const [isProjectMembersModalOpen, setIsProjectMembersModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Lists (Columns)
@@ -272,6 +293,15 @@ export default function BoardDetailPage({ params }: PageProps) {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <Button
+              onClick={() => setIsProjectMembersModalOpen(true)}
+              variant="ghost"
+              size="sm"
+              className="border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-xl text-xs"
+            >
+              <Users className="h-3.5 w-3.5 mr-1.5 text-blue-400" />
+              Members ({memberCount})
+            </Button>
             {isAdmin && (
               <>
                 <Button
@@ -284,15 +314,7 @@ export default function BoardDetailPage({ params }: PageProps) {
                   Edit Board
                 </Button>
                 <Button
-                  onClick={() => {
-                    if (confirm(`Are you sure you want to delete board "${board.name}"?`)) {
-                      deleteBoardMutation.mutate(boardId, {
-                        onSuccess: () => {
-                          router.push(`/workspaces/${slug}`);
-                        },
-                      });
-                    }
-                  }}
+                  onClick={() => setIsDeleteBoardAlertOpen(true)}
                   variant="ghost"
                   size="sm"
                   className="border border-zinc-800 bg-zinc-900/60 hover:bg-red-500/10 text-zinc-300 hover:text-red-400 rounded-xl text-xs flex-1 sm:flex-initial"
@@ -498,6 +520,44 @@ export default function BoardDetailPage({ params }: PageProps) {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Board Alert Dialog */}
+        <AlertDialog open={isDeleteBoardAlertOpen} onOpenChange={setIsDeleteBoardAlertOpen}>
+          <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-2xl max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-400 font-bold">Delete Board</AlertDialogTitle>
+              <AlertDialogDescription className="text-zinc-400 text-xs">
+                Are you sure you want to delete <strong className="text-zinc-200">{board.name}</strong>? All lists and tasks inside will be permanently removed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white rounded-xl text-xs">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  deleteBoardMutation.mutate(boardId, {
+                    onSuccess: () => router.push(`/workspaces/${slug}`),
+                  });
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs"
+              >
+                Delete Board
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Project Members Dialog */}
+        {Boolean(projectId && workspace) && (
+          <ProjectMembersDialog
+            projectId={projectId}
+            workspaceId={workspace!.id}
+            projectName={board?.name || ''}
+            open={isProjectMembersModalOpen}
+            onOpenChange={setIsProjectMembersModalOpen}
+          />
+        )}
       </main>
     </div>
   );
@@ -524,6 +584,15 @@ function BoardColumn({
   onMoveTask,
 }: BoardColumnProps) {
   const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+  const { data: projectMembersResp } = useProjectMembers(projectId);
+  const assignableUsers = useMemo(() => {
+    const pms = Array.isArray(projectMembersResp)
+      ? projectMembersResp
+      : (projectMembersResp as unknown as { data?: unknown[] })?.data || [];
+    return (pms as Array<{ user?: AdminUser }>)
+      .map((pm) => pm.user)
+      .filter(Boolean) as AdminUser[];
+  }, [projectMembersResp]);
 
   const { data: tasks, isLoading } = useTasks(list.id);
   const { data: prioritiesResp } = usePriorities(projectId);
@@ -537,6 +606,7 @@ function BoardColumn({
 
   type SortOption = 'date-desc' | 'date-asc' | 'priority-desc' | 'priority-asc';
   const [columnSortBy, setColumnSortBy] = useState<SortOption>('date-desc');
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null);
 
   const getPriorityRank = (pName?: string) => {
     if (!pName) return 0;
@@ -700,10 +770,14 @@ function BoardColumn({
                   e.dataTransfer.setData('text/plain', task.id);
                 }}
                 onClick={() => handleOpenDetails(task)}
-                className={`group bg-zinc-900/60 hover:bg-zinc-900 border border-zinc-900/80 hover:border-zinc-800 rounded-xl p-4 space-y-2 transition-all shadow-sm ${
+                className={`group border rounded-xl p-4 space-y-2 transition-all shadow-sm ${
                   userCanMove
                     ? 'cursor-grab active:cursor-grabbing'
                     : 'cursor-not-allowed opacity-80'
+                } ${
+                  task.status === 'ARCHIVED'
+                    ? 'bg-zinc-950/80 border-zinc-900 opacity-50'
+                    : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-900/80 hover:border-zinc-800'
                 }`}
               >
                 <div className="flex items-start justify-between gap-x-2">
@@ -714,9 +788,7 @@ function BoardColumn({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm('Delete this task?')) {
-                          deleteTaskMutation.mutate(task.id);
-                        }
+                        setTaskToDelete(task.id);
                       }}
                       className="text-zinc-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all shrink-0"
                     >
@@ -949,12 +1021,43 @@ function BoardColumn({
         </DialogContent>
       </Dialog>
 
+      {/* Delete Task Alert Dialog */}
+      <AlertDialog open={!!taskToDelete} onOpenChange={() => setTaskToDelete(null)}>
+        <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-400 font-bold">Delete Task</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs">
+              Are you sure you want to delete this task? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setTaskToDelete(null)}
+              className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white rounded-xl text-xs"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (taskToDelete) {
+                  deleteTaskMutation.mutate(taskToDelete);
+                  setTaskToDelete(null);
+                }
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs"
+            >
+              Delete Task
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Task Details Modal (Subtasks, Comments, Attachments, Assignments, Labels) */}
       <TaskDetailModal
         task={activeTask}
         projectId={projectId}
         priorities={priorities}
-        allUsers={allUsers}
+        allUsers={assignableUsers}
         currentUser={currentUser}
         onClose={() => setActiveTask(null)}
       />

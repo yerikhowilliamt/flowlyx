@@ -57,4 +57,10 @@ export class OrganizationBillingWebhookController {
   handleWebhook(@Body() payload: Record<string, unknown>) {
     return this.organizationBillingService.handleWebhook(payload);
   }
+
+  @Get('sync/:orderId')
+  @ApiOperation({ summary: 'Sync transaction status from Midtrans (fallback for localhost dev)' })
+  syncTransaction(@Param('orderId') orderId: string) {
+    return this.organizationBillingService.syncTransactionStatus(orderId);
+  }
 }

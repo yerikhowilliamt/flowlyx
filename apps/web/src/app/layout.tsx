@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
 import { QueryProvider } from '@/providers/query-provider';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
+import { GlobalAiAssistant } from '@/features/ai/components/global-ai-assistant';
 import './globals.css';
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -48,6 +49,7 @@ export default function RootLayout({
         <QueryProvider>
           {children}
           <Toaster theme="dark" position="bottom-right" />
+          <GlobalAiAssistant />
         </QueryProvider>
       </body>
     </html>

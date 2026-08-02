@@ -33,6 +33,23 @@ export class EmailProcessor extends BaseProcessor {
     });
   }
 
+  async process(job: Job<SendEmailDto, unknown, string>): Promise<unknown> {
+    const startTime = Date.now();
+    this.logger.log(`[JobStarted] ID: ${job.id} | Name: ${job.name} | To: ${job.data.to}`);
+    try {
+      const result = await this.handle(job);
+      const duration = Date.now() - startTime;
+      this.logger.log(`[JobCompleted] ID: ${job.id} | Name: ${job.name} | Duration: ${duration}ms`);
+      return result;
+    } catch (error: unknown) {
+      const duration = Date.now() - startTime;
+      this.logger.error(
+        `[JobFailed] ID: ${job.id} | Name: ${job.name} | Duration: ${duration}ms | Error: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      throw error;
+    }
+  }
+
   async handle(job: Job<SendEmailDto, unknown, string>): Promise<unknown> {
     const { to, subject, text, html } = job.data;
 

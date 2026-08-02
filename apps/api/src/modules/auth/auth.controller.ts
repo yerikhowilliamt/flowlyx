@@ -21,7 +21,7 @@ import { User } from '@flowlyx/database';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { UserResponse } from '../../models/user.model';
 import { ConfigService } from '@nestjs/config';
-import { EnvConfig } from 'src/core/config/env.validation';
+import { EnvConfig } from '../../core/config/env.validation';
 
 @ApiTags('Auth')
 @Controller('auth')

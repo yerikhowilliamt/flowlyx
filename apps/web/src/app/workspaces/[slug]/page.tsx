@@ -217,13 +217,13 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
       <header className="sticky top-0 z-40 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-md">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6">
           {/* Left Breadcrumbs */}
-          <div className="flex items-center gap-x-2 sm:gap-x-3 min-w-0">
+          <div className="flex items-center gap-x-2 sm:gap-x-3 min-w-0 shrink-0">
             <Link href="/organizations" className="flex items-center gap-x-2 group shrink-0">
               <div>
                 <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={70} height={20} priority />
               </div>
             </Link>
-            <span className="text-zinc-800 shrink-0">/</span>
+            <span className="hidden md:inline text-zinc-800 shrink-0">/</span>
             {organization && (
               <>
                 <Link
@@ -236,16 +236,16 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
                 <span className="hidden md:inline text-zinc-800 shrink-0">/</span>
               </>
             )}
-            <div className="flex items-center gap-x-1.5 text-sm text-zinc-200 font-semibold truncate">
+            <div className="sm:flex hidden items-center gap-x-1.5 text-sm text-zinc-200 font-semibold truncate">
               <Layers className="h-3.5 w-3.5 text-orange-500 shrink-0" />
               <span className="truncate">{workspace.name}</span>
             </div>
           </div>
 
           {/* Right Header Actions */}
-          <div className="flex items-center gap-x-2 sm:gap-x-4">
+          <div className="flex flex-1 sm:flex-initial justify-end items-center gap-x-2 sm:gap-x-4">
             {/* Search Input and Dropdown */}
-            <div className="relative w-36 sm:w-56 md:w-64">
+            <div className="relative w-full sm:w-56 md:w-64 ml-2">
               <input
                 type="text"
                 placeholder="Search..."
@@ -255,8 +255,8 @@ export default function WorkspaceDashboardPage({ params }: PageProps) {
                 onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                 className="w-full h-8 pl-3 pr-8 text-xs bg-zinc-900/90 border border-zinc-800 rounded-xl text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-orange-500/80 focus:ring-2 focus:ring-orange-500/20 transition-all"
               />
-              <div className="absolute right-2.5 top-2 pointer-events-none hidden sm:flex items-center">
-                <kbd className="text-[10px] font-mono text-zinc-500 bg-zinc-950 px-1 py-0.5 border border-zinc-800 rounded shadow-2xs">⌘K</kbd>
+              <div className="absolute right-2.5 top-1/2 transform -translate-y-1/2 pointer-events-none hidden sm:flex items-center">
+                <kbd className="text-3xs font-mono text-zinc-500 bg-zinc-950 px-1 py-0.5 border border-zinc-800 rounded shadow-2xs">⌘K</kbd>
               </div>
               {isSearchFocused && searchQuery.trim() && (
                 <div className="absolute right-0 mt-2 w-72 max-h-80 overflow-y-auto bg-zinc-950/95 backdrop-blur-md border border-zinc-800/80 rounded-2xl shadow-2xl z-50 p-2 text-xs divide-y divide-zinc-900/80 scrollbar-none animate-in fade-in-50 zoom-in-95 duration-150">

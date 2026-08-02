@@ -32,6 +32,11 @@ export class ProjectMembersService {
         skip,
         take: limit,
         orderBy: { [sortBy]: sortOrder },
+        include: {
+          user: {
+            select: { id: true, name: true, email: true, avatarUrl: true },
+          },
+        },
       }),
       prisma.projectMember.count({ where }),
     ]);

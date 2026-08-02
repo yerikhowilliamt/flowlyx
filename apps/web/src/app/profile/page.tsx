@@ -20,8 +20,8 @@ export default function ProfilePage() {
             </Link>
           </div>
           <div>
-                          <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={90} height={26} priority />
-                        </div>
+            <Image src={'/Flowlyx.webp'} alt="Flowlyx" width={70} height={20} priority />
+          </div>
         </div>
       </header>
 

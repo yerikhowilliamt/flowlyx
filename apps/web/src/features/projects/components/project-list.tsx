@@ -5,9 +5,17 @@ import { useProjects, useDeleteProject } from '../hooks/use-projects';
 import { CreateProjectForm } from './create-project-form';
 import { EditProjectForm } from './edit-project-form';
 import { ProjectMembersDialog } from './project-members-dialog';
+import { AiProjectActionsDialog } from '@/features/ai/components/ai-project-actions-dialog';
 import { ProjectSummary } from '../types/project.types';
-import { Loader2, Plus, FolderKanban, Briefcase, Calendar, Edit2, Trash2, Users } from 'lucide-react';
+import { Loader2, Plus, FolderKanban, Briefcase, Calendar, Edit2, Trash2, Users, Sparkles, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -15,6 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ProjectListProps {
   workspaceId: string;
@@ -24,10 +42,12 @@ interface ProjectListProps {
 export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) {
   const { data: projects, isLoading, isError, error } = useProjects(workspaceId);
   const deleteProjectMutation = useDeleteProject(workspaceId);
+  const [deletingProject, setDeletingProject] = useState<ProjectSummary | null>(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectSummary | null>(null);
   const [membersProject, setMembersProject] = useState<ProjectSummary | null>(null);
+  const [aiProject, setAiProject] = useState<ProjectSummary | null>(null);
 
   if (isLoading) {
     return (
@@ -103,38 +123,45 @@ export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) 
                     </h3>
                   </div>
                   <div className="flex items-center gap-x-1.5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMembersProject(project);
-                      }}
-                      className="p-1 text-zinc-500 hover:text-orange-400 transition-colors rounded"
-                      title="Manage members"
-                    >
-                      <Users className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingProject(project);
-                      }}
-                      className="p-1 text-zinc-500 hover:text-orange-400 transition-colors rounded"
-                      title="Edit project"
-                    >
-                      <Edit2 className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (confirm(`Are you sure you want to delete project "${project.name}"?`)) {
-                          deleteProjectMutation.mutate(project.id);
-                        }
-                      }}
-                      className="p-1 text-zinc-500 hover:text-red-400 transition-colors rounded"
-                      title="Delete project"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="p-1 text-zinc-500 hover:text-white transition-colors rounded hover:bg-zinc-800" title="Options" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                        <MoreHorizontal className="h-4 w-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 bg-zinc-950 border-zinc-900 text-zinc-50">
+                        <DropdownMenuItem
+                          onClick={(e) => { e.stopPropagation(); setAiProject(project); }}
+                          className="text-xs hover:bg-zinc-900 hover:text-white cursor-pointer group"
+                        >
+                          <Sparkles className="mr-2 h-4 w-4 text-orange-500 group-hover:text-orange-400" />
+                          AI Tools
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-zinc-900" />
+                        <DropdownMenuItem
+                          onClick={(e) => { e.stopPropagation(); setMembersProject(project); }}
+                          className="text-xs hover:bg-zinc-900 hover:text-white cursor-pointer"
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          Manage Members
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => { e.stopPropagation(); setEditingProject(project); }}
+                          className="text-xs hover:bg-zinc-900 hover:text-white cursor-pointer"
+                        >
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          Edit Project
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingProject(project);
+                          }}
+                          className="text-xs text-red-500 focus:text-red-400 hover:bg-zinc-900 cursor-pointer"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 {project.description && (
@@ -201,6 +228,47 @@ export function ProjectList({ workspaceId, onSelectProject }: ProjectListProps) 
           onOpenChange={(open) => !open && setMembersProject(null)}
         />
       )}
+
+      {/* AI Actions Modal */}
+      {aiProject && (
+        <AiProjectActionsDialog
+          projectId={aiProject.id}
+          projectName={aiProject.name}
+          open={!!aiProject}
+          onOpenChange={(open) => !open && setAiProject(null)}
+        />
+      )}
+
+      {/* Delete Project Alert Dialog */}
+      <AlertDialog open={!!deletingProject} onOpenChange={() => setDeletingProject(null)}>
+        <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-400 font-bold">Delete Project</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs">
+              Are you sure you want to delete <strong className="text-zinc-200">{deletingProject?.name}</strong>? All boards and tasks inside will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setDeletingProject(null)}
+              className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white rounded-xl text-xs"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deletingProject) {
+                  deleteProjectMutation.mutate(deletingProject.id);
+                  setDeletingProject(null);
+                }
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs"
+            >
+              Delete Project
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

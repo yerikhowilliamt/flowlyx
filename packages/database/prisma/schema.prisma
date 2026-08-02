@@ -594,6 +594,8 @@ model PaymentTransaction {
   status         String    @default("PENDING") @map("status") // PENDING, SETTLEMENT, EXPIRE, CANCEL, DENY
   paymentType    String?   @map("payment_type") // e.g. credit_card, gopay
   transactionId  String?   @map("transaction_id") // Midtrans transaction_id
+  plan           String?   @map("plan") // FREE, PRO, ENTERPRISE
+  billingCycle   String?   @map("billing_cycle") // MONTHLY, YEARLY
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 

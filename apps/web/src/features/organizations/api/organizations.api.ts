@@ -54,6 +54,13 @@ export const getBillingInfo = async (organizationId: string): Promise<BillingInf
   return response.data;
 };
 
+export const syncBillingTransaction = async (orderId: string): Promise<{ synced: boolean; status: string }> => {
+  const response = await api.get<ApiResponse<{ synced: boolean; status: string }>>(
+    `/billing/sync/${orderId}`,
+  );
+  return response.data;
+};
+
 export const updateBillingPlan = async (
   organizationId: string,
   data: UpdatePlanPayload,

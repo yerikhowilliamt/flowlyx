@@ -2,21 +2,28 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getUsers, getSystemConfigs, getAuditLogs } from '@/features/admin/api/admin.api';
+import { getOrganizations } from '@/features/organizations/api/organizations.api';
 import { AdminOverviewStats } from '@/features/admin/components/admin-overview-stats';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Settings, Activity, ArrowRight } from 'lucide-react';
+import { Users, Settings, Activity, ArrowRight, Building2 } from 'lucide-react';
 import Link from 'next/link';
 
 function useAdminStats() {
   return useQuery({
     queryKey: ['admin', 'stats'],
     queryFn: async () => {
-      const [users, configs, logs] = await Promise.all([
+      const [users, configs, logs, orgs] = await Promise.all([
         getUsers().catch(() => []),
         getSystemConfigs().catch(() => []),
         getAuditLogs().catch(() => []),
+        getOrganizations().catch(() => []),
       ]);
-      return { userCount: users.length, configCount: configs.length, auditCount: logs.length };
+      return {
+        userCount: users.length,
+        configCount: configs.length,
+        auditCount: logs.length,
+        orgCount: orgs.length,
+      };
     },
   });
 }
@@ -36,11 +43,12 @@ export default function AdminOverviewPage() {
 
       <AdminOverviewStats
         userCount={data?.userCount ?? 0}
+        orgCount={data?.orgCount ?? 0}
         configCount={data?.configCount ?? 0}
         auditCount={data?.auditCount ?? 0}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="bg-zinc-900/60 border-zinc-800 hover:border-orange-500/30 transition-all group">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -59,6 +67,28 @@ export default function AdminOverviewPage() {
               className="inline-flex items-center gap-2 text-xs font-semibold text-orange-400 group-hover:text-orange-300"
             >
               Go to Users <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-zinc-900/60 border-zinc-800 hover:border-orange-500/30 transition-all group">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base font-semibold text-white flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-orange-400" />
+                Organization Management
+              </CardTitle>
+            </div>
+            <CardDescription className="text-zinc-400 text-xs">
+              Manage tenant organizations, add new tenants, or remove existing ones.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link
+              href="/admin/organizations"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-orange-400 group-hover:text-orange-300"
+            >
+              Go to Organizations <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </CardContent>
         </Card>

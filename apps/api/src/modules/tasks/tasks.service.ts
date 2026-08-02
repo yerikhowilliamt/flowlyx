@@ -96,15 +96,63 @@ export class TasksService {
   async update(id: string, updateTaskDto: UpdateTaskDto, currentUser?: User): Promise<Task> {
     const task = await prisma.task.findUnique({
       where: { id },
-      include: { taskAssignments: true },
+      include: { 
+        taskAssignments: true,
+        list: {
+          include: {
+            board: {
+              include: {
+                project: {
+                  include: {
+                    members: {
+                      where: { userId: currentUser?.id }
+                    },
+                    workspace: {
+                      include: {
+                        organization: {
+                          include: {
+                            members: {
+                              where: { userId: currentUser?.id }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
     });
     if (!task) {
       throw new NotFoundException('Task not found');
     }
 
+    if (currentUser && updateTaskDto.status !== undefined) {
+      const isSuperAdmin = currentUser.role === Role.SUPER_ADMIN;
+      
+      let hasAccess = isSuperAdmin;
+      
+      if (!isSuperAdmin) {
+        // Cast to any since prisma return type inference fails for deep includes sometimes
+        const taskData = task as any;
+        const isProjectMember = taskData.list?.board?.project?.members?.length > 0;
+        const orgMember = taskData.list?.board?.project?.workspace?.organization?.members?.[0];
+        const isOrgAdmin = orgMember && ['OWNER', 'ADMIN'].includes(orgMember.role);
+        
+        hasAccess = isProjectMember || isOrgAdmin;
+      }
+
+      if (!hasAccess) {
+        throw new ForbiddenException('You do not have permission to change the task status');
+      }
+    }
+
     if (currentUser) {
       const isAdmin = this.isAdmin(currentUser);
-      const isAssigned = task.taskAssignments.some((a) => a.userId === currentUser.id);
+      const isAssigned = (task as any).taskAssignments?.some((a: any) => a.userId === currentUser.id);
 
       if (!isAdmin && !isAssigned) {
         throw new ForbiddenException('Only administrators and assigned users can update or move this task');

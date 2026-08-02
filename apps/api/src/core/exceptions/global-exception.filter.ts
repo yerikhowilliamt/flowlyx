@@ -25,9 +25,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const responseBody = exception.getResponse() as Record<string, unknown>;
-      errorCode = (responseBody.error as string) || errorCode;
-      message = (responseBody.message as string) || exception.message;
+      const responseBody = exception.getResponse() as any;
+      errorCode = responseBody?.error || errorCode;
+      message = responseBody?.message || exception.message;
+
+      // Handle nestjs-zod validation errors wrapped in HttpException
+      if (status === HttpStatus.BAD_REQUEST && responseBody?.message === 'Validation failed') {
+        errorCode = 'VALIDATION_ERROR';
+        // Extract the actual error message from Zod issues if available
+        if (responseBody.errors && Array.isArray(responseBody.errors)) {
+          message = responseBody.errors.map((e: any) => e.message).join(', ') || 'Input validation failed';
+          details = responseBody.errors;
+        }
+      }
     } else if (exception instanceof ZodError) {
       status = HttpStatus.BAD_REQUEST;
       errorCode = 'VALIDATION_ERROR';

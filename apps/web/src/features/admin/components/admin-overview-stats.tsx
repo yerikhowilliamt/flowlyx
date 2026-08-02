@@ -1,15 +1,21 @@
 'use client';
 
-import { Users, Settings, Activity, CheckCircle2 } from 'lucide-react';
+import { Users, Settings, Activity, CheckCircle2, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface OverviewStatsProps {
   userCount: number;
+  orgCount?: number;
   configCount: number;
   auditCount: number;
 }
 
-export function AdminOverviewStats({ userCount, configCount, auditCount }: OverviewStatsProps) {
+export function AdminOverviewStats({
+  userCount,
+  orgCount = 0,
+  configCount,
+  auditCount,
+}: OverviewStatsProps) {
   const stats = [
     {
       title: 'Total System Users',
@@ -19,6 +25,15 @@ export function AdminOverviewStats({ userCount, configCount, auditCount }: Overv
       color: 'text-blue-400',
       bg: 'bg-blue-500/10',
       border: 'border-blue-500/20',
+    },
+    {
+      title: 'Organizations',
+      value: orgCount,
+      description: 'Active tenant organizations',
+      icon: Building2,
+      color: 'text-orange-400',
+      bg: 'bg-orange-500/10',
+      border: 'border-orange-500/20',
     },
     {
       title: 'System Configurations',
@@ -50,7 +65,7 @@ export function AdminOverviewStats({ userCount, configCount, auditCount }: Overv
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
       {stats.map((stat, i) => {
         const Icon = stat.icon;
         return (
