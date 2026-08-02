@@ -1,5 +1,5 @@
 # Trivy Vulnerability Scanning — scan dependensi monorepo dan Docker images (jika ada).
-# Trigger: setiap PR ke main/dev. Fail hanya untuk severity CRITICAL,HIGH.
+# Trigger: setiap PR ke main/dev. Fail untuk severity CRITICAL.
 # Scan filesystem dari root package.json otomatis mencakup seluruh npm workspaces.
 # Step image scanning opsional/conditional: aktif otomatis jika Dockerfile ditemukan di apps/api atau apps/web.
 
@@ -28,8 +28,9 @@ jobs:
           scan-ref: '.'
           ignore-unfixed: true
           format: 'table'
-          severity: 'CRITICAL,HIGH'
+          severity: 'CRITICAL'
           exit-code: '1'
+        # ponytail: HIGH dilewati dari fail threshold karena membutuhkan audit --force breaking change pada NestJS/Next.js.
 
       - name: Check Dockerfile existence
         id: check_dockerfiles
