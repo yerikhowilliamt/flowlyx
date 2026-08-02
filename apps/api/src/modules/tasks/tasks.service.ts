@@ -137,7 +137,9 @@ export class TasksService {
       
       if (!isSuperAdmin) {
         // Cast to any since prisma return type inference fails for deep includes sometimes
-        const taskData = task as any;
+        const taskData = task as Prisma.TaskGetPayload<{
+          include: { list: { include: { board: { include: { project: { include: { members: true; workspace: { include: { organization: { include: { members: true } } } } } } } } } }; taskAssignments: true;
+        }>;
         const isProjectMember = taskData.list?.board?.project?.members?.length > 0;
         const orgMember = taskData.list?.board?.project?.workspace?.organization?.members?.[0];
         const isOrgAdmin = orgMember && ['OWNER', 'ADMIN'].includes(orgMember.role);
@@ -152,7 +154,7 @@ export class TasksService {
 
     if (currentUser) {
       const isAdmin = this.isAdmin(currentUser);
-      const isAssigned = (task as any).taskAssignments?.some((a: any) => a.userId === currentUser.id);
+      const isAssigned = (task as { taskAssignments: { userId: string }[] }).taskAssignments?.some((a) => a.userId === currentUser.id);
 
       if (!isAdmin && !isAssigned) {
         throw new ForbiddenException('Only administrators and assigned users can update or move this task');

@@ -25,17 +25,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      const responseBody = exception.getResponse() as any;
-      errorCode = responseBody?.error || errorCode;
-      message = responseBody?.message || exception.message;
+      const responseBody = exception.getResponse() as Record<string, unknown> | string;
+      errorCode = typeof responseBody === 'object' && responseBody !== null && typeof responseBody.error === 'string' ? responseBody.error : errorCode;
+      message = typeof responseBody === 'object' && responseBody !== null && typeof responseBody.message === 'string' ? responseBody.message : exception.message;
 
       // Handle nestjs-zod validation errors wrapped in HttpException
-      if (status === HttpStatus.BAD_REQUEST && responseBody?.message === 'Validation failed') {
+      if (status === HttpStatus.BAD_REQUEST && message === 'Validation failed') {
         errorCode = 'VALIDATION_ERROR';
+        const errors = typeof responseBody === 'object' && responseBody !== null && Array.isArray(responseBody.errors) ? responseBody.errors : [];
         // Extract the actual error message from Zod issues if available
-        if (responseBody.errors && Array.isArray(responseBody.errors)) {
-          message = responseBody.errors.map((e: any) => e.message).join(', ') || 'Input validation failed';
-          details = responseBody.errors;
+        if (errors.length > 0) {
+          message = errors.map((e) => (e as { message: string }).message).join(', ') || 'Input validation failed';
+          details = errors;
         }
       }
     } else if (exception instanceof ZodError) {
