@@ -1,4 +1,3 @@
-'use me';
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
@@ -54,49 +53,75 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
 
   useEffect(() => {
     if (!user) return;
-    async function loadInitialData() {
+    let mounted = true;
+
+    (async () => {
       try {
-        const loadedOrgs = await getOrganizations().catch(() => []);
-        setOrgs(loadedOrgs);
-        if (loadedOrgs.length > 0) {
-          setSelectedOrg(loadedOrgs[0].id);
-        }
+        const loadedOrgs = await getOrganizations();
+        if (!mounted) return;
+        const orgsToSet = loadedOrgs ?? [];
+        setOrgs(orgsToSet);
+        if (orgsToSet.length > 0) setSelectedOrg(orgsToSet[0].id);
       } catch {
-        // Ignored
+        if (mounted) setOrgs([]);
       }
-    }
-    loadInitialData();
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
-  // Load workspaces when selectedOrg changes (for both WORKSPACE and PROJECT targets)
   useEffect(() => {
-    if ((targetType === 'WORKSPACE' || targetType === 'PROJECT') && selectedOrg) {
-      getWorkspaces(selectedOrg)
-        .then((data) => {
-          setWorkspaces(data);
-          if (data.length > 0) {
-            setSelectedWorkspace(data[0].id);
-          } else {
+    let mounted = true;
+
+    (async () => {
+      if ((targetType === 'WORKSPACE' || targetType === 'PROJECT') && selectedOrg) {
+        try {
+          const data = await getWorkspaces(selectedOrg);
+          if (!mounted) return;
+          setWorkspaces(data ?? []);
+          setSelectedWorkspace(data && data.length > 0 ? data[0].id : '');
+        } catch {
+          if (mounted) {
+            setWorkspaces([]);
             setSelectedWorkspace('');
           }
-        })
-        .catch(() => setWorkspaces([]));
-    } else {
-      setWorkspaces([]);
-      setSelectedWorkspace('');
-    }
+        }
+      } else if (mounted) {
+        // Clear when target changes or no org selected
+        setWorkspaces([]);
+        setSelectedWorkspace('');
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [targetType, selectedOrg]);
 
-  // Load projects when selectedWorkspace changes
   useEffect(() => {
-    if (targetType === 'PROJECT' && selectedWorkspace) {
-      getProjects(selectedWorkspace)
-        .then((data) => {
-          setProjects(data);
-          if (data.length > 0) setSelectedProject(data[0].id);
-        })
-        .catch(() => setProjects([]));
-    }
+    let mounted = true;
+
+    (async () => {
+      if (targetType === 'PROJECT' && selectedWorkspace) {
+        try {
+          const data = await getProjects(selectedWorkspace);
+          if (!mounted) return;
+          setProjects(data ?? []);
+          setSelectedProject(data && data.length > 0 ? data[0].id : '');
+        } catch {
+          if (mounted) setProjects([]);
+        }
+      } else if (mounted) {
+        setProjects([]);
+        setSelectedProject('');
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [targetType, selectedWorkspace]);
 
   const handleAssign = async (e: FormEvent) => {
@@ -155,7 +180,7 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
   };
 
   return (
-    <Dialog open={!!user} onOpenChange={() => onClose()}>
+    <Dialog open={!!user} onOpenChange={onClose}>
       <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Assign User to Context</DialogTitle>
@@ -205,7 +230,9 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
                   {orgs.length === 0 ? (
-                    <div className="p-2 text-xs text-zinc-500 text-center">No organizations found</div>
+                    <div className="p-2 text-xs text-zinc-500 text-center">
+                      No organizations found
+                    </div>
                   ) : (
                     orgs.map((o) => (
                       <SelectItem key={o.id} value={o.id}>
@@ -233,7 +260,9 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
                     {orgs.length === 0 ? (
-                      <div className="p-2 text-xs text-zinc-500 text-center">No organizations found</div>
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No organizations found
+                      </div>
                     ) : (
                       orgs.map((o) => (
                         <SelectItem key={o.id} value={o.id}>
@@ -258,7 +287,9 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
                     {workspaces.length === 0 ? (
-                      <div className="p-2 text-xs text-zinc-500 text-center">No workspaces in this organization</div>
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No workspaces in this organization
+                      </div>
                     ) : (
                       workspaces.map((w) => (
                         <SelectItem key={w.id} value={w.id}>
@@ -287,7 +318,9 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
                     {orgs.length === 0 ? (
-                      <div className="p-2 text-xs text-zinc-500 text-center">No organizations found</div>
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No organizations found
+                      </div>
                     ) : (
                       orgs.map((o) => (
                         <SelectItem key={o.id} value={o.id}>
@@ -312,7 +345,9 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
                     {workspaces.length === 0 ? (
-                      <div className="p-2 text-xs text-zinc-500 text-center">No workspaces in this organization</div>
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No workspaces in this organization
+                      </div>
                     ) : (
                       workspaces.map((w) => (
                         <SelectItem key={w.id} value={w.id}>
@@ -337,7 +372,9 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
                     {projects.length === 0 ? (
-                      <div className="p-2 text-xs text-zinc-500 text-center">No projects in this workspace</div>
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No projects in this workspace
+                      </div>
                     ) : (
                       projects.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
