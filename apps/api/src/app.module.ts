@@ -50,6 +50,8 @@ import { AiProjectSummaryModule } from './modules/ai-project-summary/ai-project-
 import { AiSprintPlanningModule } from './modules/ai-sprint-planning/ai-sprint-planning.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { IntegrationsModule } from './modules/integrations/integrations.module';
+import { MobileModule } from './modules/mobile/mobile.module';
 
 @Module({
   imports: [
@@ -107,6 +109,8 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     AiSprintPlanningModule,
     ReportingModule,
     AnalyticsModule,
+    IntegrationsModule,
+    MobileModule,
   ],
   controllers: [],
   providers: [

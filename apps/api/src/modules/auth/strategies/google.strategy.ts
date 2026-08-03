@@ -29,7 +29,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     const user = {
       googleId: id,
       email: emails[0].value,
-      name: displayName,
+      name: displayName || emails[0].value.split('@')[0],
       avatarUrl: photos?.[0]?.value,
     };
 

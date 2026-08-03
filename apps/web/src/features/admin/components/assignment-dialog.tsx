@@ -1,4 +1,3 @@
-'use me';
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
@@ -54,42 +53,75 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
 
   useEffect(() => {
     if (!user) return;
-    async function loadInitialData() {
+    let mounted = true;
+
+    (async () => {
       try {
-        const loadedOrgs = await getOrganizations().catch(() => []);
-        setOrgs(loadedOrgs);
-        if (loadedOrgs.length > 0) {
-          setSelectedOrg(loadedOrgs[0].id);
-        }
+        const loadedOrgs = await getOrganizations();
+        if (!mounted) return;
+        const orgsToSet = loadedOrgs ?? [];
+        setOrgs(orgsToSet);
+        if (orgsToSet.length > 0) setSelectedOrg(orgsToSet[0].id);
       } catch {
-        // Ignored
+        if (mounted) setOrgs([]);
       }
-    }
-    loadInitialData();
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
-  // Load workspaces when selectedOrg changes
   useEffect(() => {
-    if (targetType === 'WORKSPACE' && selectedOrg) {
-      getWorkspaces(selectedOrg)
-        .then((data) => {
-          setWorkspaces(data);
-          if (data.length > 0) setSelectedWorkspace(data[0].id);
-        })
-        .catch(() => setWorkspaces([]));
-    }
+    let mounted = true;
+
+    (async () => {
+      if ((targetType === 'WORKSPACE' || targetType === 'PROJECT') && selectedOrg) {
+        try {
+          const data = await getWorkspaces(selectedOrg);
+          if (!mounted) return;
+          setWorkspaces(data ?? []);
+          setSelectedWorkspace(data && data.length > 0 ? data[0].id : '');
+        } catch {
+          if (mounted) {
+            setWorkspaces([]);
+            setSelectedWorkspace('');
+          }
+        }
+      } else if (mounted) {
+        // Clear when target changes or no org selected
+        setWorkspaces([]);
+        setSelectedWorkspace('');
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [targetType, selectedOrg]);
 
-  // Load projects when selectedWorkspace changes
   useEffect(() => {
-    if (targetType === 'PROJECT' && selectedWorkspace) {
-      getProjects(selectedWorkspace)
-        .then((data) => {
-          setProjects(data);
-          if (data.length > 0) setSelectedProject(data[0].id);
-        })
-        .catch(() => setProjects([]));
-    }
+    let mounted = true;
+
+    (async () => {
+      if (targetType === 'PROJECT' && selectedWorkspace) {
+        try {
+          const data = await getProjects(selectedWorkspace);
+          if (!mounted) return;
+          setProjects(data ?? []);
+          setSelectedProject(data && data.length > 0 ? data[0].id : '');
+        } catch {
+          if (mounted) setProjects([]);
+        }
+      } else if (mounted) {
+        setProjects([]);
+        setSelectedProject('');
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [targetType, selectedWorkspace]);
 
   const handleAssign = async (e: FormEvent) => {
@@ -148,7 +180,7 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
   };
 
   return (
-    <Dialog open={!!user} onOpenChange={() => onClose()}>
+    <Dialog open={!!user} onOpenChange={onClose}>
       <DialogContent className="bg-zinc-900 border-zinc-800 text-white sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Assign User to Context</DialogTitle>
@@ -197,11 +229,17 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
-                  {orgs.map((o) => (
-                    <SelectItem key={o.id} value={o.id}>
-                      {o.name}
-                    </SelectItem>
-                  ))}
+                  {orgs.length === 0 ? (
+                    <div className="p-2 text-xs text-zinc-500 text-center">
+                      No organizations found
+                    </div>
+                  ) : (
+                    orgs.map((o) => (
+                      <SelectItem key={o.id} value={o.id}>
+                        {o.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             )}
@@ -221,35 +259,46 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
-                    {orgs.map((o) => (
-                      <SelectItem key={o.id} value={o.id}>
-                        {o.name}
-                      </SelectItem>
-                    ))}
+                    {orgs.length === 0 ? (
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No organizations found
+                      </div>
+                    ) : (
+                      orgs.map((o) => (
+                        <SelectItem key={o.id} value={o.id}>
+                          {o.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
-                {selectedOrg && (
-                  <Select
-                    value={selectedWorkspace}
-                    onValueChange={(val) => {
-                      if (val) setSelectedWorkspace(val);
-                    }}
-                  >
-                    <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-200">
-                      <SelectValue placeholder="Select Workspace">
-                        {workspaces.find((w) => w.id === selectedWorkspace)?.name ||
-                          'Select Workspace'}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
-                      {workspaces.map((w) => (
+                <Select
+                  value={selectedWorkspace}
+                  onValueChange={(val) => {
+                    if (val) setSelectedWorkspace(val);
+                  }}
+                  disabled={!selectedOrg || workspaces.length === 0}
+                >
+                  <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-200">
+                    <SelectValue placeholder="Select Workspace">
+                      {workspaces.find((w) => w.id === selectedWorkspace)?.name ||
+                        (!selectedOrg ? 'Select Organization first...' : 'Select Workspace')}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
+                    {workspaces.length === 0 ? (
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No workspaces in this organization
+                      </div>
+                    ) : (
+                      workspaces.map((w) => (
                         <SelectItem key={w.id} value={w.id}>
                           {w.name}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
@@ -268,56 +317,73 @@ export function AssignmentDialog({ user, onClose }: AssignmentDialogProps) {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
-                    {orgs.map((o) => (
-                      <SelectItem key={o.id} value={o.id}>
-                        {o.name}
-                      </SelectItem>
-                    ))}
+                    {orgs.length === 0 ? (
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No organizations found
+                      </div>
+                    ) : (
+                      orgs.map((o) => (
+                        <SelectItem key={o.id} value={o.id}>
+                          {o.name}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
-                {selectedOrg && (
-                  <Select
-                    value={selectedWorkspace}
-                    onValueChange={(val) => {
-                      if (val) setSelectedWorkspace(val);
-                    }}
-                  >
-                    <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-200">
-                      <SelectValue placeholder="-- Choose Workspace --">
-                        {workspaces.find((w) => w.id === selectedWorkspace)?.name ||
-                          '-- Choose Workspace --'}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
-                      {workspaces.map((w) => (
+                <Select
+                  value={selectedWorkspace}
+                  onValueChange={(val) => {
+                    if (val) setSelectedWorkspace(val);
+                  }}
+                  disabled={!selectedOrg || workspaces.length === 0}
+                >
+                  <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-200">
+                    <SelectValue placeholder="-- Choose Workspace --">
+                      {workspaces.find((w) => w.id === selectedWorkspace)?.name ||
+                        (!selectedOrg ? 'Select Organization first...' : '-- Choose Workspace --')}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
+                    {workspaces.length === 0 ? (
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No workspaces in this organization
+                      </div>
+                    ) : (
+                      workspaces.map((w) => (
                         <SelectItem key={w.id} value={w.id}>
                           {w.name}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-                {selectedWorkspace && (
-                  <Select
-                    value={selectedProject}
-                    onValueChange={(val) => {
-                      if (val) setSelectedProject(val);
-                    }}
-                  >
-                    <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-200">
-                      <SelectValue placeholder="Select Project">
-                        {projects.find((p) => p.id === selectedProject)?.name || 'Select Project'}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
-                      {projects.map((p) => (
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={selectedProject}
+                  onValueChange={(val) => {
+                    if (val) setSelectedProject(val);
+                  }}
+                  disabled={!selectedWorkspace || projects.length === 0}
+                >
+                  <SelectTrigger className="w-full bg-zinc-950 border-zinc-800 text-zinc-200">
+                    <SelectValue placeholder="Select Project">
+                      {projects.find((p) => p.id === selectedProject)?.name ||
+                        (!selectedWorkspace ? 'Select Workspace first...' : 'Select Project')}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-200">
+                    {projects.length === 0 ? (
+                      <div className="p-2 text-xs text-zinc-500 text-center">
+                        No projects in this workspace
+                      </div>
+                    ) : (
+                      projects.map((p) => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.name}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             )}
           </div>

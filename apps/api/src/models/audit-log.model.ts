@@ -1,18 +1,28 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 
 export class AuditLogResponse {
-  @ApiProperty() id!: string;
-  @ApiProperty() action!: string;
-  @ApiProperty() entityId!: string;
-  @ApiProperty() entityType!: string;
-  @ApiProperty() userId!: string;
-  @ApiPropertyOptional() oldValues?: object;
-  @ApiPropertyOptional() newValues?: object;
-  @ApiProperty() createdAt!: Date;
+  @Expose() @ApiProperty() id!: string;
+  @Expose() @ApiProperty() action!: string;
+  @Expose() @ApiPropertyOptional() resourceType?: string;
+  @Expose() @ApiPropertyOptional() resourceId?: string;
+  @Expose() @ApiPropertyOptional() userId?: string;
+  @Expose() @ApiPropertyOptional() details?: object;
+  @Expose() @ApiPropertyOptional() ipAddress?: string;
+  @Expose() @ApiPropertyOptional() userAgent?: string;
+  @Expose() @ApiPropertyOptional() user?: { id: string; name: string; email: string };
+  @Expose() @ApiProperty() createdAt!: Date;
 }
 
 export class AuditLogSummary {
-  @ApiProperty() id!: string;
-  @ApiProperty() action!: string;
-  @ApiProperty() createdAt!: Date;
+  @Expose() @ApiProperty() id!: string;
+  @Expose() @ApiProperty() action!: string;
+  @Expose() @ApiPropertyOptional() resourceType?: string;
+  @Expose() @ApiPropertyOptional() resourceId?: string;
+  @Expose() @ApiPropertyOptional() userId?: string;
+  @Expose() @ApiPropertyOptional() details?: object;
+  @Expose() @ApiPropertyOptional() ipAddress?: string;
+  @Expose() @ApiPropertyOptional() userAgent?: string;
+  @Expose() @ApiPropertyOptional() user?: { id: string; name: string; email: string };
+  @Expose() @ApiProperty() createdAt!: Date;
 }

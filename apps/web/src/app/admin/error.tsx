@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+
 export default function AdminError({
   error,
   reset,
@@ -17,12 +19,12 @@ export default function AdminError({
           <p className="text-zinc-600 text-xs font-mono">Error ID: {error.digest}</p>
         )}
       </div>
-      <button
+      <Button
         onClick={reset}
         className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
       >
         Try again
-      </button>
+      </Button>
     </div>
   );
 }

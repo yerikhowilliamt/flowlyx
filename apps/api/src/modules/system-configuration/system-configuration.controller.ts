@@ -46,7 +46,7 @@ export class SystemConfigurationController {
   @ApiOperation({ summary: 'List all system configurations' })
   @ApiOkResponse({ type: [SystemConfigurationResponse] })
   @Serialize([SystemConfigurationResponse])
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @Get()
   async findAll(@Query() query: PaginationDto): Promise<unknown> {
     return this.systemConfigurationService.findAll(query);
@@ -55,7 +55,7 @@ export class SystemConfigurationController {
   @ApiOperation({ summary: 'Get a system configuration by key' })
   @ApiOkResponse({ type: SystemConfigurationResponse })
   @Serialize(SystemConfigurationResponse)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.SUPER_ADMIN)
   @Get(':key')
   async findOne(@Param('key') key: string): Promise<unknown> {
     return this.systemConfigurationService.findByKey(key);

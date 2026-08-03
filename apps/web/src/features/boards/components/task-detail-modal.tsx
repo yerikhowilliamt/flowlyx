@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { TaskResponse, PrioritySummary } from '../types/board.types';
 import { AdminUser } from '@/features/admin/types/admin.types';
+import { AiMagicButton } from '@/features/ai/components/ai-magic-button';
 import { LabelItem, TaskAttachmentItem } from '../api/task-details.api';
 import {
   useSubtasks,
@@ -32,6 +33,7 @@ import {
   useDeleteTimeEntry,
 } from '../hooks/use-time-tracking';
 import { useActivities } from '../hooks/use-activities';
+import { useUpdateTask } from '../hooks/use-boards';
 import {
   Dialog,
   DialogContent,
@@ -126,8 +128,11 @@ export function TaskDetailModal({
   allUsers = [],
   currentUser,
   onClose,
+  onUpdateTask,
 }: TaskDetailModalProps) {
   const taskId = task?.id || '';
+
+  const updateTaskMutation = useUpdateTask();
 
   // Subtasks
   const { data: subtasks = [], isLoading: isSubtasksLoading } = useSubtasks(task ? taskId : undefined);
@@ -309,9 +314,32 @@ export function TaskDetailModal({
         <DialogHeader className="text-left space-y-2 border-b border-zinc-900 pb-4">
           <div className="flex items-center justify-between gap-x-4">
             <div className="flex items-center gap-x-2">
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-orange-500">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded border ${
+                task.status === 'ARCHIVED' 
+                  ? 'bg-zinc-900 border-zinc-800 text-zinc-500' 
+                  : 'bg-zinc-900 border-zinc-800 text-orange-500'
+              }`}>
                 Task Detail
               </span>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  const nextStatus = task.status === 'ARCHIVED' ? 'ACTIVE' : 'ARCHIVED';
+                  if (onUpdateTask) {
+                    onUpdateTask({ status: nextStatus });
+                  }
+                  updateTaskMutation.mutate({ id: task.id, data: { status: nextStatus } as unknown as Parameters<typeof updateTaskMutation.mutate>[0]['data'] });
+                }}
+                className={`text-xs font-semibold px-2.5 py-1 rounded border transition-colors cursor-pointer ${
+                  task.status === 'ARCHIVED'
+                    ? 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'
+                    : 'bg-zinc-900 border-orange-500/50 text-orange-500 hover:bg-orange-500/10'
+                }`}
+              >
+                {task.status === 'ARCHIVED' ? 'Archived' : 'Active'}
+              </button>
+
               {(() => {
                 const targetPId = task.priorityId || (task as unknown as { priority_id?: string })?.priority_id;
                 const p = priorities.find((item) => item.id === targetPId);
@@ -341,7 +369,21 @@ export function TaskDetailModal({
             {task.title}
           </DialogTitle>
           <DialogDescription className="text-sm text-zinc-400">
-            {task.description || 'No description provided for this task.'}
+            <div className="flex flex-col gap-2">
+              <div>{task.description || 'No description provided for this task.'}</div>
+              {task.description && task.description.trim() !== '' && (
+                <div className="mt-1">
+                  <AiMagicButton 
+                    type="summarize" 
+                    inputValue={task.description}
+                    onResult={(res) => {
+                      // Fallback as a quick view via alert for now, or update description in UI
+                      alert('AI Summary:\n\n' + res);
+                    }} 
+                  />
+                </div>
+              )}
+            </div>
           </DialogDescription>
         </DialogHeader>
 
@@ -456,6 +498,22 @@ export function TaskDetailModal({
                   <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-300">
                     Subtasks ({completedSubtasksCount}/{subtasks.length})
                   </h4>
+                  <AiMagicButton 
+                    type="suggest-task"
+                    inputValue={
+                      subtasks.length > 0 
+                        ? `${task.description || task.title}\n\nExisting subtasks to avoid duplicating:\n${subtasks.map(s => `- ${s.title}`).join('\n')}` 
+                        : (task.description || task.title)
+                    }
+                    onResult={(res) => {
+                      const firstSubtaskTitle = res
+                        .split('\n')
+                        .filter(Boolean)[1]
+                        ?.replace(/^- /, '')
+                        .trim();
+                      if (firstSubtaskTitle) setNewSubtaskTitle(firstSubtaskTitle);
+                    }}
+                  />
                 </div>
                 {subtasks.length > 0 && (
                   <span className="text-2xs font-semibold text-orange-400">

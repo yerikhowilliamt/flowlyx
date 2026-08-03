@@ -23,6 +23,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import Link from 'next/link';
 
 interface BoardListProps {
@@ -56,6 +66,7 @@ export function BoardList({
 
   const { data: boards, isLoading, isError, error } = useBoards(activeProjectId);
   const deleteBoardMutation = useDeleteBoard(activeProjectId);
+  const [deletingBoard, setDeletingBoard] = useState<BoardSummary | null>(null);
 
   if (!projects || projects.length === 0) {
     return (
@@ -180,9 +191,7 @@ export function BoardList({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(`Are you sure you want to delete board "${board.name}"?`)) {
-                          deleteBoardMutation.mutate(board.id);
-                        }
+                        setDeletingBoard(board);
                       }}
                       className="p-1 text-zinc-500 hover:text-red-400 transition-colors rounded"
                       title="Delete board"
@@ -245,6 +254,37 @@ export function BoardList({
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Board Alert Dialog */}
+      <AlertDialog open={!!deletingBoard} onOpenChange={() => setDeletingBoard(null)}>
+        <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-2xl max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-400 font-bold">Delete Board</AlertDialogTitle>
+            <AlertDialogDescription className="text-zinc-400 text-xs">
+              Are you sure you want to delete <strong className="text-zinc-200">{deletingBoard?.name}</strong>? All lists and tasks inside will be permanently removed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => setDeletingBoard(null)}
+              className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white rounded-xl text-xs"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deletingBoard) {
+                  deleteBoardMutation.mutate(deletingBoard.id);
+                  setDeletingBoard(null);
+                }
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs"
+            >
+              Delete Board
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

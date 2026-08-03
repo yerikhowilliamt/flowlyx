@@ -25,3 +25,7 @@ export const updateProfile = async (id: string, data: FormData): Promise<UserPro
   const response = await api.patch<ApiResponse<UserProfile>>(`/users/${id}`, data);
   return response.data;
 };
+
+export const deleteAccount = async (id: string): Promise<void> => {
+  await api.delete(`/users/${id}`);
+};

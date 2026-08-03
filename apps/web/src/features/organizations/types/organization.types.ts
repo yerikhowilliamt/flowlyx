@@ -38,4 +38,5 @@ export interface UpdatePlanPayload {
 export interface UpdatePlanResponse {
   token?: string;
   redirectUrl?: string;
+  orderId?: string;
 }

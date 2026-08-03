@@ -33,6 +33,7 @@ model User {
   notifications       Notification[]
   uploadedFiles       File[]
   auditLogs           AuditLog[]
+  mobileDevices       MobileDevice[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -99,6 +100,7 @@ model Workspace {
   projects     Project[]
   files        File[]
   auditLogs    AuditLog[]
+  integrations Integration[]
 
   // --- Audit Fields ---
   createdAt DateTime  @default(now()) @map("created_at")
@@ -592,6 +594,8 @@ model PaymentTransaction {
   status         String    @default("PENDING") @map("status") // PENDING, SETTLEMENT, EXPIRE, CANCEL, DENY
   paymentType    String?   @map("payment_type") // e.g. credit_card, gopay
   transactionId  String?   @map("transaction_id") // Midtrans transaction_id
+  plan           String?   @map("plan") // FREE, PRO, ENTERPRISE
+  billingCycle   String?   @map("billing_cycle") // MONTHLY, YEARLY
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -600,4 +604,49 @@ model PaymentTransaction {
   updatedAt DateTime  @updatedAt @map("updated_at")
 
   @@map("payment_transactions")
+}
+
+model MobileDevice {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  platform   String   @map("platform")
+  pushToken  String   @map("push_token")
+  deviceId   String   @map("device_id")
+  appVersion String?  @map("app_version")
+  status     String   @default("ACTIVE") @map("status")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt      @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@unique([userId, deviceId])
+  @@index([userId])
+  @@map("mobile_devices")
+}
+
+model Integration {
+  id          String  @id @default(uuid()) @db.Uuid
+  workspaceId String  @map("workspace_id") @db.Uuid
+  provider    String  @map("provider")
+  name        String  @map("name")
+  webhookUrl  String? @map("webhook_url")
+  accessToken String? @map("access_token")
+  config      Json?   @map("config")
+  status      String  @default("ACTIVE") @map("status")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  // --- Audit Fields ---
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  createdBy String?   @map("created_by") @db.Uuid
+  updatedBy String?   @map("updated_by") @db.Uuid
+
+  @@index([workspaceId])
+  @@map("integrations")
 }

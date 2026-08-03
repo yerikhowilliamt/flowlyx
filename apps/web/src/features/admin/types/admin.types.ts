@@ -45,9 +45,12 @@ export interface AuditLog {
   id: string;
   userId?: string | null;
   userEmail?: string | null;
+  user?: { id: string; name: string; email: string } | null;
   action: string;
-  entityType: string;
+  entityType?: string;
   entityId?: string | null;
+  resourceType?: string;
+  resourceId?: string | null;
   details?: Record<string, unknown> | string | null;
   ipAddress?: string | null;
   userAgent?: string | null;

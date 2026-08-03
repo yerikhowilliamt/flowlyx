@@ -95,6 +95,10 @@ export class UsersService {
   ): Promise<void> {
     if (!actor || !targetUser) return;
 
+    if (actor.id === targetUser.id) {
+      return;
+    }
+
     if (actor.role === Role.SUPER_ADMIN) {
       return;
     }
@@ -102,10 +106,6 @@ export class UsersService {
     if (actor.role === Role.ADMIN) {
       if (targetUser.role === Role.SUPER_ADMIN) {
         throw new ForbiddenException('Admins cannot update or delete Super Admin accounts');
-      }
-
-      if (actor.id === targetUser.id) {
-        return;
       }
 
       const sharedMembership = await prisma.user.findFirst({

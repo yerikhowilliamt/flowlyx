@@ -3,13 +3,17 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AuditLogsService, AuditLogWithUser } from './audit-logs.service';
 import { FindAuditLogsDto } from './dto/find-audit-logs.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../rbac/guards/roles.guard';
+import { Roles } from '../rbac/decorators/roles.decorator';
+import { Role } from '../rbac/enums/role.enum';
 
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { AuditLogResponse, AuditLogSummary } from '../../models/audit-log.model';
 
 @ApiTags('Audit Logs')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.SUPER_ADMIN, Role.ADMIN)
 @Controller('audit-logs')
 export class AuditLogsController {
   constructor(private readonly auditLogsService: AuditLogsService) {}

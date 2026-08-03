@@ -15,6 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Loader2,
   ArrowLeft,
@@ -24,6 +35,7 @@ import {
   Layers,
   LogOut,
   CreditCard,
+  Check,
   Menu,
   X,
 } from 'lucide-react';
@@ -41,6 +53,7 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('workspaces');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isDeleteOrgAlertOpen, setIsDeleteOrgAlertOpen] = useState(false);
   const logoutMutation = useLogout();
 
   // Organization settings states
@@ -74,7 +87,9 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
   const { data: billing, isLoading: billingLoading } = useBillingInfo(organization?.id ?? '');
   const updateBillingMutation = useUpdateBillingPlan(organization?.id ?? '');
 
-  if (billing && billingPlan === 'FREE' && billingCycle === 'MONTHLY') {
+  const [syncedBillingId, setSyncedBillingId] = useState<string | null>(null);
+  if (billing && billing.id !== syncedBillingId) {
+    setSyncedBillingId(billing.id);
     setBillingPlan(billing.currentPlan);
     setBillingCycle(billing.billingCycle);
   }
@@ -103,17 +118,11 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
 
   const handleDelete = () => {
     if (!organization) return;
-    if (
-      confirm(
-        'Are you absolutely sure you want to delete this organization? This will delete all workspaces, projects, boards, and configurations permanently.',
-      )
-    ) {
-      deleteOrgMutation.mutate(organization.id, {
-        onSuccess: () => {
-          router.push('/organizations');
-        },
-      });
-    }
+    deleteOrgMutation.mutate(organization.id, {
+      onSuccess: () => {
+        router.push('/organizations');
+      },
+    });
   };
 
   if (isLoading) {
@@ -343,38 +352,43 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
 
             {/* Billing */}
             <div className="rounded-2xl border border-zinc-900 bg-zinc-900/20 p-6 space-y-6">
-              <div className="flex items-center gap-x-2.5 text-zinc-300">
-                <CreditCard className="h-5 w-5 text-orange-500" />
-                <h3 className="text-base font-bold text-white">Billing & Plan</h3>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-x-2.5 text-zinc-300">
+                  <CreditCard className="h-5 w-5 text-orange-500" />
+                  <div>
+                    <h3 className="text-base font-bold text-white">Billing & Plan</h3>
+                    <p className="text-xs text-zinc-400">
+                      Manage your organization subscription and billing cycle
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant={
+                    (billing?.currentPlan ?? 'FREE') === 'PRO'
+                      ? 'default'
+                      : (billing?.currentPlan ?? 'FREE') === 'ENTERPRISE'
+                        ? 'destructive'
+                        : 'secondary'
+                  }
+                  className="w-fit text-xs px-3 py-1 rounded-full font-bold uppercase"
+                >
+                  Current: {billing?.currentPlan ?? 'FREE'}
+                </Badge>
               </div>
 
               {billingLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-zinc-500" />
+                <div className="flex items-center gap-2 py-4 text-zinc-500">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span className="text-sm">Loading billing information...</span>
+                </div>
               ) : billing ? (
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <div className="flex flex-col gap-y-1.5">
-                    <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                      Current Plan
-                    </span>
-                    <Badge
-                      variant={
-                        billing.currentPlan === 'PRO'
-                          ? 'default'
-                          : billing.currentPlan === 'ENTERPRISE'
-                            ? 'destructive'
-                            : 'secondary'
-                      }
-                      className="w-fit text-xs px-3 py-1 rounded-full font-bold"
-                    >
-                      {billing.currentPlan}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-col gap-y-1.5">
+                <div className="grid gap-4 sm:grid-cols-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-4">
+                  <div className="flex flex-col gap-y-1">
                     <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                       Status
                     </span>
                     <span
-                      className={`text-sm font-semibold ${
+                      className={`text-sm font-bold ${
                         billing.status === 'ACTIVE'
                           ? 'text-green-400'
                           : billing.status === 'PAST_DUE'
@@ -389,22 +403,22 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
                           : 'Canceled'}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-y-1.5">
+                  <div className="flex flex-col gap-y-1">
                     <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                       Billing Cycle
                     </span>
-                    <span className="text-sm font-semibold text-zinc-300">
+                    <span className="text-sm font-bold text-zinc-200">
                       {billing.billingCycle === 'MONTHLY' ? 'Monthly' : 'Yearly'}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-y-1.5">
+                  <div className="flex flex-col gap-y-1">
                     <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                      Next Billing Date
+                      Next Renewal
                     </span>
-                    <span className="text-sm font-semibold text-zinc-300">
+                    <span className="text-sm font-bold text-zinc-200">
                       {new Date(billing.nextBillingDate).toLocaleDateString('en-US', {
                         year: 'numeric',
-                        month: 'long',
+                        month: 'short',
                         day: 'numeric',
                       })}
                     </span>
@@ -414,64 +428,143 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
                 <p className="text-sm text-zinc-500">No billing information available.</p>
               )}
 
-              <div className="border-t border-zinc-800 pt-6">
-                <div className="flex flex-col gap-y-4">
-                  <div className="flex flex-col gap-y-1.5">
+              <div className="border-t border-zinc-800 pt-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
                     <Label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                      Change Plan
+                      Available Plans
                     </Label>
-                    <div className="flex flex-wrap gap-3">
-                      {(['FREE', 'PRO', 'ENTERPRISE'] as const).map((plan) => (
-                        <button
-                          key={plan}
-                          onClick={() => setBillingPlan(plan)}
-                          className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-all cursor-pointer ${
-                            billingPlan === plan
-                              ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                              : 'border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
-                          }`}
-                        >
-                          {plan}
-                        </button>
-                      ))}
-                    </div>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      Select a tier that scales with your team size and operational needs
+                    </p>
                   </div>
-                  <div className="flex flex-col gap-y-1.5">
-                    <Label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                      Billing Cycle
-                    </Label>
-                    <div className="flex gap-3">
-                      {(['MONTHLY', 'YEARLY'] as const).map((cycle) => (
-                        <button
-                          key={cycle}
-                          onClick={() => setBillingCycle(cycle)}
-                          className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-all cursor-pointer ${
-                            billingCycle === cycle
-                              ? 'border-orange-500 bg-orange-500/10 text-orange-400'
-                              : 'border-zinc-800 bg-zinc-900/40 text-zinc-400 hover:border-zinc-700'
-                          }`}
-                        >
-                          {cycle === 'MONTHLY' ? 'Monthly' : 'Yearly'}
-                        </button>
-                      ))}
-                    </div>
+                  <div className="flex rounded-xl border border-zinc-800 bg-zinc-900/60 p-1 w-fit">
+                    {(['MONTHLY', 'YEARLY'] as const).map((cycle) => (
+                      <button
+                        key={cycle}
+                        type="button"
+                        onClick={() => setBillingCycle(cycle)}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                          billingCycle === cycle
+                            ? 'bg-orange-500 text-white font-bold'
+                            : 'text-zinc-400 hover:text-zinc-200'
+                        }`}
+                      >
+                        {cycle === 'MONTHLY' ? 'Monthly' : 'Yearly (Save 20%)'}
+                      </button>
+                    ))}
                   </div>
-                  <div className="pt-2">
-                    <Button
-                      onClick={() =>
-                        updateBillingMutation.mutate({ plan: billingPlan, billingCycle })
-                      }
-                      disabled={
-                        updateBillingMutation.isPending ||
-                        (billing &&
-                          billing.currentPlan === billingPlan &&
-                          billing.billingCycle === billingCycle)
-                      }
-                      className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl cursor-pointer disabled:opacity-50"
-                    >
-                      {updateBillingMutation.isPending ? 'Updating plan...' : 'Update Plan'}
-                    </Button>
-                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  {[
+                    {
+                      name: 'FREE' as const,
+                      price: '$0',
+                      desc: 'Essential features for individuals & small starter projects.',
+                      features: ['Up to 5 members', '3 Workspaces', 'Basic Sprint Boards'],
+                    },
+                    {
+                      name: 'PRO' as const,
+                      price: billingCycle === 'MONTHLY' ? '$29' : '$24',
+                      desc: 'Advanced tools and higher limits for growing teams.',
+                      features: ['Up to 25 members', 'Unlimited Workspaces', 'Priority Support', 'Advanced Analytics'],
+                    },
+                    {
+                      name: 'ENTERPRISE' as const,
+                      price: billingCycle === 'MONTHLY' ? '$99' : '$79',
+                      desc: 'Dedicated controls, security, and unlimited scale.',
+                      features: ['Unlimited members', 'Custom Security & SAML SSO', '24/7 SLA Support', 'Dedicated Success Manager'],
+                    },
+                  ].map((tier) => {
+                    const isSelected = billingPlan === tier.name;
+                    const currentPlanName = billing?.currentPlan ?? 'FREE';
+                    const isCurrent = currentPlanName === tier.name;
+
+                    return (
+                      <Card
+                        key={tier.name}
+                        onClick={() => setBillingPlan(tier.name)}
+                        className={`relative flex flex-col justify-between transition-all cursor-pointer select-none ${
+                          isSelected
+                            ? 'border-orange-500 bg-orange-500/10 shadow-lg shadow-orange-500/5'
+                            : 'border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 hover:bg-zinc-900/50'
+                        }`}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-bold text-white">
+                              {tier.name}
+                            </CardTitle>
+                            {isCurrent && (
+                              <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 border-orange-500/40 bg-orange-500/20 text-orange-400">
+                                Current Plan
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-baseline gap-1 mt-1">
+                            <span className="text-2xl font-extrabold text-white">
+                              {tier.price}
+                            </span>
+                            <span className="text-xs text-zinc-400">
+                              / {tier.price === '$0' ? 'forever' : 'seat / mo'}
+                            </span>
+                          </div>
+                          <CardDescription className="text-xs text-zinc-400 mt-1">
+                            {tier.desc}
+                          </CardDescription>
+                        </CardHeader>
+
+                        <CardContent className="pb-4">
+                          <ul className="space-y-2">
+                            {tier.features.map((feat) => (
+                              <li
+                                key={feat}
+                                className="flex items-center gap-2 text-xs text-zinc-300"
+                              >
+                                <Check className="h-3.5 w-3.5 text-orange-500 shrink-0" />
+                                <span>{feat}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+
+                        <CardFooter className="pt-2 border-t border-zinc-800/80 pb-4">
+                          <div
+                            className={`w-full text-center py-2 rounded-lg text-xs font-semibold transition-all ${
+                              isCurrent
+                                ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30 font-bold'
+                                : isSelected
+                                  ? 'bg-orange-500 text-white font-bold'
+                                  : 'bg-zinc-800/60 text-zinc-400 hover:text-white'
+                            }`}
+                          >
+                            {isCurrent
+                              ? 'Current Plan'
+                              : isSelected
+                                ? 'Selected'
+                                : 'Choose ' + tier.name}
+                          </div>
+                        </CardFooter>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-end pt-2">
+                  <Button
+                    onClick={() =>
+                      updateBillingMutation.mutate({ plan: billingPlan, billingCycle })
+                    }
+                    disabled={
+                      updateBillingMutation.isPending ||
+                      ((billing?.currentPlan ?? 'FREE') === billingPlan &&
+                        (billing?.billingCycle ?? 'MONTHLY') === billingCycle)
+                    }
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl cursor-pointer disabled:opacity-50 px-6"
+                  >
+                    {updateBillingMutation.isPending ? 'Updating plan...' : 'Update Subscription'}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -488,17 +581,46 @@ export default function OrganizationDashboardPage({ params }: PageProps) {
               </p>
               <div className="pt-2">
                 <Button
-                  onClick={handleDelete}
+                  onClick={() => setIsDeleteOrgAlertOpen(true)}
                   disabled={deleteOrgMutation.isPending}
                   variant="destructive"
-                  className="bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl cursor-pointer disabled:opacity-50"
+                  className="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl"
                 >
-                  {deleteOrgMutation.isPending ? 'Deleting organization...' : 'Delete Organization'}
+                  {deleteOrgMutation.isPending ? 'Deleting...' : 'Delete Organization'}
                 </Button>
               </div>
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Delete Organization Alert Dialog */}
+        <AlertDialog open={isDeleteOrgAlertOpen} onOpenChange={setIsDeleteOrgAlertOpen}>
+          <AlertDialogContent className="bg-zinc-950 border-zinc-800 text-zinc-100 rounded-2xl max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-400 font-bold">Delete Organization</AlertDialogTitle>
+              <AlertDialogDescription className="text-zinc-400 text-xs">
+                Are you absolutely sure you want to delete <strong className="text-zinc-200">{organization.name}</strong>? This will delete all workspaces, projects, boards, and configurations permanently. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                onClick={() => setIsDeleteOrgAlertOpen(false)}
+                className="border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800 hover:text-white rounded-xl text-xs"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  handleDelete();
+                  setIsDeleteOrgAlertOpen(false);
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs"
+              >
+                Delete Organization
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

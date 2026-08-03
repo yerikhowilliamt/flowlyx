@@ -49,3 +49,4 @@ Handbook/
 pr_body
 .agents/
 AGENTS.md
+.env.test

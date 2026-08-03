@@ -21,6 +21,10 @@ export class ProjectMemberSummary {
   @ApiProperty()
   @Expose()
   status!: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  user?: { id: string; name: string; email: string; avatarUrl?: string | null };
 }
 
 export class ProjectMemberResponse {
@@ -51,4 +55,8 @@ export class ProjectMemberResponse {
   @ApiProperty()
   @Expose()
   updatedAt!: Date;
+
+  @ApiProperty({ required: false })
+  @Expose()
+  user?: { id: string; name: string; email: string; avatarUrl?: string | null };
 }

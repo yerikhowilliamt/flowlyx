@@ -16,6 +16,30 @@
 - Jangan re-verify hal yang sudah confirmed di step sebelumnya dalam task yang sama (misal: sudah cek `package.json` sekali, jangan cek ulang untuk alasan yang sama).
 - Selesaikan task dengan perubahan seminimal mungkin yang menyelesaikan requirement — selaras dengan skill `ponytail` (YAGNI-first).
 
+## Branching Rules
+
+- **Branch mengikuti issue, bukan explore branch list.** Format: `feature/phase-<N>-<slug-dari-judul-issue>`.
+  Ambil detail issue via `gh issue view <number>`, lalu langsung `git checkout -b feature/phase-<N>-<slug>` dari branch dasar yang relevan.
+  Jangan jalankan `git branch -a` untuk "melihat pola" — pattern-nya sudah fixed, cukup lihat 1 branch phase sebelumnya kalau perlu (`git log --oneline -5 <branch-N-1>`), bukan seluruh daftar.
+
+## Reference Module Reading
+
+- Kalau butuh contoh pola dari modul existing (controller/service/module/dto), **baca semuanya dalam SATU batch read**, bukan berurutan satu-satu.
+- Pilih **hanya 1 modul referensi** yang paling relevan (biasanya modul terakhir yang dibuat / paling mirip domain-nya). Jangan bandingkan ke lebih dari 1 modul kecuali user minta.
+
+## Search Discipline
+
+- Grep/Select-String **maksimal 1 kali per pertanyaan**. Kalau hasil kosong, anggap "belum terdokumentasi" dan lanjut — jangan retry dengan pattern lain yang lebih longgar.
+- Jangan cek ulang file yang sama dengan command berbeda untuk informasi yang sama (misal: `app.module.ts` untuk cek existing import — sekali cukup).
+
+## Implementation Plan for New Module/Phase
+
+- Untuk task "implementasikan phase/issue baru" yang bikin modul baru:
+  1. `gh issue view <N>` — sumber utama requirement, JANGAN cross-check ke Handbook roadmap kecuali issue description ambigu/kurang jelas.
+  2. Baca 1 modul referensi (batch read, lihat rule di atas).
+  3. Cek schema.prisma **hanya section yang relevan** (grep nama model dulu untuk cari offset, jangan baca 100+ baris blind).
+  4. Langsung tulis plan. Total tool call untuk fase eksplorasi target: ≤6, bukan 15+.
+
 ## Debugging Protocol (coba cheap fixes dulu sebelum deep-dive)
 
 Sebelum melakukan investigasi berat (baca banyak file, query database, grep massal, trace call chain lintas modul), cek dulu apakah error yang muncul match salah satu pola umum berikut. Kalau match, **langsung eksekusi fix-nya**, jangan investigasi lebih jauh:

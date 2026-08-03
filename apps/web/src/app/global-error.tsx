@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+
 export default function GlobalError({
   reset,
 }: {
@@ -16,12 +18,12 @@ export default function GlobalError({
             A critical error occurred. Please refresh the page.
           </p>
         </div>
-        <button
+        <Button
           onClick={reset}
           className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors"
         >
           Refresh
-        </button>
+        </Button>
       </body>
     </html>
   );

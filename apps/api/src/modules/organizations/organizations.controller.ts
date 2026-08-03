@@ -31,6 +31,8 @@ import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { PaginationDto } from '../../core/pagination';
 import { SuccessResponse } from '../../models/api.model';
 
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @ApiTags('Organizations')
@@ -50,13 +52,22 @@ export class OrganizationsController {
     return this.organizationsService.create(createOrganizationDto);
   }
 
-  @ApiOperation({ summary: 'List all organizations' })
+  @ApiOperation({ summary: 'List all organizations for current user' })
   @ApiOkResponse({ type: [OrganizationSummary] })
   @Serialize([OrganizationSummary])
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    this.logger.log('Fetching all organizations');
-    return this.organizationsService.findAll(query);
+  async findAll(
+    @Query() query: PaginationDto,
+    @CurrentUser('id') userId: string,
+    @CurrentUser('role') role: string,
+  ) {
+    if (role === 'SUPER_ADMIN' || role === 'SUPERADMIN') {
+      this.logger.log('Fetching all organizations for SUPER_ADMIN');
+      return this.organizationsService.findAll(query);
+    }
+
+    this.logger.log(`Fetching all organizations for user: ${userId}`);
+    return this.organizationsService.findAllForUser(userId, query);
   }
 
   @ApiOperation({ summary: 'Get an organization by ID' })

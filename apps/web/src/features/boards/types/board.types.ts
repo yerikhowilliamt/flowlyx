@@ -2,6 +2,7 @@ export interface BoardSummary {
   id: string;
   project_id: string;
   name: string;
+  description?: string | null;
   status: string;
 }
 

@@ -24,6 +24,7 @@ jest.mock('midtrans-client', () => ({
       redirect_url: 'http://mock.redirect.url',
     }),
   })),
+  CoreApi: jest.fn().mockImplementation(() => ({})),
 }));
 
 describe('OrganizationBillingService', () => {
@@ -35,6 +36,7 @@ describe('OrganizationBillingService', () => {
         if (key === 'MIDTRANS_SERVER_KEY') return 'server_key';
         if (key === 'MIDTRANS_CLIENT_KEY') return 'client_key';
         if (key === 'MIDTRANS_IS_PRODUCTION') return 'false';
+        if (key === 'EXCHANGE_RATE_USD_IDR') return 17990;
         return null;
       }),
     };
@@ -61,11 +63,29 @@ describe('OrganizationBillingService', () => {
     });
 
     it('should return subscription if found', async () => {
-      const mockSub = { id: '1', organizationId: 'org1', plan: 'PRO' };
+      const mockSub = {
+        id: '1',
+        organizationId: 'org1',
+        plan: 'PRO',
+        billingCycle: 'MONTHLY',
+        status: 'ACTIVE',
+        currentPeriodEnd: new Date('2026-01-01T00:00:00.000Z'),
+        createdAt: new Date('2026-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      };
       (prisma.organizationSubscription.findUnique as jest.Mock).mockResolvedValue(mockSub);
 
       const result = await service.getBillingInfo('org1');
-      expect(result).toEqual(mockSub);
+      expect(result).toEqual({
+        id: '1',
+        organizationId: 'org1',
+        currentPlan: 'PRO',
+        billingCycle: 'MONTHLY',
+        status: 'ACTIVE',
+        nextBillingDate: '2026-01-01T00:00:00.000Z',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      });
     });
   });
 
@@ -79,16 +99,20 @@ describe('OrganizationBillingService', () => {
     it('should create transaction and return token and redirectUrl', async () => {
       const result = await service.updatePlan('org1', { plan: 'PRO', billingCycle: 'MONTHLY' });
 
-      expect(result).toEqual({
-        token: 'mock_token',
-        redirectUrl: 'http://mock.redirect.url',
-      });
+      expect(result).toEqual(
+        expect.objectContaining({
+          token: 'mock_token',
+          redirectUrl: 'http://mock.redirect.url',
+        }),
+      );
       expect(prisma.paymentTransaction.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             organizationId: 'org1',
-            amount: 150000,
+            amount: 521710, // 29 USD × 17990
             status: 'PENDING',
+            plan: 'PRO',
+            billingCycle: 'MONTHLY',
           }),
         }),
       );
