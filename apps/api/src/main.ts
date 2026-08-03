@@ -1,26 +1,40 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import helmet from 'helmet';
+import compression from 'compression';
 import { ResponseInterceptor } from './core/response/response.interceptor';
 import { Logger } from 'nestjs-pino';
 import { GlobalExceptionFilter } from './core/exceptions/global-exception.filter';
+import { AuditLogInterceptor } from './core/interceptors/audit-log.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ZodValidationPipe } from 'nestjs-zod';
+import { ZodValidationPipe, patchNestJsSwagger } from 'nestjs-zod';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
-
+  app.setGlobalPrefix('api');
+  app.enableCors({
+    origin: 'http://localhost:3015',
+    methods: 'GET,POST, PATCH, PUT,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
+    credentials: true,
+  });
+  app.use(helmet());
+  app.use(compression());
   // 1. Logger
   const logger = app.get(Logger);
   app.useLogger(logger);
 
   // 2. Exception Filter & Response Interceptor
   app.useGlobalFilters(new GlobalExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalInterceptors(new ResponseInterceptor(), new AuditLogInterceptor());
 
   // 3. Validation
   app.useGlobalPipes(new ZodValidationPipe());
 
   // 4. Swagger
+  patchNestJsSwagger();
   const config = new DocumentBuilder()
     .setTitle('Flowlyx API')
     .setDescription('Enterprise Project Management Platform API')
@@ -31,8 +45,11 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   // 5. Start Server
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 4000;
   await app.listen(port);
   logger.log(`Application listening on port ${port}`);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('❌ Failed to start application:', err);
+  process.exit(1);
+});
