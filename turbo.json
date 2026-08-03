@@ -13,7 +13,7 @@
       "inputs": ["src/**/*.tsx", "src/**/*.ts", "test/**/*.ts"]
     },
     "type-check": {
-      "dependsOn": ["^build", "^type-check"]
+      "dependsOn": ["^type-check"]
     },
     "dev": {
       "cache": false,
