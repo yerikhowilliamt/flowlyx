@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-import { prisma } from './index';
+import { PrismaClient } from '@prisma/client';
 
 export const extendedPrismaClient = () => {
+  const prisma = new PrismaClient();
+
   return prisma.$extends({
     name: 'softDelete',
     query: {
