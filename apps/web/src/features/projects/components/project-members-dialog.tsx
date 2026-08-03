@@ -59,9 +59,19 @@ export function ProjectMembersDialog({
     isLoading: isProjectMembersLoading,
     refetch,
   } = useProjectMembers(projectId);
-  const projectMembers = Array.isArray(projectMembersResp)
-    ? projectMembersResp
-    : (projectMembersResp as unknown as { data?: unknown[] })?.data || [];
+  const projectMembers: Array<{ id: string; userId?: string; user_id?: string; role: string }> =
+    Array.isArray(projectMembersResp)
+      ? (projectMembersResp as Array<{
+          id: string;
+          userId?: string;
+          user_id?: string;
+          role: string;
+        }>)
+      : (
+          projectMembersResp as unknown as {
+            data?: Array<{ id: string; userId?: string; user_id?: string; role: string }>;
+          }
+        )?.data || [];
 
   const createMemberMutation = useCreateProjectMember(projectId);
   const updateMemberMutation = useUpdateProjectMember(projectId);
@@ -301,7 +311,8 @@ export function ProjectMembersDialog({
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-400 font-bold">Remove Member</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400 text-xs">
-              Are you sure you want to remove this member from the project? They will lose access to all boards and tasks inside this project.
+              Are you sure you want to remove this member from the project? They will lose access to
+              all boards and tasks inside this project.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
