@@ -2,13 +2,13 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { register } from '../api/auth.api';
-import { RegisterInput } from '../schemas/auth.schema';
+import { RegisterPayload } from '../schemas/auth.schema';
 
 export const useRegister = () => {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: (data: RegisterInput) => register(data),
+    mutationFn: (data: RegisterPayload) => register(data),
     onSuccess: () => {
       toast.success('Registration successful! Please login.');
       router.push('/login');

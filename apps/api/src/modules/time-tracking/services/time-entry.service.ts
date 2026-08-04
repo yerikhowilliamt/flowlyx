@@ -42,7 +42,7 @@ export class TimeEntryService {
     const timeEntry = await prisma.timeEntry.findUnique({ where: { id } });
 
     if (!timeEntry || timeEntry.status === 'DELETED') {
-      throw new NotFoundException(`Time entry with ID ${id} not found`);
+      throw new NotFoundException('Time entry not found');
     }
 
     if (timeEntry.userId !== userId) {
@@ -71,7 +71,7 @@ export class TimeEntryService {
     const timeEntry = await prisma.timeEntry.findUnique({ where: { id } });
 
     if (!timeEntry || timeEntry.status === 'DELETED') {
-      throw new NotFoundException(`Time entry with ID ${id} not found`);
+      throw new NotFoundException('Time entry not found');
     }
 
     let duration = timeEntry.duration;
@@ -102,7 +102,7 @@ export class TimeEntryService {
     const timeEntry = await prisma.timeEntry.findUnique({ where: { id } });
 
     if (!timeEntry || timeEntry.status === 'DELETED') {
-      throw new NotFoundException(`Time entry with ID ${id} not found`);
+      throw new NotFoundException('Time entry not found');
     }
 
     return prisma.timeEntry.update({

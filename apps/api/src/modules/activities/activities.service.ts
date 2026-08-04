@@ -52,7 +52,7 @@ export class ActivitiesService {
     });
 
     if (!activity) {
-      throw new NotFoundException(`Activity with ID ${id} not found`);
+      throw new NotFoundException('Activity not found');
     }
     return activity;
   }

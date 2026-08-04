@@ -15,8 +15,15 @@ const DEFAULT_PRIORITY_NAMES = ['urgent', 'high', 'medium', 'low'];
 
 @Injectable()
 export class PrioritiesService {
-  private isDefaultPriority(priority: { name?: string | null; createdBy?: string | null }): boolean {
-    return !!priority?.name && DEFAULT_PRIORITY_NAMES.includes(priority.name.toLowerCase()) && !priority.createdBy;
+  private isDefaultPriority(priority: {
+    name?: string | null;
+    createdBy?: string | null;
+  }): boolean {
+    return (
+      !!priority?.name &&
+      DEFAULT_PRIORITY_NAMES.includes(priority.name.toLowerCase()) &&
+      !priority.createdBy
+    );
   }
 
   async create(createPriorityDto: CreatePriorityDto, userId: string) {
@@ -36,9 +43,7 @@ export class PrioritiesService {
     });
 
     if (existing) {
-      throw new ConflictException(
-        `Priority with name "${name}" already exists in this project`,
-      );
+      throw new ConflictException('Priority already exists');
     }
 
     return prisma.priority.create({
@@ -112,13 +117,18 @@ export class PrioritiesService {
     });
 
     if (!priority || priority.deletedAt) {
-      throw new NotFoundException(`Priority with ID ${id} not found`);
+      throw new NotFoundException('Priority not found');
     }
 
     return priority;
   }
 
-  async update(id: string, updatePriorityDto: UpdatePriorityDto, userId: string, userRole?: string) {
+  async update(
+    id: string,
+    updatePriorityDto: UpdatePriorityDto,
+    userId: string,
+    userRole?: string,
+  ) {
     const priority = await this.findById(id);
 
     if (this.isDefaultPriority(priority)) {
@@ -142,9 +152,7 @@ export class PrioritiesService {
       });
 
       if (existing) {
-        throw new ConflictException(
-          `Priority with name ${updatePriorityDto.name} already exists in this project`,
-        );
+        throw new ConflictException('Priority already exists');
       }
     }
 

@@ -73,7 +73,7 @@ export class ReportingService {
     const project = await prisma.project.findUnique({ where: { id: projectId } });
     if (!project) {
       this.logger.warn({ message: 'Project not found', projectId, userId });
-      throw new NotFoundException(`Project ${projectId} not found`);
+      throw new NotFoundException('Project not found');
     }
 
     const createdAtFilter = this.buildDateFilter(query);
@@ -124,7 +124,7 @@ export class ReportingService {
     const project = await prisma.project.findUnique({ where: { id: projectId } });
     if (!project) {
       this.logger.warn({ message: 'Project not found', projectId, userId });
-      throw new NotFoundException(`Project ${projectId} not found`);
+      throw new NotFoundException('Project not found');
     }
 
     const createdAtFilter = this.buildDateFilter(query);
@@ -191,7 +191,7 @@ export class ReportingService {
     });
     if (!project) {
       this.logger.warn({ message: 'Project not found', projectId, userId });
-      throw new NotFoundException(`Project ${projectId} not found`);
+      throw new NotFoundException('Project not found');
     }
 
     const createdAtFilter = this.buildDateFilter(query);
@@ -248,7 +248,7 @@ export class ReportingService {
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId } });
     if (!workspace) {
       this.logger.warn({ message: 'Workspace not found', workspaceId, userId });
-      throw new NotFoundException(`Workspace ${workspaceId} not found`);
+      throw new NotFoundException('Workspace not found');
     }
 
     const [projects, members, tasks, timeEntries] = await Promise.all([

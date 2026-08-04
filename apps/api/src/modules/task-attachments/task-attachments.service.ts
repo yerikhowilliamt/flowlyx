@@ -97,7 +97,7 @@ export class TaskAttachmentsService {
       try {
         uploadResult = (await this.cloudinaryService.uploadFile(file)) as UploadApiResponse;
       } catch {
-        throw new BadRequestException(`Failed to upload file: ${file.originalname}`);
+        throw new BadRequestException('Failed to upload file');
       }
 
       // Save attachment record in DB

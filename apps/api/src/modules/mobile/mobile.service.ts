@@ -43,7 +43,7 @@ export class MobileService {
     });
 
     if (!device || device.deletedAt) {
-      throw new NotFoundException(`Device ${deviceId} not found`);
+      throw new NotFoundException('Device not found');
     }
 
     this.logger.log({ message: 'Revoking mobile device', deviceId, userId });

@@ -10,7 +10,7 @@ export class SystemConfigurationService {
   async create(createDto: CreateSystemConfigurationDto) {
     const existing = await prisma.systemConfiguration.findUnique({ where: { key: createDto.key } });
     if (existing) {
-      throw new ConflictException(`Configuration with key ${createDto.key} already exists`);
+      throw new ConflictException('Configuration already exists');
     }
     return prisma.systemConfiguration.create({
       data: {
@@ -48,7 +48,7 @@ export class SystemConfigurationService {
   async findByKey(key: string) {
     const config = await prisma.systemConfiguration.findUnique({ where: { key } });
     if (!config) {
-      throw new NotFoundException(`Configuration with key ${key} not found`);
+      throw new NotFoundException('Configuration not found');
     }
     return config;
   }
@@ -56,7 +56,7 @@ export class SystemConfigurationService {
   async update(key: string, updateDto: UpdateSystemConfigurationDto) {
     const config = await prisma.systemConfiguration.findUnique({ where: { key } });
     if (!config) {
-      throw new NotFoundException(`Configuration with key ${key} not found`);
+      throw new NotFoundException('Configuration not found');
     }
 
     return prisma.systemConfiguration.update({
@@ -71,7 +71,7 @@ export class SystemConfigurationService {
   async delete(key: string) {
     const config = await prisma.systemConfiguration.findUnique({ where: { key } });
     if (!config) {
-      throw new NotFoundException(`Configuration with key ${key} not found`);
+      throw new NotFoundException('Configuration not found');
     }
     await prisma.systemConfiguration.delete({ where: { key } });
     return true;

@@ -72,7 +72,7 @@ export class AuditLogsService {
     });
 
     if (!auditLog) {
-      throw new NotFoundException(`Audit log with ID ${id} not found`);
+      throw new NotFoundException('Audit log not found');
     }
     return auditLog;
   }
