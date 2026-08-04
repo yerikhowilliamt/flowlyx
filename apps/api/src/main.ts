@@ -14,10 +14,20 @@ dotenv.config();
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.setGlobalPrefix('api');
+  const allowedOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map((o) => o.trim())
+    : ['http://localhost:3015', 'https://flowlyx-dev.vercel.app'];
+
   app.enableCors({
-    origin: 'http://localhost:3015',
-    methods: 'GET,POST, PATCH, PUT,DELETE',
-    allowedHeaders: 'Content-Type, Authorization',
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With',
     credentials: true,
   });
   app.use(helmet());
