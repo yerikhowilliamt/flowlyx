@@ -101,8 +101,16 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   if (!res.ok) {
-    const data = await res.json().catch(() => undefined);
-    throw new ApiError(res.status, res.statusText, data);
+    const data = (await res.json().catch(() => undefined)) as
+      | { message?: string | string[] }
+      | undefined;
+    const errorMessage =
+      typeof data?.message === 'string'
+        ? data.message
+        : Array.isArray(data?.message)
+          ? data.message.join(', ')
+          : res.statusText || 'An error occurred';
+    throw new ApiError(res.status, errorMessage, data);
   }
 
   if (res.status === 204) return undefined as T;
