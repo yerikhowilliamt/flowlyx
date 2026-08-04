@@ -12,7 +12,7 @@ export class SettingsService {
   async create(createSettingDto: CreateSettingDto, userId: string): Promise<Setting> {
     const existing = await prisma.setting.findUnique({ where: { key: createSettingDto.key } });
     if (existing) {
-      throw new ConflictException(`Setting with key '${createSettingDto.key}' already exists`);
+      throw new ConflictException('Setting already exists');
     }
 
     const setting = await prisma.setting.create({
@@ -59,7 +59,7 @@ export class SettingsService {
   async findByKey(key: string): Promise<Setting> {
     const setting = await prisma.setting.findUnique({ where: { key } });
     if (!setting) {
-      throw new NotFoundException(`Setting with key '${key}' not found`);
+      throw new NotFoundException('Setting not found');
     }
     return setting;
   }
@@ -67,7 +67,7 @@ export class SettingsService {
   async findById(id: string): Promise<Setting> {
     const setting = await prisma.setting.findUnique({ where: { id } });
     if (!setting) {
-      throw new NotFoundException(`Setting with ID '${id}' not found`);
+      throw new NotFoundException('Setting not found');
     }
     return setting;
   }
@@ -78,7 +78,7 @@ export class SettingsService {
     if (updateSettingDto.key && updateSettingDto.key !== setting.key) {
       const existing = await prisma.setting.findUnique({ where: { key: updateSettingDto.key } });
       if (existing) {
-        throw new ConflictException(`Setting with key '${updateSettingDto.key}' already exists`);
+        throw new ConflictException('Setting already exists');
       }
     }
 

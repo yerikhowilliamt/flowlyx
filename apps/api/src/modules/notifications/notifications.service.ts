@@ -48,7 +48,7 @@ export class NotificationsService {
   async markAsRead(id: string, userId: string): Promise<Notification> {
     const notification = await prisma.notification.findUnique({ where: { id } });
     if (!notification || notification.userId !== userId) {
-      throw new NotFoundException(`Notification with ID ${id} not found`);
+      throw new NotFoundException('Notification not found');
     }
     return prisma.notification.update({
       where: { id },
@@ -67,7 +67,7 @@ export class NotificationsService {
   async remove(id: string, userId: string): Promise<Notification> {
     const notification = await prisma.notification.findUnique({ where: { id } });
     if (!notification || notification.userId !== userId) {
-      throw new NotFoundException(`Notification with ID ${id} not found`);
+      throw new NotFoundException('Notification not found');
     }
     return prisma.notification.update({
       where: { id },

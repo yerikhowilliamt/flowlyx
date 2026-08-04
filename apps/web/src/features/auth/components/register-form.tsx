@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RegisterInput, registerSchema } from '../schemas/auth.schema';
@@ -8,8 +9,12 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function RegisterForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -21,11 +26,15 @@ export function RegisterForm() {
   const registerMutation = useRegister();
 
   const onSubmit = (data: RegisterInput) => {
-    registerMutation.mutate(data);
+    registerMutation.mutate({
+      name: data.name,
+      email: data.email,
+      password: data.password,
+    });
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <div className="flex flex-col gap-y-1.5 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-white">Create an Account</h1>
         <p className="text-sm text-zinc-400">Enter your details to get started</p>
@@ -73,15 +82,52 @@ export function RegisterForm() {
           >
             Password
           </Label>
-          <Input
-            id="password"
-            type="password"
-            {...register('password')}
-            className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
-            placeholder="••••••••"
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              {...register('password')}
+              className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 pr-10 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 focus:outline-none transition-colors cursor-pointer"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-y-1.5">
+          <Label
+            htmlFor="confirmPassword"
+            className="text-xs font-semibold text-zinc-400 uppercase tracking-wider"
+          >
+            Confirm Password
+          </Label>
+          <div className="relative">
+            <Input
+              id="confirmPassword"
+              type={showConfirmPassword ? 'text' : 'password'}
+              {...register('confirmPassword')}
+              className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 pr-10 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 focus:outline-none transition-colors cursor-pointer"
+            >
+              {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {errors.confirmPassword && (
+            <p className="text-xs text-red-500 mt-1">{errors.confirmPassword.message}</p>
           )}
         </div>
 

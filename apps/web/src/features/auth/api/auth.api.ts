@@ -1,6 +1,6 @@
 import { api, setAccessToken } from '@/lib/api-client';
 import { User } from '@flowlyx/database';
-import { LoginInput, RegisterInput } from '../schemas/auth.schema';
+import { LoginInput, RegisterPayload } from '../schemas/auth.schema';
 import { AuthTokens } from '../types/auth.types';
 
 interface ApiResponse<T> {
@@ -12,7 +12,7 @@ export const login = async (data: LoginInput): Promise<AuthTokens> => {
   return response.data;
 };
 
-export const register = async (data: RegisterInput): Promise<User> => {
+export const register = async (data: RegisterPayload): Promise<User> => {
   const response = await api.post<ApiResponse<User>>('/auth/register', data);
   return response.data;
 };

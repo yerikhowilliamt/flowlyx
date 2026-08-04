@@ -28,7 +28,7 @@ export class ExportService {
     });
 
     if (!workspace) {
-      throw new NotFoundException(`Workspace with ID ${workspaceId} not found`);
+      throw new NotFoundException('Workspace not found');
     }
 
     return workspace;

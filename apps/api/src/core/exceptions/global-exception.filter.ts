@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { Prisma } from '@flowlyx/database';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -26,16 +27,33 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       status = exception.getStatus();
       const responseBody = exception.getResponse() as Record<string, unknown> | string;
-      errorCode = typeof responseBody === 'object' && responseBody !== null && typeof responseBody.error === 'string' ? responseBody.error : errorCode;
-      message = typeof responseBody === 'object' && responseBody !== null && typeof responseBody.message === 'string' ? responseBody.message : exception.message;
+      errorCode =
+        typeof responseBody === 'object' &&
+        responseBody !== null &&
+        typeof responseBody.error === 'string'
+          ? responseBody.error
+          : errorCode;
+      message =
+        typeof responseBody === 'object' &&
+        responseBody !== null &&
+        typeof responseBody.message === 'string'
+          ? responseBody.message
+          : exception.message;
 
       // Handle nestjs-zod validation errors wrapped in HttpException
       if (status === HttpStatus.BAD_REQUEST && message === 'Validation failed') {
         errorCode = 'VALIDATION_ERROR';
-        const errors = typeof responseBody === 'object' && responseBody !== null && Array.isArray(responseBody.errors) ? responseBody.errors : [];
+        const errors =
+          typeof responseBody === 'object' &&
+          responseBody !== null &&
+          Array.isArray(responseBody.errors)
+            ? responseBody.errors
+            : [];
         // Extract the actual error message from Zod issues if available
         if (errors.length > 0) {
-          message = errors.map((e) => (e as { message: string }).message).join(', ') || 'Input validation failed';
+          message =
+            errors.map((e) => (e as { message: string }).message).join(', ') ||
+            'Input validation failed';
           details = errors;
         }
       }
@@ -44,8 +62,22 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       errorCode = 'VALIDATION_ERROR';
       message = 'Input validation failed';
       details = exception.errors;
+    } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+      if (exception.code === 'P2025') {
+        status = HttpStatus.NOT_FOUND;
+        errorCode = 'NOT_FOUND';
+        message = 'Resource not found';
+      } else if (exception.code === 'P2002') {
+        status = HttpStatus.CONFLICT;
+        errorCode = 'CONFLICT';
+        message = 'Resource already exists';
+      } else {
+        message = 'Database request failed. Please try again later.';
+      }
+    } else if (exception instanceof Prisma.PrismaClientInitializationError) {
+      message = 'Database is unavailable. Please try again later.';
     } else if (exception instanceof Error) {
-      message = exception.message;
+      message = 'Something went wrong. Please try again later.';
     }
 
     // Correlation ID mapping (set via Pino)

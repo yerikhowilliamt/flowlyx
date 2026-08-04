@@ -50,7 +50,7 @@ export class AiSprintPlanningService {
 
     if (!project) {
       this.logger.warn({ message: 'Project not found', projectId: dto.projectId, userId });
-      throw new NotFoundException(`Project ${dto.projectId} not found`);
+      throw new NotFoundException('Project not found');
     }
 
     const allTasks = project.boards.flatMap((b) => b.lists.flatMap((l) => l.tasks));

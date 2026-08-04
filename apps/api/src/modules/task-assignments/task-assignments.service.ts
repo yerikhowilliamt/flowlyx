@@ -10,10 +10,10 @@ export class TaskAssignmentsService {
 
   async create(dto: CreateTaskAssignmentDto, currentUserId: string) {
     const task = await prisma.task.findUnique({ where: { id: dto.taskId } });
-    if (!task) throw new NotFoundException(`Task with ID ${dto.taskId} not found`);
+    if (!task) throw new NotFoundException('Task not found');
 
     const user = await prisma.user.findUnique({ where: { id: dto.userId } });
-    if (!user) throw new NotFoundException(`User with ID ${dto.userId} not found`);
+    if (!user) throw new NotFoundException('User not found');
 
     const existing = await prisma.taskAssignment.findUnique({
       where: { taskId_userId: { taskId: dto.taskId, userId: dto.userId } },
@@ -52,7 +52,7 @@ export class TaskAssignmentsService {
 
   async remove(id: string) {
     const assignment = await prisma.taskAssignment.findUnique({ where: { id } });
-    if (!assignment) throw new NotFoundException(`Task assignment with ID ${id} not found`);
+    if (!assignment) throw new NotFoundException('Task assignment not found');
     await prisma.taskAssignment.delete({ where: { id } });
   }
 }

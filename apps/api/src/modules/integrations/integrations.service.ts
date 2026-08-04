@@ -17,7 +17,7 @@ export class IntegrationsService {
 
     const workspace = await prisma.workspace.findUnique({ where: { id: dto.workspaceId } });
     if (!workspace) {
-      throw new NotFoundException(`Workspace ${dto.workspaceId} not found`);
+      throw new NotFoundException('Workspace not found');
     }
 
     const integration = await prisma.integration.create({
@@ -49,7 +49,7 @@ export class IntegrationsService {
       where: { id, deletedAt: null },
     });
     if (!integration) {
-      throw new NotFoundException(`Integration ${id} not found`);
+      throw new NotFoundException('Integration not found');
     }
     return integration;
   }

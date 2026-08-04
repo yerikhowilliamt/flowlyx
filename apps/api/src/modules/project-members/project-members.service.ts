@@ -51,7 +51,7 @@ export class ProjectMembersService {
         data: updateProjectMemberDto,
       });
     } catch {
-      throw new NotFoundException(`Project member with ID ${id} not found`);
+      throw new NotFoundException('Project member not found');
     }
   }
 
@@ -60,7 +60,7 @@ export class ProjectMembersService {
       await prisma.projectMember.delete({ where: { id } });
       return true;
     } catch {
-      throw new NotFoundException(`Project member with ID ${id} not found`);
+      throw new NotFoundException('Project member not found');
     }
   }
 }

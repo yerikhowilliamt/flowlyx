@@ -171,7 +171,7 @@ export class UsersService {
   ): Promise<User> {
     const user = await this.findById(id);
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException('User not found');
     }
 
     await this.verifyManagementPermission(actor, user);
@@ -197,7 +197,7 @@ export class UsersService {
   async delete(id: string, actor?: { id: string; role: string }): Promise<boolean> {
     const user = await this.findById(id);
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException('User not found');
     }
 
     await this.verifyManagementPermission(actor, user);

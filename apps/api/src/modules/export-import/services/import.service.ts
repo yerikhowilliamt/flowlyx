@@ -18,7 +18,7 @@ export class ImportService {
     });
 
     if (!workspace) {
-      throw new BadRequestException(`Workspace with ID ${workspaceId} not found`);
+      throw new BadRequestException('Workspace not found');
     }
 
     // Process import inside a transaction

@@ -1,5 +1,6 @@
 ﻿'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { LoginInput, loginSchema } from '../schemas/auth.schema';
@@ -8,8 +9,11 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -25,7 +29,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       <div className="flex flex-col gap-y-1.5 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-white">Welcome Back</h1>
         <p className="text-sm text-zinc-400">Enter your credentials to access your account</p>
@@ -58,13 +62,22 @@ export function LoginForm() {
               Password
             </Label>
           </div>
-          <Input
-            id="password"
-            type="password"
-            {...register('password')}
-            className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
-            placeholder="********"
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              {...register('password')}
+              className="w-full border-zinc-800 bg-zinc-900/40 px-3 py-2 pr-10 text-zinc-100 placeholder:text-zinc-500 focus-visible:ring-1 focus-visible:ring-orange-500 focus-visible:border-orange-500 focus-visible:outline-none transition-all"
+              placeholder="********"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 focus:outline-none transition-colors cursor-pointer"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           {errors.password && (
             <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>
           )}
